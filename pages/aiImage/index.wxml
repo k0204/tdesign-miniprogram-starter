@@ -1,0 +1,65 @@
+<t-navbar title="AI 图生图" left-arrow />
+<view class="ai-page">
+  <!-- 垫图 -->
+  <view class="card">
+    <view class="card__title">垫图<text class="card__required">必填 · 最多 1 张</text></view>
+    <view class="picker" bindtap="chooseImage">
+      <image wx:if="{{sourcePath}}" class="picker__img" src="{{sourcePath}}" mode="aspectFill" />
+      <view wx:else class="picker__empty">
+        <t-icon name="add" size="56rpx" color="#00000066" />
+        <text class="picker__empty-text">选择图片</text>
+      </view>
+      <view wx:if="{{uploading}}" class="picker__mask">上传中...</view>
+    </view>
+    <view wx:if="{{sourcePath}}" class="card__link" bindtap="removeImage">移除垫图</view>
+  </view>
+
+  <!-- 提示词 -->
+  <view class="card">
+    <view class="card__title">提示词</view>
+    <t-textarea
+      t-class="prompt-class"
+      value="{{prompt}}"
+      bind:change="onPromptChange"
+      placeholder="描述你想要的效果，例如：改成水彩风格，暖色调"
+      maxlength="{{500}}"
+      disableDefaultPadding="{{true}}"
+      indicator
+    />
+    <view class="presets">
+      <view class="presets__item" wx:for="{{presets}}" wx:key="*this" data-text="{{item}}" bindtap="usePreset">
+        <t-tag variant="light">{{item}}</t-tag>
+      </view>
+    </view>
+  </view>
+
+  <!-- 生成按钮 -->
+  <view class="card">
+    <t-button
+      theme="primary"
+      size="large"
+      icon="lightbulb"
+      loading="{{generating}}"
+      disabled="{{generating}}"
+      bindtap="generate"
+      content="{{generating ? '生成中...' : '生成图片'}}"
+    />
+    <view class="card__tip">生成耗时约 20~60 秒，生成结果会自动保存到云存储</view>
+  </view>
+
+  <!-- 结果 -->
+  <view wx:if="{{resultSrc}}" class="card">
+    <view class="card__title">生成结果</view>
+    <image class="result__img" src="{{resultSrc}}" mode="widthFix" bindtap="preview" />
+    <view wx:if="{{revisedPrompt}}" class="result__revised">优化后提示词：{{revisedPrompt}}</view>
+    <view class="ops">
+      <t-button theme="light" size="medium" content="预览" bindtap="preview" />
+      <t-button theme="light" size="medium" content="保存相册" bindtap="saveToAlbum" />
+      <t-button theme="light" size="medium" content="复制 fileID" bindtap="copyFileID" />
+    </view>
+    <view class="card__link" bindtap="resetResult">清空结果，重新生成</view>
+  </view>
+
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+</view>
+<t-toast id="t-toast" />

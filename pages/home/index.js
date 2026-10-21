@@ -79,4 +79,9 @@ Page({
       url: '/pages/release/index',
     });
   },
+  goAiImage() {
+    wx.navigateTo({
+      url: '/pages/aiImage/index',
+    });
+  },
 });

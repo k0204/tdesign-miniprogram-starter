@@ -32,8 +32,15 @@
   }
 }
 
-.home-release {
+.home-fab {
   position: fixed;
   bottom: 208rpx;
   right: 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  &__row + &__row {
+    margin-top: 20rpx;
+  }
 }

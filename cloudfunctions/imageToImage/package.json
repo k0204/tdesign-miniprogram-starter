@@ -1,0 +1,9 @@
+{
+  "name": "imageToImage",
+  "version": "1.0.0",
+  "description": "混元图生图（I2I）云函数：垫图 + 提示词 -> 生成图，并转存云存储",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "4.0.2"
+  }
+}

@@ -53,6 +53,7 @@
     }
   },
   "compileType": "miniprogram",
+  "cloudfunctionRoot": "cloudfunctions/",
   "libVersion": "3.7.8",
   "appid": "wx16f3362b82c554fd",
   "projectname": "miniprogram-starter",
@@ -99,6 +100,13 @@
         {
           "name": "setting",
           "pathName": "pages/setting/index",
+          "query": "",
+          "launchMode": "default",
+          "scene": null
+        },
+        {
+          "name": "aiImage",
+          "pathName": "pages/aiImage/index",
           "query": "",
           "launchMode": "default",
           "scene": null

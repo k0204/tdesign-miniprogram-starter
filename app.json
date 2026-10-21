@@ -43,6 +43,11 @@
       "root": "pages/release",
       "name": "release",
       "pages": ["index"]
+    },
+    {
+      "root": "pages/aiImage",
+      "name": "aiImage",
+      "pages": ["index"]
     }
   ],
   "window": {

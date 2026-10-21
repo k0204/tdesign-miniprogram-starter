@@ -10,6 +10,8 @@ if (config.isMock) {
 
 App({
   onLaunch() {
+    this.initCloud();
+
     const updateManager = wx.getUpdateManager();
 
     updateManager.onCheckForUpdate((res) => {
@@ -39,6 +41,22 @@ App({
 
   /** 全局事件总线 */
   eventBus: createBus(),
+
+  /** 初始化云开发（AI 图生图依赖 wx.cloud.callFunction / uploadFile） */
+  initCloud() {
+    if (!wx.cloud) {
+      console.warn('[cloud] 当前基础库不支持云开发');
+      return;
+    }
+    try {
+      wx.cloud.init({
+        ...(config.cloudEnv ? { env: config.cloudEnv } : {}),
+        traceUser: true,
+      });
+    } catch (err) {
+      console.warn('[cloud] init 失败，请确认已开通云开发环境：', err);
+    }
+  },
 
   /** 初始化WebSocket */
   connect() {

@@ -40,9 +40,12 @@
   </view>
 </view>
 
-<view class="home-release">
-  <t-button theme="primary" size="large" icon="add" shape="round" bindtap="goRelease">
-    发布
-  </t-button>
+<view class="home-fab">
+  <view class="home-fab__row">
+    <t-button theme="light" size="large" icon="lightbulb" shape="round" bindtap="goAiImage">AI 生图</t-button>
+  </view>
+  <view class="home-fab__row">
+    <t-button theme="primary" size="large" icon="add" shape="round" bindtap="goRelease">发布</t-button>
+  </view>
 </view>
 <t-message id="t-message" />
