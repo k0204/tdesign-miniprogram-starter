@@ -148,7 +148,11 @@ export const ENGINES = [
     maxImages: 1,
     /** 本页是修图流程，所有引擎都至少需要 1 张原图；改成 0 即可放出纯文生图 */
     minImages: 1,
-    maxPromptLength: 480, // 云函数硬限 500，提前 20 字拦
+    /**
+     * 云函数硬限 8192（官方文档值，2026-10-25 实测 8192 字可正常出图、耗时 9.4s），
+     * 这里留 92 字余量提前拦，避免白跑一次 8-11s 的生成。
+     */
+    maxPromptLength: 8100,
     sizeMode: 'exact',
     /** 混元约 30s，一次 callFunction 等得回来 */
     asyncTask: false,

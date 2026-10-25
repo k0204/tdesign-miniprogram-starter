@@ -1,0 +1,9 @@
+{
+  "name": "promptAdvisor",
+  "version": "1.0.0",
+  "description": "混元视觉模型提示词顾问：看原图 + 用户白话需求 -> 诊断 + 3 条候选改动描述",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "4.0.2"
+  }
+}

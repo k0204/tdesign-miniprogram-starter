@@ -19,6 +19,13 @@ import {
   slotLabel,
 } from './providers';
 import { toFriendlyError } from './errors';
+import {
+  buildAdviceKey,
+  readCachedAdvice,
+  cacheAdvice,
+  clearAdviceCache,
+  requestAdvice,
+} from './advisor';
 
 /**
  * 垫图大小上限。模型侧规定最多 10MB，这里留 0.5MB 余量提前拦截，
@@ -58,12 +65,23 @@ Page({
     optionsView: [], // 带 selected 标记，供 wxml 直接渲染
     picked: [], // 单选效果 id；保留数组形态以兼容模板的长度判断
     promptPreview: '',
+    /** 拼装后是否超过当前引擎的字数上限，交给模板标红，不在这里截断 */
+    promptTooLong: false,
+    /** 折叠条右侧的字数文案，在 JS 侧算好——模板里不拼字符串 */
+    promptDigits: '待生成',
     promptParts: [], // 四段拆解，供界面展示
 
     extra: '',
     pageStyle: '', // 一屏高度 = 100vh - 导航栏，由 onLoad 算
     stageView: 'src', // 预览区看原图还是结果
     promptOpen: false, // 指令拆解弹层，默认收起
+
+    // 提示词顾问（DeepSeek 图片理解，看原图给建议）
+    adviceOpen: false,
+    advising: false,
+    advice: null, // { analysis, candidates: [{ label, text }] }
+    adviceError: '',
+    adviceFromCache: false,
     generating: false,
     resultSrc: '',
     resultFileID: '',
@@ -281,6 +299,19 @@ Page({
       });
     }
 
+    // 主图换了 → 上一轮的 AI 建议跟着失效。不清的话用户会在新图上看到旧图的诊断，
+    // 点一下就把「调整左脸阴影」这种只对旧图成立的指令写到新图上。
+    const nextFileID = main ? main.fileID : '';
+    if (nextFileID !== this.data.sourceFileID) {
+      Object.assign(patch, {
+        advice: null,
+        adviceOpen: false,
+        adviceError: '',
+        adviceFromCache: false,
+      });
+      clearAdviceCache(this.data.sourceFileID);
+    }
+
     // setData 会同步更新 this.data，所以紧接着重算提示词即可，
     // 不要放进 callback——那样指令区会晚一帧，多图/单图切换时看到的是旧文案
     this.setData(patch);
@@ -326,6 +357,8 @@ Page({
       picked: [],
       promptPreview: '',
       promptParts: [],
+      promptTooLong: false,
+      promptDigits: '待生成',
       error: '',
     });
   },
@@ -351,25 +384,37 @@ Page({
   /** 底部单行输入（原生 input） */
   onExtraInput(e) {
     const extra = (e.detail && e.detail.value) || '';
-    this.setData({ extra }, () => this.refreshPreview());
+    // setData 同步更新 this.data，紧跟 refreshPreview 即可；放进 callback 会晚一帧
+    this.setData({ extra });
+    this.refreshPreview();
   },
 
   refreshPreview(pickedArg) {
     const picked = pickedArg || this.data.picked;
-    const { extra, engineId, imageCount } = this.data;
+    const { extra, engineId, imageCount, engine } = this.data;
 
     const found = picked[0] ? findOption(picked[0]) : null;
     const userText = String(extra || '').trim();
     if (!found) {
-      this.setData({ promptPreview: '', promptParts: [] });
+      this.setData({
+        promptPreview: '',
+        promptParts: [],
+        promptTooLong: false,
+        promptDigits: '待生成',
+      });
       return;
     }
     const { capability, option } = found;
     const reference = referenceHint(engineId, imageCount);
     const mods = [option.prompt, userText].filter(Boolean).join('。');
+    const prompt = buildEditPrompt({ option, capability, extra: userText, reference });
+    // 超长只标红，不静默截断——截断会让用户以为自己写的都生效了
+    const tooLong = !!prompt && prompt.length > engine.maxPromptLength;
 
     this.setData({
-      promptPreview: buildEditPrompt({ option, capability, extra: userText, reference }),
+      promptPreview: prompt,
+      promptTooLong: tooLong,
+      promptDigits: prompt ? `${prompt.length} 字${tooLong ? ' · 超长' : ''}` : '待生成',
       promptParts: [
         { key: '基础', text: ANCHOR_PHOTO },
         { key: '改动', text: mods },
@@ -695,11 +740,131 @@ Page({
     }
   },
 
+  /* ---------------- 提示词顾问（DeepSeek 图片理解） ---------------- */
+
+  /**
+   * 打开建议弹层。
+   *
+   * 前置要求是「已经选好图 + 已经选好效果」：没选效果时模型不知道往哪个方向改，
+   * 只会给出一堆《提升整体质感》这种泛泛之谈，比现成的模板还差。
+   */
+  openAdvice() {
+    if (this.data.generating || this.data.uploading) return;
+    const { sourceFileID, picked, activeCap } = this.data;
+
+    if (!sourceFileID) {
+      this.showHint('请先选择一张图片');
+      return;
+    }
+    if (!picked.length) {
+      const name = activeCap ? activeCap.name : '上面';
+      this.showHint(`先在「${name}」里选一种效果，AI 才知道该往哪个方向改`);
+      return;
+    }
+
+    // 两个弹层互斥，别叠在一起
+    this.setData({ adviceOpen: true, promptOpen: false });
+    if (!this.data.advice) this.runAdvice(false);
+  },
+
+  /** 允许中途关掉：请求还会跑完并写进缓存，下次打开直接命中 */
+  closeAdvice() {
+    if (this.data.adviceOpen) this.setData({ adviceOpen: false });
+  },
+
+  /** 换一批：绕过缓存重跑一次 */
+  refreshAdvice() {
+    if (this.data.advising) return;
+    this.runAdvice(true);
+  },
+
+  /**
+   * 真正发起顾问请求。
+   * force=false 时先查本地缓存——同一张图 + 同一个效果 + 同一句需求，
+   * 视觉模型的答案不会变，重复调用纯属浪费。
+   */
+  async runAdvice(force) {
+    if (this.data.advising) return;
+    const { sourceFileID, activeCap, picked, extra, engine } = this.data;
+    const found = picked[0] ? findOption(picked[0]) : null;
+    if (!sourceFileID || !found || !activeCap) return;
+
+    const demand = String(extra || '').trim();
+    const key = buildAdviceKey({
+      fileID: sourceFileID,
+      capId: activeCap ? activeCap.id : '',
+      optionId: found.option.id,
+      demand,
+    });
+
+    if (!force) {
+      const cached = readCachedAdvice(key);
+      if (cached) {
+        this.setData({
+          advice: cached,
+          adviceFromCache: true,
+          adviceError: '',
+          advising: false,
+        });
+        return;
+      }
+    }
+
+    this.setData({ advising: true, adviceError: '', advice: null, adviceFromCache: false });
+
+    try {
+      const advice = await requestAdvice({
+        fileID: sourceFileID,
+        demand,
+        // scope 决定「这份建议服务于哪个效果」，模型据此判断该往哪个方向改
+        scope: `${activeCap.name}·${found.option.label}：${found.option.desc}`,
+        // keepHint 只作为边界喂给模型（别建议改脸、改背景），不要求它复述
+        keepHint: activeCap.keepHint,
+        engineName: engine.name,
+      });
+      cacheAdvice(key, advice);
+      if (!this.alive) return;
+      this.setData({ advice, advising: false });
+    } catch (err) {
+      console.error('[aiImage] AI 建议失败（原始错误）', {
+        raw: (err && (err.errMsg || err.message)) || String(err),
+        key,
+        err,
+      });
+      if (!this.alive) return;
+      this.setData({ advising: false, adviceError: this.describeAdviceError(err) });
+    }
+  },
+
+  /** 云函数返回的业务文案本身就是人话，只有网络层错误才需要翻译 */
+  describeAdviceError(err) {
+    if (err && err.fromServer) return err.message || '';
+    const raw = (err && (err.errMsg || err.message)) || String(err || '');
+    return toFriendlyError(raw).text || 'AI 没能给出建议，稍后再试';
+  },
+
+  /**
+   * 点一条候选 → 写进「补充要求」。
+   * 只覆盖 extra 这一格：锚点、保留、约束行仍由 buildPrompt 拼装，
+   * 这样建议再活跃也动不了「保持不变」这条硬约束。
+   */
+  pickAdvice(e) {
+    const index = Number(e.currentTarget.dataset.index);
+    const list = (this.data.advice && this.data.advice.candidates) || [];
+    const item = list[index];
+    if (!item) return;
+
+    // setData 是同步更新 this.data 的，但 callback 在下一帧 ——
+    // 所以 refreshPreview 必须紧跟着 setData 调，不能塞进 callback
+    this.setData({ extra: item.text, adviceOpen: false });
+    this.refreshPreview();
+  },
+
   /* ---------------- 指令弹层 ---------------- */
 
   openPrompt() {
     if (!this.data.promptPreview) return;
-    this.setData({ promptOpen: true });
+    this.setData({ promptOpen: true, adviceOpen: false });
   },
 
   closePrompt() {

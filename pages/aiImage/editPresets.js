@@ -1,10 +1,4 @@
-import {
-  EDIT_TYPES,
-  ANCHOR_PHOTO,
-  CONSTRAINT_TAIL,
-  MAX_PROMPT_LENGTH,
-  buildPrompt,
-} from './promptOptions';
+import { EDIT_TYPES, ANCHOR_PHOTO, CONSTRAINT_TAIL, buildPrompt } from './promptOptions';
 
 export const CAPABILITIES = EDIT_TYPES;
 
@@ -29,8 +23,4 @@ export function buildEditPrompt({ option, capability, extra = '', reference = ''
   });
 }
 
-export function isPromptTooLong(prompt) {
-  return String(prompt || '').length > MAX_PROMPT_LENGTH;
-}
-
-export { ANCHOR_PHOTO, CONSTRAINT_TAIL, MAX_PROMPT_LENGTH };
+export { ANCHOR_PHOTO, CONSTRAINT_TAIL };

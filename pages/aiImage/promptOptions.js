@@ -11,7 +11,6 @@ export const KEEP_SCENE =
 
 export const CONSTRAINT_TAIL =
   '结果必须是同一张照片的自然后期版本；不扩图、不裁切、不移动、增加、删除或替换任何内容，不改变天气与时段，不虚构被遮挡细节，无文字变化、重影、畸变、塑料皮肤或多余肢体';
-export const MAX_PROMPT_LENGTH = 480;
 
 export const EDIT_TYPES = [
   {

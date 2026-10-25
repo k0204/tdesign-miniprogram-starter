@@ -20,6 +20,13 @@
 - 尺寸算法按引擎分派：`engine.pickSize || pickExactSize`。混元规则（8 倍数、面积 ≤1024²）与 gpt-image-2 规则（16 倍数、≤3:1、655K-8.29M）不能互换。`AGNES_RATIOS` + 对数距离吸附比例档。
 - 引擎胶囊区：两引擎并排（名字+副标题 + tip）；三引擎必须两行式（`.engine` column、三个等分只摆名字，说明降下一行 `{{desc}} · {{tip}}`，tip 不重复 desc）。
 
+### 混元生图参数与额度（2026-10-25 实测定型）
+- 我们用的 `HY-Image-v3.0-I2I-ToB-v1.0.1` 属**「小程序成长计划」免费资源包**的生图模型。二期（2026-07-01~12-31）官方列 4 个：`hunyuan-image-v3.0-v1.0.4` / `hunyuan-image` / `HY-Image-3.0-Plus-4090-Tob-v1.0` / `HY-Image-v3.0-I2I-ToB-v1.0.1`。**额度 10 万张、6 个月有效，只能在小程序与云开发服务端调用**（拿不到外部当通用 API）。用量到 80/90/100% 会有公众号提醒，用完切资源点套餐。
+- **prompt 真上限 8192 字符**（官方文档值，CloudBase 封装层无额外校验）。实测：600 字 **8.4s**、3000 字 **11.1s**、8192 字 **9.4s** 全部成功 → **耗时与长度无关**，别再拿"长提示词会变慢"当理由卡长度。
+- 原来的 500（云函数）/480（前端）是拍脑袋值，已改 **8192 / 8100**。
+- 其他限制：垫图每张 ≤10MB、png/jpeg/jpg；尺寸宽高 [512,2048]、面积 ≤1024²；水印关不掉只能换文案（`footnote` ≤16 字符）。**模型本身支持 0-3 张参考图，我们只传 1 张**（产品定位单图精修，能力未用满）。
+- **测长 prompt 不能用 `automator` 的 await 写法**：通道自己有响应超时，长任务会先拿到 `timeout waiting for automator response`，分不清模型慢还是通道慢（第一次测 8192/3000 就这样白等 3 分钟）。正确做法：evaluate 里发起后立即返回、把 Promise 挂 `globalThis`，隔 75s 再读一次。
+
 ## 混元文本 / 视觉模型（CloudBase 内置，2026-10 调研）
 - 调用：云函数 `cloud.ai().createModel('cloudbase'|'hunyuan').generateText({ model, messages })`，需 wx-server-sdk ≥ 3.0.5-beta.1（本项目 4.0.2 已满足）。返回值 `{ text, messages, usage, error }`。
 - **混元纯文本模型不吃图**：`hy4-preview`(1M) / `hy3`(256K) 的图片列都是 ❌。要看图只能用视觉模型。
@@ -27,6 +34,20 @@
 - 多模态 messages：`content: [{type:'text',text}, {type:'image_url',image_url:{url}}]`，url 支持公网链接与 `data:image/jpeg;base64,...`。
 - `hy3` 属「体验模型」，仅小程序成长计划可用；视觉模型按资源点/自定义模型计费，**需在控制台确认已开通**。
 - `imageToImage` 里 `revise:{value:false}` 关掉的是混元自带的提示词改写。**生图前让模型给建议提示词，本质是把 revise 的职责显式化并交给用户确认**，不是新增一层黑箱。
+
+## 提示词顾问（promptAdvisor · DeepSeek 官方直连）
+- 云函数 `promptAdvisor` **直连 `https://api.deepseek.com/chat/completions`**（不走 CloudBase 托管模型组）。原文选型理由已写进文件头：官方直连只有一个变量（Key 配没配），托管通道的模型别名/开通状态难判断。
+- 鉴权 `Authorization: Bearer ${process.env.DEEPSEEK_API_KEY}`，Key 不放代码、不返前端，日志用 `maskKey()` 只打前后几位 + 长度。
+- **模型名实测（2026-10-25 两次真图探活）**：官方 API **只认 `deepseek-flash`**，传云开发托管侧的名字 `deepseek-v4.1-flash` 会 400（模型不存在）。现在顺序是 `['deepseek-flash', 'deepseek-v4.1-flash']`，只在 400/404/422 且报错含 model 时换名。
+- **耗时由输出长度决定，不是请求次数**：候选各 ~35 字 → 3.3s，各 ~75 字 → 5.5s（模型倾向取 30-80 字的上限）。想压时间就压字数，优化模型名顺序是噪声级。
+
+- **401 的响应体是纯文本 `Authentication Fails (governor)`，不是 JSON** —— 解析必须先 `JSON.parse` 再回落 `text`，只读 `json.error.message` 会拿到空串。
+- 图片规则：**只能出现在 `user` 消息**（system/assistant 带图 400）；外部 URL ≤8192 字符、单图 ≤32MiB、需 60s 内下载完；base64 内联计入 48MiB 请求体；每图自动缩到约 1300×1300、**token 上限 1024**。所以 `detail` 固定 `high`（用 `low` 缩到 512×512 省不了几个 token，却把噪点/油光抹平）。
+- 兜底链：URL 取图失败（400 且含 image/url/download）→ 下载转 base64 重试一次（15s 预算）。
+- **新建云函数默认 `timeout: 3`**（`imageToImage` 是 240）。模型调用必然被杀，**必须在控制台改成 60s**。`cloud_fn_info` 可以只读核对。
+- `cloud_fn_deploy` 首次创建函数常报 `FailedOperation.UpdateFunctionCode: 当前函数处于Creating状态` —— 等 20-30s 重发即可（函数本身已建好，列表里能看到）。
+- 探活脚本：`.workbuddy/scripts/probe-promptAdvisor.mjs`（先查 timeout，再用真实 fileID 调一次）。
+
 
 ## 云函数部署（Agnes / Nexus 均为两段式）
 - Agnes：`agnesImage`（派发）+ `agnesImageWorker`（执行，200s 预算）；Nexus：`nexusImage` + `nexusImageWorker`。结果写 `ai_image_tasks`，前端每 3s 轮询 `{action:'status'}`。
