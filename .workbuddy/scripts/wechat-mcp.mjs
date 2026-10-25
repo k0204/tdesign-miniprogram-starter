@@ -17,13 +17,17 @@ import { join } from 'node:path';
 
 const EXE = 'C:\\Program Files (x86)\\Tencent\\微信web开发者工具\\wechatide.cmd';
 
-/** 从 ~/.workbuddy/mcp.json 取 token，避免脚本里硬编码 */
+/** 从 ~/.workbuddy/mcp.json 取 token，避免脚本里硬编码。
+ *  两种写法都要认：IDE 官方配置是 `--token=xxx`（等号连写），
+ *  手写配置常见 `--token xxx`（分开）。只认一种会 misread 成空串。 */
 function readToken() {
   try {
     const cfg = JSON.parse(readFileSync(join(homedir(), '.workbuddy', 'mcp.json'), 'utf8'));
     const args = cfg?.mcpServers?.['wechat-devtools']?.args || [];
     const i = args.indexOf('--token');
-    return i >= 0 ? args[i + 1] : '';
+    if (i >= 0 && args[i + 1]) return args[i + 1];
+    const inline = args.find((a) => typeof a === 'string' && a.startsWith('--token='));
+    return inline ? inline.slice('--token='.length) : '';
   } catch {
     return '';
   }

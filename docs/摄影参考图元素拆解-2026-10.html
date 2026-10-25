@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>803 张摄影参考图 · 元素拆解与提示词体系</title>
+<style>
+  :root{
+    --ink:#14161A; --ink2:#3D424B; --ink3:#6B7280; --line:#E6E4DF;
+    --bg:#FBFAF7; --card:#FFFFFF; --brand:#FF2E4D; --deep:#0E1B33;
+    --amber:#B26B00; --green:#1F7A4D; --blue:#1B5FBF;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+    font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1000px;margin:0 auto;padding:56px 28px 96px;}
+  header.top{border-bottom:2px solid var(--ink);padding-bottom:28px;margin-bottom:44px;}
+  .kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--brand);font-weight:700;margin-bottom:14px;}
+  h1{font-size:32px;line-height:1.28;margin:0 0 16px;letter-spacing:-.4px;font-weight:800;}
+  h1 em{font-style:normal;color:var(--brand);}
+  .meta{font-size:13px;color:var(--ink3);display:flex;gap:22px;flex-wrap:wrap;}
+  h2{font-size:22px;margin:66px 0 20px;letter-spacing:-.2px;font-weight:800;display:flex;align-items:baseline;gap:12px;}
+  h2 .num{font-size:12px;font-weight:700;color:#fff;background:var(--deep);padding:3px 8px;border-radius:4px;letter-spacing:.08em;transform:translateY(-3px);}
+  h3{font-size:16px;margin:32px 0 12px;font-weight:700;}
+  p{margin:0 0 16px;color:var(--ink2);}
+  .lead{font-size:16.5px;color:var(--ink);line-height:1.8;}
+  strong{color:var(--ink);font-weight:700;}
+  code{font-family:ui-monospace,"SF Mono",Consolas,monospace;font-size:12.5px;background:#F1EFE9;padding:1px 5px;border-radius:3px;color:#8A2B12;}
+  a{color:var(--blue);text-decoration:none;border-bottom:1px solid rgba(27,95,191,.28);}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:22px 24px;margin:18px 0;}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px;}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{font-size:12px;letter-spacing:.04em;color:var(--ink3);font-weight:700;background:#F7F5F0;border-bottom:1px solid #DDD9D0;}
+  tbody tr:hover{background:#FDFCF9;}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
+  .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:26px 0;}
+  @media(max-width:760px){.kpi{grid-template-columns:1fr 1fr;}}
+  .kpi div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 16px 14px;}
+  .kpi .v{font-size:25px;font-weight:800;line-height:1.2;letter-spacing:-1px;}
+  .kpi .l{font-size:12px;color:var(--ink3);margin-top:6px;line-height:1.5;}
+  .badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:.03em;vertical-align:1px;}
+  .b-red{background:#FFE8EC;color:#C4122F;}
+  .b-blue{background:#E7F0FE;color:#1B5FBF;}
+  .b-amber{background:#FFF3DE;color:#9A5B00;}
+  .b-green{background:#E4F5EC;color:#146B43;}
+  .b-gray{background:#EFEDE8;color:#5B5F66;}
+  blockquote{margin:20px 0;padding:16px 20px;background:#FFF8F0;border-left:3px solid var(--brand);border-radius:0 8px 8px 0;font-size:14.5px;color:#5A3A12;}
+  blockquote p{margin:0;color:inherit;}
+  blockquote.dark{background:#F4F6F9;border-left-color:var(--deep);color:#26303F;}
+  blockquote p+p{margin-top:10px;}
+  pre{background:#12151C;color:#D8DEE9;padding:18px 20px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.7;font-family:ui-monospace,"SF Mono",Consolas,monospace;}
+  .bgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px 26px;}
+  @media(max-width:700px){.bgrid{grid-template-columns:1fr;}}
+  .bi{display:flex;align-items:center;gap:9px;}
+  .bn{flex:0 0 82px;font-size:12.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .bt{flex:1;background:#F0EEE8;height:6px;border-radius:3px;overflow:hidden;min-width:26px;}
+  .bs{height:100%;border-radius:3px;background:linear-gradient(90deg,#FF2E4D,#FF8194);}
+  .bp{flex:0 0 38px;text-align:right;font-size:12px;color:var(--ink3);font-variant-numeric:tabular-nums;}
+  .barwrap{display:flex;align-items:center;gap:9px;}
+  .bar{height:7px;border-radius:4px;background:linear-gradient(90deg,#FF2E4D,#FF7A90);min-width:2px;flex:0 0 auto;}
+  .bar.g{background:linear-gradient(90deg,#0E1B33,#4A6285);}
+  .pct{font-variant-numeric:tabular-nums;color:var(--ink3);font-size:12.5px;min-width:42px;text-align:right;}
+  ul,ol{margin:0 0 16px;padding-left:22px;color:var(--ink2);}
+  li{margin-bottom:7px;}
+  .recipe{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0;}
+  @media(max-width:820px){.recipe{grid-template-columns:1fr 1fr;}}
+  @media(max-width:560px){.recipe{grid-template-columns:1fr;}}
+  .rc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:15px 16px 14px;}
+  .rc .h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:9px;}
+  .rc .h b{font-size:14.5px;letter-spacing:-.1px;}
+  .rc .h span{font-size:11.5px;color:var(--ink3);font-variant-numeric:tabular-nums;}
+  .rc .s{font-size:12.5px;color:var(--ink2);line-height:1.65;}
+  .rc .s i{font-style:normal;color:var(--brand);font-weight:700;}
+  details{margin:14px 0;border:1px solid var(--line);border-radius:10px;background:var(--card);}
+  details summary{cursor:pointer;padding:13px 18px;font-weight:700;font-size:14px;list-style:none;display:flex;justify-content:space-between;align-items:center;}
+  details summary::-webkit-details-marker{display:none;}
+  details summary:after{content:"展开";font-size:12px;color:var(--ink3);font-weight:500;}
+  details[open] summary:after{content:"收起";}
+  details[open] summary{border-bottom:1px solid var(--line);}
+  .dbody{padding:16px 18px 18px;}
+  .ex{margin:0 0 14px;}
+  .ex:last-child{margin:0;}
+  .ex .t{font-size:12px;color:var(--ink3);margin-bottom:5px;}
+  .ex .p{font-size:13.5px;line-height:1.72;color:var(--ink);background:#FAF8F2;border-left:2px solid var(--brand);padding:9px 13px;border-radius:0 6px 6px 0;}
+  .files{font-size:13.5px;line-height:1.9;}
+  .files div{padding:6px 0;border-bottom:1px dashed var(--line);}
+  .files div:last-child{border:0;}
+  footer{margin-top:80px;padding-top:24px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink3);}
+  @media(max-width:760px){.wrap{padding:34px 18px 64px;}h1{font-size:25px;}h2{font-size:19px;}}
+</style>
+</head>
+<body>
+<div class='wrap'>
+<header class='top'>
+<div class='kicker'>Reference Library · Element Breakdown</div>
+<h1>803 张参考图，拆成 <em>18 个维度</em>，<br>还原成一句能出图的提示词</h1>
+<div class='meta'><span>覆盖 images/ 全库 803 张</span><span>263 位摄影师</span><span>米拍 664 · CNU 84 · 太平洋 55</span><span>2026-10</span></div>
+</header>
+<div class='kpi'>
+<div><div class='v'>803</div><div class='l'>逐张分析的图片</div></div>
+<div><div class='v'>18</div><div class='l'>拆解维度 + 成品提示词</div></div>
+<div><div class='v'>12</div><div class='l'>风格分类</div></div>
+<div><div class='v'>0</div><div class='l'>抽样 / 缺漏</div></div>
+</div>
+<p class='lead'>这批图不是拿来「看」的，是拿来「抄配方」的。所以每一张都拆到可复现的颗粒度：机位多高、光从哪来、什么景别、什么后期，最后压成一条 70—110 字的提示词。下面是从 803 张里量化出来的共性，以及 12 个风格各自的写法。</p>
+<h2 id='s01'><span class='num'>01</span>六个能直接改变出图结果的结论</h2>
+<div class='card'>
+<ol>
+<li><strong>平视占 72%</strong>。整库的语法是「贴身观察」，不是炫技角度。俯拍 13% 集中在建筑与航拍，仰拍 8% 集中在城市与街头——想做出差异，先动机位。</li>
+<li><strong>全景 39%，特写只有 6%</strong>。场景承载的信息量被刻意保留，人只是环境里的一个元素。写提示词要先交代环境，再落人物。</li>
+<li><strong>中心构图 40%，三分法只有 10%</strong>。三分法在这批成片里被严重高估；稳定配方是「主体居中 / 压在纵深轴上」，留白 8%、对称 7% 用来做安静与秩序。</li>
+<li><strong>柔光 + 散射合计 69%</strong>，硬光只有 21%，逆光 17%——<strong>逆光是氛围感的主开关</strong>，黄金时刻是它的加强版。想加情绪，加逆光边缘光，别加饱和度。</li>
+<li><strong>颗粒 34% + 低饱和 18%，高饱和仅 12.8%</strong>。颜色靠蓝 38%、白 37%、绿 33%、灰 31% 撑起大半画面，暖调略多于冷调。</li>
+<li><strong>情绪词高度收敛成两族</strong>：疏离 / 静谧 / 清冷 / 孤独 / 怀旧是一族，靠留白、低饱和、背影侧脸；温柔 / 慵懒 / 松弛 / 日常 / 温暖是另一族，靠柔光、浅景深、生活化道具。选错族，色调再准也不像。</li>
+</ol></div>
+<h2 id='s02'><span class='num'>02</span>全局画像</h2>
+<table><thead><tr><th style='width:88px'>维度</th><th>主要取值与占比</th></tr></thead><tbody>
+<tr><td><strong>景别</strong></td><td><div class='bgrid'><div class="bi"><span class="bn">全景</span><div class="bt"><div class="bs" style="width:39%"></div></div><span class="bp">39%</span></div><div class="bi"><span class="bn">中景</span><div class="bt"><div class="bs" style="width:28%"></div></div><span class="bp">28%</span></div><div class="bi"><span class="bn">远景</span><div class="bt"><div class="bs" style="width:16%"></div></div><span class="bp">16%</span></div><div class="bi"><span class="bn">近景</span><div class="bt"><div class="bs" style="width:13%"></div></div><span class="bp">13%</span></div><div class="bi"><span class="bn">特写</span><div class="bt"><div class="bs" style="width:6%"></div></div><span class="bp">6%</span></div></div></td></tr>
+<tr><td><strong>机位</strong></td><td><div class='bgrid'><div class="bi"><span class="bn">平视</span><div class="bt"><div class="bs" style="width:72%"></div></div><span class="bp">72%</span></div><div class="bi"><span class="bn">俯拍</span><div class="bt"><div class="bs" style="width:13%"></div></div><span class="bp">13%</span></div><div class="bi"><span class="bn">仰拍</span><div class="bt"><div class="bs" style="width:8%"></div></div><span class="bp">8%</span></div><div class="bi"><span class="bn">航拍</span><div class="bt"><div class="bs" style="width:6%"></div></div><span class="bp">6%</span></div></div></td></tr>
+<tr><td><strong>光线</strong></td><td><div class='bgrid'><div class="bi"><span class="bn">柔光</span><div class="bt"><div class="bs" style="width:42%"></div></div><span class="bp">42%</span></div><div class="bi"><span class="bn">散射</span><div class="bt"><div class="bs" style="width:26%"></div></div><span class="bp">26%</span></div><div class="bi"><span class="bn">硬光</span><div class="bt"><div class="bs" style="width:21%"></div></div><span class="bp">21%</span></div><div class="bi"><span class="bn">逆光</span><div class="bt"><div class="bs" style="width:17%"></div></div><span class="bp">17%</span></div><div class="bi"><span class="bn">黄金时刻</span><div class="bt"><div class="bs" style="width:10%"></div></div><span class="bp">10%</span></div><div class="bi"><span class="bn">侧光</span><div class="bt"><div class="bs" style="width:9%"></div></div><span class="bp">9%</span></div></div></td></tr>
+<tr><td><strong>构图</strong></td><td><div class='bgrid'><div class="bi"><span class="bn">中心</span><div class="bt"><div class="bs" style="width:40%"></div></div><span class="bp">40%</span></div><div class="bi"><span class="bn">三分</span><div class="bt"><div class="bs" style="width:10%"></div></div><span class="bp">10%</span></div><div class="bi"><span class="bn">对角</span><div class="bt"><div class="bs" style="width:9%"></div></div><span class="bp">9%</span></div><div class="bi"><span class="bn">留白</span><div class="bt"><div class="bs" style="width:8%"></div></div><span class="bp">8%</span></div><div class="bi"><span class="bn">对称</span><div class="bt"><div class="bs" style="width:7%"></div></div><span class="bp">7%</span></div><div class="bi"><span class="bn">几何</span><div class="bt"><div class="bs" style="width:2%"></div></div><span class="bp">2%</span></div></div></td></tr>
+<tr><td><strong>景深</strong></td><td><div class='bgrid'><div class="bi"><span class="bn">全清晰</span><div class="bt"><div class="bs" style="width:54%"></div></div><span class="bp">54%</span></div><div class="bi"><span class="bn">轻微虚化</span><div class="bt"><div class="bs" style="width:27%"></div></div><span class="bp">27%</span></div><div class="bi"><span class="bn">强虚化</span><div class="bt"><div class="bs" style="width:15%"></div></div><span class="bp">15%</span></div></div></td></tr>
+<tr><td><strong>焦段</strong></td><td><div class='bgrid'><div class="bi"><span class="bn">标准(35-70mm)</span><div class="bt"><div class="bs" style="width:29%"></div></div><span class="bp">29%</span></div><div class="bi"><span class="bn">超广角(<24mm)</span><div class="bt"><div class="bs" style="width:26%"></div></div><span class="bp">26%</span></div><div class="bi"><span class="bn">中长焦(70-135mm)</span><div class="bt"><div class="bs" style="width:24%"></div></div><span class="bp">24%</span></div><div class="bi"><span class="bn">广角(24-35mm)</span><div class="bt"><div class="bs" style="width:16%"></div></div><span class="bp">16%</span></div><div class="bi"><span class="bn">长焦(>135mm)</span><div class="bt"><div class="bs" style="width:4%"></div></div><span class="bp">4%</span></div></div></td></tr>
+<tr><td><strong>色调</strong></td><td><div class='bgrid'><div class="bi"><span class="bn">暖调</span><div class="bt"><div class="bs" style="width:43%"></div></div><span class="bp">43%</span></div><div class="bi"><span class="bn">冷调</span><div class="bt"><div class="bs" style="width:40%"></div></div><span class="bp">40%</span></div><div class="bi"><span class="bn">低饱和</span><div class="bt"><div class="bs" style="width:33%"></div></div><span class="bp">33%</span></div></div></td></tr>
+<tr><td><strong>后期</strong></td><td><div class='bgrid'><div class="bi"><span class="bn">颗粒</span><div class="bt"><div class="bs" style="width:34%"></div></div><span class="bp">34%</span></div><div class="bi"><span class="bn">低饱和</span><div class="bt"><div class="bs" style="width:18%"></div></div><span class="bp">18%</span></div><div class="bi"><span class="bn">高反差</span><div class="bt"><div class="bs" style="width:17%"></div></div><span class="bp">17%</span></div><div class="bi"><span class="bn">高饱和</span><div class="bt"><div class="bs" style="width:13%"></div></div><span class="bp">13%</span></div><div class="bi"><span class="bn">偏色</span><div class="bt"><div class="bs" style="width:11%"></div></div><span class="bp">11%</span></div><div class="bi"><span class="bn">柔焦</span><div class="bt"><div class="bs" style="width:11%"></div></div><span class="bp">11%</span></div></div></td></tr>
+<tr><td><strong>色相</strong></td><td><div class='bgrid'><div class="bi"><span class="bn">蓝</span><div class="bt"><div class="bs" style="width:38%"></div></div><span class="bp">38%</span></div><div class="bi"><span class="bn">白</span><div class="bt"><div class="bs" style="width:37%"></div></div><span class="bp">37%</span></div><div class="bi"><span class="bn">绿</span><div class="bt"><div class="bs" style="width:33%"></div></div><span class="bp">33%</span></div><div class="bi"><span class="bn">灰</span><div class="bt"><div class="bs" style="width:31%"></div></div><span class="bp">31%</span></div><div class="bi"><span class="bn">红</span><div class="bt"><div class="bs" style="width:23%"></div></div><span class="bp">23%</span></div><div class="bi"><span class="bn">黄</span><div class="bt"><div class="bs" style="width:20%"></div></div><span class="bp">20%</span></div></div></td></tr>
+<tr><td><strong>情绪</strong></td><td style='color:#3D424B'>疏离 · 静谧 · 清冷 · 安静 · 温柔 · 怀旧 · 孤独 · 慵懒</td></tr>
+</tbody></table>
+<p style='font-size:12.5px;color:#6B7280'>口径：维度取值按关键词归一化，一张图可命中多个标签，故各维度百分比不必相加为 100%。</p>
+<h2 id='s03'><span class='num'>03</span>可复用的提示词骨架</h2>
+<p>从 803 条提示词里归纳出的稳定结构，按这个顺序组织，出图还原度最高：</p>
+<pre>【景别 + 机位视角】+【场景 / 环境与时间】+【主体：性别年龄 + 造型 + 服装】
++【姿势 + 表情视线】+【道具 / 前景层次】+【光线：方向 + 性质 + 时段】
++【构图结构】+【色调 + 后期质感】+【情绪落点】</pre>
+<div class='card'>
+<ul>
+<li><strong>前 20 个字决定构图</strong>：景别、机位、画幅最先说，模型对开头最敏感。</li>
+<li><strong>光线写两个词</strong>：「侧逆光 + 柔光 + 傍晚」。只写「打了光」没有用。</li>
+<li><strong>后期质感是风格开关</strong>：颗粒、褪色、低饱和、青橙偏色，写上就能把普通照片推成胶片感。</li>
+<li><strong>情绪放最后</strong>：一个 1—2 词的落点（疏离 / 慵懒 / 辽阔），模型会用它调整整体调性。</li>
+</ul></div>
+<h2 id='s04'><span class='num'>04</span>12 个风格的要素配方</h2>
+<p>每张卡片里的「骨架」取的是该风格<strong>相对全库更突出</strong>的取值，不是出现最多的那个——所以 12 张卡片彼此能拉开差异，而不是都写着「平视 + 柔光 + 中心构图」。</p>
+<div class='recipe'>
+<div class='rc'>
+<div class='h'><b>人像写真</b><span>84 张</span></div>
+<div class='s'><i>中景，平视视角，柔光，对角构图，低饱和</i></div>
+<div class='s' style='margin-top:8px;color:#6B7280;font-size:12px'>光线 柔光65% / 散射33% · 构图 中心 / 对角</div>
+</div>
+<div class='rc'>
+<div class='h'><b>日系胶片</b><span>61 张</span></div>
+<div class='s'><i>中景，平视视角，柔光，中心构图，暖调，颗粒</i></div>
+<div class='s' style='margin-top:8px;color:#6B7280;font-size:12px'>光线 柔光48% / 散射30% · 构图 中心 / 对角</div>
+</div>
+<div class='rc'>
+<div class='h'><b>情绪氛围</b><span>62 张</span></div>
+<div class='s'><i>中景，平视视角，柔光，中心构图，暖调，偏色</i></div>
+<div class='s' style='margin-top:8px;color:#6B7280;font-size:12px'>光线 柔光52% / 散射27% · 构图 中心 / 留白</div>
+</div>
+<div class='rc'>
+<div class='h'><b>古风国风</b><span>62 张</span></div>
+<div class='s'><i>中景，平视视角，柔光，对角构图，冷调，高饱和</i></div>
+<div class='s' style='margin-top:8px;color:#6B7280;font-size:12px'>光线 柔光58% / 散射27% · 构图 中心 / 对角</div>
+</div>
+<div class='rc'>
+<div class='h'><b>复古港风</b><span>62 张</span></div>
+<div class='s'><i>全景，平视视角，柔光，中心构图，冷调，颗粒</i></div>
+<div class='s' style='margin-top:8px;color:#6B7280;font-size:12px'>光线 柔光58% / 散射23% · 构图 中心 / 对角</div>
+</div>
+<div class='rc'>
+<div class='h'><b>街头瞬间</b><span>85 张</span></div>
+<div class='s'><i>全景，平视视角，硬光，中心构图，低饱和，颗粒</i></div>
+<div class='s' style='margin-top:8px;color:#6B7280;font-size:12px'>光线 柔光32% / 硬光27% · 构图 中心 / 三分</div>
+</div>
+<div class='rc'>
+<div class='h'><b>纪实人文</b><span>72 张</span></div>
+<div class='s'><i>全景，平视视角，散射，三分构图，低饱和，高反差</i></div>
+<div class='s' style='margin-top:8px;color:#6B7280;font-size:12px'>光线 散射28% / 柔光25% · 构图 中心 / 三分</div>
+</div>
+<div class='rc'>
+<div class='h'><b>旅行旅拍</b><span>70 张</span></div>
+<div class='s'><i>中景，平视视角，柔光，中心构图，暖调，高饱和</i></div>
+<div class='s' style='margin-top:8px;color:#6B7280;font-size:12px'>光线 柔光36% / 散射23% · 构图 中心 / 对称</div>
+</div>
+<div class='rc'>
+<div class='h'><b>自然风光</b><span>69 张</span></div>
+<div class='s'><i>远景，俯拍视角，逆光，三分构图，冷调，低饱和</i></div>
+<div class='s' style='margin-top:8px;color:#6B7280;font-size:12px'>光线 逆光32% / 散射28% · 构图 中心 / 三分</div>
+</div>
+<div class='rc'>
+<div class='h'><b>城市建筑</b><span>60 张</span></div>
+<div class='s'><i>远景，平视视角，硬光，对称构图，冷调，高反差</i></div>
+<div class='s' style='margin-top:8px;color:#6B7280;font-size:12px'>光线 硬光25% / 柔光22% · 构图 中心 / 对称</div>
+</div>
+<div class='rc'>
+<div class='h'><b>航拍视角</b><span>54 张</span></div>
+<div class='s'><i>远景，航拍视角，黄金时刻，对角构图，冷调，高饱和</i></div>
+<div class='s' style='margin-top:8px;color:#6B7280;font-size:12px'>光线 硬光43% / 黄金时刻37% · 构图 中心 / 对角</div>
+</div>
+<div class='rc'>
+<div class='h'><b>黑白</b><span>62 张</span></div>
+<div class='s'><i>中景，平视视角，硬光，三分构图，低饱和，颗粒</i></div>
+<div class='s' style='margin-top:8px;color:#6B7280;font-size:12px'>光线 柔光55% / 硬光39% · 构图 中心 / 三分</div>
+</div>
+</div>
+<h2 id='s05'><span class='num'>05</span>成品提示词样例</h2>
+<p>每个风格取一条原文，可直接拿去出图。完整 803 条在 <a href='../images/prompt-library.html'>prompt-library.html</a>（可按景别 / 机位 / 光线筛，一键复制）。</p>
+<details open><summary>展开 12 条样例</summary><div class='dbody'>
+<div class='ex'><div class='t'><span class='badge b-red'>人像写真</span>&nbsp; 晓港漫步的百合花少女</div><div class='p'>南方老城巷弄的街边棋牌摊，麻将桌、电动车与蓝色遮阳伞环绕，一位扎黑长直双马尾的少女穿白衬衫与浅灰半身裙，背靠树干抱臂站立，神情平静疏离直视镜头；侧逆柔光，胶片颗粒低饱和灰绿调，居中构图，安静而格格不入。</div></div>
+<div class='ex'><div class='t'><span class='badge b-red'>日系胶片</span>&nbsp; 日系人像</div><div class='p'>夏日午后的公园，一名穿白衬衫蓝格裙的少女盘腿坐在大树下弹木吉他，低头浅笑，黑长发低扎，侧逆柔光从树梢洒下，草绿背景轻微虚化，人物居中偏右、树干作竖线分割画面，低反差颗粒胶片，草绿米白暖调，安静松弛的青春气息。</div></div>
+<div class='ex'><div class='t'><span class='badge b-red'>情绪氛围</span>&nbsp; 小众婚纱胶片</div><div class='p'>暗色室内，二十岁女子头戴白色蕾丝头纱、垂下珍珠链坠、正红唇带雀斑，穿白色蕾丝婚纱正面静立微低头，抬眼看镜头，一支燃烧的蜡烛在画面右侧前景虚化成暖黄光团，暗棕与暖黄的低调，重颗粒暗部浓重，神秘带仪式感。</div></div>
+<div class='ex'><div class='t'><span class='badge b-red'>古风国风</span>&nbsp; 在老社区拍旗袍</div><div class='p'>密集老居民楼的天井夹道中，红棕短发的少女穿米色绿叶印花无袖旗袍，侧身站立回头直视镜头，神情清冷，阴天漫射灰光，两侧高楼与空调外机形成竖向夹道，中景，前景绿植铁栏，灰绿米色褪色胶片感，怀旧疏离。</div></div>
+<div class='ex'><div class='t'><span class='badge b-red'>复古港风</span>&nbsp; 复古电影感人像</div><div class='p'>夜晚车窗内，盘发女子穿白色抹胸缎面长裙，戴钻石耳坠与珍珠项链，一手轻抚颈侧侧身回望，眼神迷离。车外暖黄路灯化作大片光斑，玻璃反光叠影，金黄褐调带胶片颗粒，暧昧又怀旧。</div></div>
+<div class='ex'><div class='t'><span class='badge b-red'>街头瞬间</span>&nbsp; Hong Kong扫街</div><div class='p'>清晨香港海边公路，一辆红色敞篷老爷车贴着护栏驶过，车身鲜红在灰调画面里格外醒目，海面泛白、薄雾笼罩远山与货轮，路边立着黑色交通标志牌与波纹护栏，大片留白的天空与海，低饱和胶片质感，自由怀旧而空旷。</div></div>
+<div class='ex'><div class='t'><span class='badge b-red'>纪实人文</span>&nbsp; 市井</div><div class='p'>老城市集巷口的修脚摊，戴手套的女人俯身替老人修脚，男人靠在折叠椅上玩手机，身后两人坐在台阶抽烟，前景堆着大葱和泡沫箱。平视中景，青灰冷调，市井、真实、辛劳。</div></div>
+<div class='ex'><div class='t'><span class='badge b-red'>旅行旅拍</span>&nbsp; 濮院古镇（手机）</div><div class='p'>江南水乡河道的正面对称视角，前景两艘深色木乌篷船并排，青瓦纹船篷配红色小旗与编号牌，中央河道向前延伸，一座石桥横跨，桥上一人伫立，远处白墙黛瓦民居与绿树，一艘游船正驶来，长焦压缩，墨绿灰白低饱和，悠然水乡。</div></div>
+<div class='ex'><div class='t'><span class='badge b-red'>自然风光</span>&nbsp; 朝霞漫天（手机）</div><div class='p'>清晨城市公园湖面，中式重檐亭立在右侧，湖中倒影被晨雾抹软，远处还有一座水上长廊。天空铺满被朝霞烧成金鳞的层云，金橙与青蓝并置。前景是草坪与芦苇，广角全景，HDR 通透，明媚清新的清晨氛围。</div></div>
+<div class='ex'><div class='t'><span class='badge b-red'>城市建筑</span>&nbsp; 倒影</div><div class='p'>蓝调时分的湖畔城市远景，两栋亮着蓝色灯带的双塔立在画面中央，右侧是穹顶体育馆，岸线树带与黄色灯串连成一线。平静湖面把整座城市上下对称地倒映出来，蓝青色调中点缀暖黄灯火，高反差冷调，静谧辽阔的都市黄昏。</div></div>
+<div class='ex'><div class='t'><span class='badge b-red'>航拍视角</span>&nbsp; 晨光中的蜀山之王</div><div class='p'>高空俯瞰蜀山之王，连绵雪脊从前景斜切而入，主峰在云海之上被晨光染成粉紫，远处群峰层叠如浪；高空平视远眺，山脊与云带形成层层横向秩序；粉紫与冷蓝交织，圣洁而壮阔。</div></div>
+<div class='ex'><div class='t'><span class='badge b-red'>黑白</span>&nbsp; 黑白</div><div class='p'>黑白近景肖像，一个年轻人的脸从深黑里浮出来，只被一束侧逆光擦亮鼻梁、颧骨与下颌，头发的边缘几乎溶进背景；她低着头，手指轻抵嘴唇，眼睛却向上抬，直直看进镜头，粗颗粒与柔焦让皮肤像旧照片，沉默、私密、有话说不出。</div></div>
+</div></details>
+<h2 id='s06'><span class='num'>06</span>待复核：疑似拼贴 / 排版类</h2>
+<p>逐张分析时读到了「多图拼贴 / 白边框海报 / 文字压边」特征，共 <strong>22 张</strong>。全部保留在图库内，<strong>未做删除</strong>，确认后再决定去留。</p>
+<table><thead><tr><th style='width:88px'>风格</th><th>标题</th><th>文件</th><th style='width:104px'>平台</th></tr></thead><tbody>
+<tr><td>人像写真</td><td>怎么会有这么会拍的短发女孩</td><td><code>一周又一周小姐-682003.jpg</code></td><td>CNU视觉联盟</td></tr>
+<tr><td>人像写真</td><td>漂亮的人像。</td><td><code>从容-5247462.jpg</code></td><td>太平洋摄影部落</td></tr>
+<tr><td>人像写真</td><td>阳光明媚的日子</td><td><code>我自云中来-5247348.jpg</code></td><td>太平洋摄影部落</td></tr>
+<tr><td>复古港风</td><td>空镜</td><td><code>橘幸-90415620.jpg</code></td><td>米拍</td></tr>
+<tr><td>复古港风</td><td>苹果梦境</td><td><code>肥羊火锅-16071814.jpg</code></td><td>米拍</td></tr>
+<tr><td>日系胶片</td><td>花生</td><td><code>橘幸-90414949.jpg</code></td><td>米拍</td></tr>
+<tr><td>城市建筑</td><td>建筑与天空</td><td><code>xuee-eZMO-90431278.jpg</code></td><td>米拍</td></tr>
+<tr><td>城市建筑</td><td>咬开夏天  是星星的味道</td><td><code>小肥咕-90326765.jpg</code></td><td>米拍</td></tr>
+<tr><td>城市建筑</td><td>再次流动的时间</td><td><code>小肥咕-90430654.jpg</code></td><td>米拍</td></tr>
+<tr><td>旅行旅拍</td><td>邂逅一场温柔旧时光</td><td><code>定格一瞬摄影之友-90430423.jpg</code></td><td>米拍</td></tr>
+<tr><td>旅行旅拍</td><td>当你流浪地球，收获了N张人生照片</td><td><code>小小探险家阿采-90394080.jpg</code></td><td>米拍</td></tr>
+<tr><td>自然风光</td><td>蓝天 芦苇 粉黛 枯荷</td><td><code>老風头-90433034.jpg</code></td><td>米拍</td></tr>
+<tr><td>纪实人文</td><td>彭镇.老茶馆</td><td><code>红叶山秋-5247409.jpg</code></td><td>太平洋摄影部落</td></tr>
+<tr><td>纪实人文</td><td>光影碎片</td><td><code>不二加LT互关-90433343.jpg</code></td><td>米拍</td></tr>
+<tr><td>纪实人文</td><td>失宠的麦当劳叔叔</td><td><code>卷毛佟手机摄影-90426145.jpg</code></td><td>米拍</td></tr>
+<tr><td>纪实人文</td><td></td><td><code>岳岳-90328269.jpg</code></td><td>米拍</td></tr>
+<tr><td>街头瞬间</td><td></td><td><code>mumu82-90427323.jpg</code></td><td>米拍</td></tr>
+<tr><td>街头瞬间</td><td></td><td><code>mumu82-90430397.jpg</code></td><td>米拍</td></tr>
+<tr><td>街头瞬间</td><td>选美舞台的高光时刻✨</td><td><code>浪夜-90395037.jpg</code></td><td>米拍</td></tr>
+<tr><td>黑白</td><td>黑白映画</td><td><code>Number4ever-683102.jpg</code></td><td>CNU视觉联盟</td></tr>
+<tr><td>黑白</td><td></td><td><code>丹霞大道-90431385.jpg</code></td><td>米拍</td></tr>
+<tr><td>黑白</td><td></td><td><code>丹霞大道-90432860.jpg</code></td><td>米拍</td></tr>
+</tbody></table>
+<h2 id='s07'><span class='num'>07</span>交付物与方法</h2>
+<div class='card files'>
+<div><code>images/prompt-library.html</code> — 可筛选浏览页：六重筛选 + 18 维展开 + 一键复制提示词</div>
+<div><code>images/prompt-patterns.md</code> — 本报告的纯文本版，便于投喂 AI 或二次编辑</div>
+<div><code>analysis/image_elements.json</code> — 803 条结构化数据（含 18 维 + 提示词 + EXIF）</div>
+<div><code>analysis/image_elements.csv</code> — 同上的表格版，可直接导入 Excel</div>
+<div><code>analysis/stats.json</code> — 维度归一化后的统计结果</div>
+</div>
+<h3>方法</h3>
+<ul>
+<li><strong>逐张分析，不抽样</strong>：803 张全部单张读取视觉模型，过程禁止拼图；分析按 18 份切片并行，主流程只做合并与校验（缺漏 0 / 重复 0 / 空字段 0）。</li>
+<li><strong>18 维定义</strong>：场景（环境与时间）、主体、姿势、表情视线、造型（发型妆容配饰）、服装、道具、机位（高度 + 方向 + 距离）、焦段、景别、景深、光线（方向 + 性质 + 时段）、构图、前景、色调、后期、情绪、叙事。</li>
+<li><strong>焦段口径</strong>：有 EXIF 用真实毫米数，没有的按透视与压缩感判为广角 / 标准 / 中长焦 / 长焦压缩，不编造毫米数。</li>
+<li><strong>提示词口径</strong>：70—110 字中文，按第 03 节的顺序组织，可直接投喂文生图模型。</li>
+</ul>
+<footer>数据来源：images/manifest.json（803 张，米拍 664 / CNU视觉联盟 84 / 太平洋摄影部落 55）。生成脚本：tools/build-elements.py → build-prompt-library.py → build-prompt-md.py → build-docs-report.py。</footer>
+</div>
+</body>
+</html>

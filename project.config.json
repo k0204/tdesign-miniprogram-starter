@@ -3,24 +3,24 @@
   "packOptions": {
     "ignore": [
       {
-        "type": "folder",
-        "value": "output"
+        "value": "output",
+        "type": "folder"
       },
       {
-        "type": "folder",
-        "value": ".workbuddy"
+        "value": ".workbuddy",
+        "type": "folder"
       },
       {
-        "type": "file",
-        "value": "package-lock.json"
+        "value": "package-lock.json",
+        "type": "file"
       },
       {
-        "type": "suffix",
-        "value": ".md"
+        "value": ".md",
+        "type": "suffix"
       },
       {
-        "type": "suffix",
-        "value": ".d.ts"
+        "value": ".d.ts",
+        "type": "suffix"
       }
     ],
     "include": []

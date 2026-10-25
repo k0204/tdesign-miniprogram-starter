@@ -1,0 +1,407 @@
+{
+  "version": "0.1",
+  "updatedAt": "2026-10-25",
+  "note": "图片分享模板令牌。坐标全部为 0-1 归一化（相对画布宽高），渲染时乘以实际像素。一份模板供三个环节复用：生成(构图约束) / 合成(Canvas 字体排版) / 审图(规则校验+评分)。",
+
+  "canvas": {
+    "id": "xhs-3x4",
+    "w": 1080,
+    "h": 1440,
+    "ratio": "3:4",
+    "ratioValue": 0.75,
+    "ratioTolerance": 0.015,
+    "dpi": 72,
+    "format": "jpg-q88",
+    "maxBytes": 5242880
+  },
+
+  "platforms": {
+    "xhs": {
+      "label": "小红书",
+      "feed": "双列瀑布流",
+      "defaultRatio": "3:4",
+      "decisionMs": 300,
+      "coverTitleMaxChars": 9,
+      "coverTitleHardMax": 12,
+      "postTitleMaxChars": 20,
+      "postTitleFoldAt": 16,
+      "textAreaRange": [0.25, 0.5],
+      "safeInset": { "top": 0.06, "right": 0.06, "bottom": 0.08, "left": 0.06 },
+      "safeInsetNote": "底部 8% 会被标题栏/头像压住",
+      "ocrIsSearchAsset": true,
+      "primaryMetric": ["收藏", "完读", "搜索命中"],
+      "innerPages": "6-9 张，同比例，禁止混用"
+    },
+    "douyin": {
+      "label": "抖音",
+      "feed": "全屏 / 主页双列",
+      "defaultRatio": ["3:4", "9:16"],
+      "decisionMs": 800,
+      "coverTitleMaxChars": 8,
+      "coverTitleHardMax": 10,
+      "postTitleMaxChars": 55,
+      "textAreaRange": [0.18, 0.38],
+      "safeInset": { "top": 0.09, "right": 0.10, "bottom": 0.18, "left": 0.10 },
+      "safeInsetNote": "底部 15-18% 被文案区/进度条压住，主页双列还会二次裁切",
+      "ocrIsSearchAsset": false,
+      "primaryMetric": ["完播", "点赞", "转发"],
+      "innerPages": "视频封面统一骨架，连续 3-5 期不换"
+    }
+  },
+
+  "typeScale": {
+    "unit": "px @ width=1080",
+    "ratioOfWidth": true,
+    "levels": {
+      "display": { "fontPx": [112, 132], "vw": [0.104, 0.122], "weight": 900, "lineHeight": 1.1, "maxLines": 2, "chars": "4-7" },
+      "title":   { "fontPx": [88, 112],  "vw": [0.081, 0.104], "weight": 900, "lineHeight": 1.15, "maxLines": 2, "chars": "5-9" },
+      "subtitle":{ "fontPx": [44, 56],   "vw": [0.041, 0.052], "weight": 500, "lineHeight": 1.3, "maxLines": 2, "chars": "8-16" },
+      "label":   { "fontPx": [32, 40],   "vw": [0.03, 0.037],  "weight": 700, "lineHeight": 1.0, "maxLines": 1, "chars": "2-6" },
+      "corner":  { "fontPx": [26, 32],   "vw": [0.024, 0.03],  "weight": 500, "lineHeight": 1.0, "maxLines": 1, "chars": "<=6" }
+    },
+    "minReadablePx": 40,
+    "minReadableNote": "低于 40px（<3.7%W）在信息流缩略图状态不可读，直接判不合格",
+    "strokeWhenOnPhoto": { "widthPx": [8, 12], "color": "#000000", "opacity": 0.35, "note": "白字压在任何照片上都必须描边或压暗，否则缩略图糊成一团" },
+    "shadowWhenOnPhoto": { "y": 0.008, "blur": 0.02, "color": "#000000", "opacity": 0.28 },
+    "forbidden": ["手写体/艺术字叠加", "细衬线小字压图", "单行超 12 字", "文字贴边 <5%W", "全大写英文长串"]
+  },
+
+  "palettes": [
+    {
+      "id": "P1-dry-white",
+      "name": "干货白底",
+      "mood": "教程 / 清单 / 知识卡",
+      "stop": { "bg": "#FFFFFF", "primary": "#111111", "secondary": "#5C5C5C", "accent": "#FF2E4D", "onAccent": "#FFFFFF" },
+      "contrast": { "primaryOnBg": 18.9, "accentOnBg": 4.0 },
+      "caution": "accent 做小面积色块，不要做正文色（对比度不足 4.5）"
+    },
+    {
+      "id": "P2-xhs-red",
+      "name": "小红书红",
+      "mood": "种草 / 好物 / 促销",
+      "stop": { "bg": "#FF2E4D", "primary": "#FFFFFF", "secondary": "#FFF3E0", "accent": "#FFD400", "onAccent": "#1A1A1A" },
+      "contrast": { "primaryOnBg": 3.6, "secondaryOnBg": 3.3 },
+      "caution": "主标题用白色加粗大字号可读，副标题必须换 #FFF3E0 并加大字号"
+    },
+    {
+      "id": "P3-cream-life",
+      "name": "奶油生活",
+      "mood": "家居 / 日常 / 生活流",
+      "stop": { "bg": "#F8F4EC", "primary": "#2B2622", "secondary": "#7A6E60", "accent": "#C4602F", "onAccent": "#FFFFFF" },
+      "contrast": { "primaryOnBg": 12.4, "accentOnBg": 4.3 }
+    },
+    {
+      "id": "P4-deep-night",
+      "name": "深蓝知识",
+      "mood": "职场 / 数码 / 测评",
+      "stop": { "bg": "#0E1B33", "primary": "#FFFFFF", "secondary": "#A8B4C8", "accent": "#FFC53D", "onAccent": "#1A1A1A" },
+      "contrast": { "primaryOnBg": 16.2, "accentOnBg": 10.9 }
+    },
+    {
+      "id": "P5-morandi",
+      "name": "莫兰迪柔光",
+      "mood": "氛围 / 生活方式 / 已有粉丝盘",
+      "stop": { "bg": "#E7E3DC", "primary": "#3A3A38", "secondary": "#6E6A63", "accent": "#B5796A", "onAccent": "#FFFFFF" },
+      "contrast": { "primaryOnBg": 9.8, "accentOnBg": 2.9 },
+      "caution": "实测低饱和封面平均点击率 4.3%，显著低于高饱和的 8.1%，新号不建议首图使用"
+    },
+    {
+      "id": "P6-pop-clash",
+      "name": "高饱和撞色",
+      "mood": "强钩子 / 避坑 / 对比",
+      "stop": { "bg": "#FFD400", "primary": "#1A1A1A", "secondary": "#3D3A32", "accent": "#FF2E4D", "onAccent": "#FFFFFF" },
+      "contrast": { "primaryOnBg": 13.1, "accentOnBg": 4.1 },
+      "caution": "只允许 1 个高饱和主色块 + 1 个互补点缀，超过 2 个高饱和色即判失败"
+    }
+  ],
+
+  "trackPalettes": {
+    "美妆护肤": { "main": ["#F3DCD4", "#F7F3EC"], "accent": ["#FF7A45", "#E8467C"], "avoid": ["大面积深紫"] },
+    "职场成长": { "main": ["#12325C", "#1F4A3D"], "accent": ["#FFD400", "#FF8A1E"], "avoid": ["灰蓝互压无重点"] },
+    "家居生活": { "main": ["#D9B98C", "#F5EEE3"], "accent": ["#7A8B5A", "#B4553C"], "avoid": ["纯白背景在信息流发飘"] },
+    "美食探店": { "main": ["#8A4B2A", "#D2703A"], "accent": ["#E8322A", "#FFD84D"], "avoid": ["全画面同暖色缺对比"] },
+    "母婴育儿": { "main": ["#CFE3F2", "#FBEFC9"], "accent": ["#FF9AA2", "#4FA3C7"], "avoid": ["颜色超过 3 组显廉价"] },
+    "数码测评": { "main": ["#2B2F36", "#3A4048"], "accent": ["#00D1FF", "#7CFF6B"], "avoid": ["深灰叠深灰"] }
+  },
+
+  "templates": [
+    {
+      "id": "T1-big-type",
+      "name": "大字报型",
+      "desc": "纯色/虚化底 + 居中或中上大字，信息传递最快",
+      "platforms": ["xhs", "douyin"],
+      "contentTypes": ["干货", "观点", "避坑"],
+      "skeleton": {
+        "image": { "x": 0, "y": 0, "w": 1, "h": 1, "fit": "cover", "opacity": 0.22, "blurPx": 18 },
+        "scrim": { "type": "solid", "color": "#FFFFFF" },
+        "decor": [{ "type": "highlightBlock", "x": 0.06, "y": 0.44, "w": 0.88, "h": 0.02, "color": "accent", "opacity": 0.9 }]
+      },
+      "slots": [
+        { "id": "title", "role": "display", "align": "left", "vAlign": "middle", "box": { "x": 0.08, "y": 0.34, "w": 0.84, "h": 0.26 }, "maxChars": 7, "maxLines": 2, "color": "primary" },
+        { "id": "subtitle", "role": "subtitle", "align": "left", "box": { "x": 0.08, "y": 0.60, "w": 0.84, "h": 0.10 }, "maxChars": 14, "maxLines": 1, "color": "secondary" },
+        { "id": "corner", "role": "corner", "align": "left", "box": { "x": 0.08, "y": 0.86, "w": 0.5, "h": 0.04 }, "maxChars": 6, "color": "secondary" }
+      ],
+      "paletteIds": ["P1-dry-white", "P6-pop-clash", "P4-deep-night"],
+      "rules": { "textAreaRatio": [0.2, 0.42], "minContrast": 7.0, "safeInset": 0.06, "requireNumberInTitle": true }
+    },
+    {
+      "id": "T2-top-text-bottom-image",
+      "name": "上字下图",
+      "desc": "上 38% 文字区、下 62% 实拍图，小红书图文最稳的默认骨架",
+      "platforms": ["xhs", "douyin"],
+      "contentTypes": ["种草", "教程", "好物合集"],
+      "skeleton": {
+        "image": { "x": 0, "y": 0.38, "w": 1, "h": 0.62, "fit": "cover", "cornerRadius": 0 },
+        "scrim": { "type": "solid", "color": "#F8F4EC" },
+        "divider": { "y": 0.38, "thicknessPx": 0, "color": "accent" }
+      },
+      "slots": [
+        { "id": "title", "role": "title", "align": "left", "box": { "x": 0.08, "y": 0.08, "w": 0.84, "h": 0.18 }, "maxChars": 9, "maxLines": 2, "color": "primary" },
+        { "id": "subtitle", "role": "subtitle", "align": "left", "box": { "x": 0.08, "y": 0.27, "w": 0.84, "h": 0.08 }, "maxChars": 16, "maxLines": 1, "color": "secondary" },
+        { "id": "tag", "role": "label", "style": "pill", "align": "left", "box": { "x": 0.08, "y": 0.335, "w": 0.3, "h": 0.038 }, "maxChars": 5, "color": "onAccent", "bg": "accent" }
+      ],
+      "paletteIds": ["P3-cream-life", "P1-dry-white", "P2-xhs-red"],
+      "rules": { "textAreaRatio": [0.22, 0.45], "minContrast": 7.0, "safeInset": 0.08, "imageMustBeRealPhoto": true }
+    },
+    {
+      "id": "T3-left-text-right-image",
+      "name": "左字右图",
+      "desc": "左侧 45% 文字、右侧 55% 主体，抖音主页双列与知识类常用",
+      "platforms": ["douyin", "xhs"],
+      "contentTypes": ["观点", "知识", "人物出镜"],
+      "skeleton": {
+        "image": { "x": 0.45, "y": 0, "w": 0.55, "h": 1, "fit": "cover" },
+        "scrim": { "type": "solid", "color": "#0E1B33" }
+      },
+      "slots": [
+        { "id": "title", "role": "display", "align": "left", "box": { "x": 0.07, "y": 0.3, "w": 0.36, "h": 0.30 }, "maxChars": 7, "maxLines": 3, "color": "primary" },
+        { "id": "subtitle", "role": "subtitle", "align": "left", "box": { "x": 0.07, "y": 0.62, "w": 0.36, "h": 0.12 }, "maxChars": 12, "maxLines": 2, "color": "secondary" },
+        { "id": "tag", "role": "label", "style": "pill", "align": "left", "box": { "x": 0.07, "y": 0.2, "w": 0.28, "h": 0.038 }, "maxChars": 4, "color": "onAccent", "bg": "accent" }
+      ],
+      "paletteIds": ["P4-deep-night", "P6-pop-clash"],
+      "rules": { "textAreaRatio": [0.18, 0.38], "minContrast": 7.0, "safeInset": 0.07, "subjectMustNotCrossTextZone": true }
+    },
+    {
+      "id": "T4-split-compare",
+      "name": "对比型",
+      "desc": "上下或左右分栏，BEFORE/AFTER 标签压在分界处，冲击力最强",
+      "platforms": ["xhs", "douyin"],
+      "contentTypes": ["改造", "测评", "效果"],
+      "skeleton": {
+        "panes": [
+          { "image": { "x": 0, "y": 0, "w": 1, "h": 0.5, "fit": "cover" }, "label": "BEFORE" },
+          { "image": { "x": 0, "y": 0.5, "w": 1, "h": 0.5, "fit": "cover" }, "label": "AFTER" }
+        ],
+        "scrim": { "type": "gradient", "from": "#000000", "opacity": 0.55, "y0": 0.44, "y1": 0.5 },
+        "decor": [{ "type": "line", "y": 0.5, "thicknessPx": 8, "color": "#FFFFFF" }]
+      },
+      "slots": [
+        { "id": "title", "role": "title", "align": "center", "box": { "x": 0.1, "y": 0.885, "w": 0.8, "h": 0.09 }, "maxChars": 9, "maxLines": 1, "color": "#FFFFFF", "stroke": true },
+        { "id": "labelTop", "role": "label", "align": "left", "box": { "x": 0.06, "y": 0.05, "w": 0.24, "h": 0.036 }, "maxChars": 6, "color": "#FFFFFF" },
+        { "id": "labelBottom", "role": "label", "align": "left", "box": { "x": 0.06, "y": 0.54, "w": 0.24, "h": 0.036 }, "maxChars": 6, "color": "#FFFFFF" }
+      ],
+      "paletteIds": ["P1-dry-white", "P6-pop-clash"],
+      "rules": { "textAreaRatio": [0.08, 0.28], "minContrast": 7.0, "safeInset": 0.05, "requireSameAngle": true, "requireSameLight": true }
+    },
+    {
+      "id": "T5-grid-collage",
+      "name": "拼图型",
+      "desc": "2x2 / 3x3 拼图 + 压条标题，信息密度最高",
+      "platforms": ["xhs"],
+      "contentTypes": ["合集", "清单", "多品对比"],
+      "skeleton": {
+        "grid": { "cols": 2, "rows": 2, "gapPx": 12, "x": 0, "y": 0, "w": 1, "h": 0.82 },
+        "scrim": { "type": "solid", "color": "#F5EEE3" },
+        "titleBand": { "x": 0, "y": 0.82, "w": 1, "h": 0.18, "color": "#1A1A1A" }
+      },
+      "slots": [
+        { "id": "title", "role": "title", "align": "center", "vAlign": "middle", "box": { "x": 0.08, "y": 0.845, "w": 0.84, "h": 0.13 }, "maxChars": 10, "maxLines": 1, "color": "#FFFFFF" }
+      ],
+      "paletteIds": ["P3-cream-life", "P1-dry-white"],
+      "rules": { "textAreaRatio": [0.06, 0.2], "minContrast": 7.0, "safeInset": 0.05, "requireUniformTemperature": true, "requireUniformGap": true }
+    },
+    {
+      "id": "T6-scene-overlay",
+      "name": "场景氛围",
+      "desc": "满版图 + 底部渐变蒙层 + 白字，代入感最强、文字最少",
+      "platforms": ["xhs", "douyin"],
+      "contentTypes": ["探店", "旅行", "氛围", "情绪"],
+      "skeleton": {
+        "image": { "x": 0, "y": 0, "w": 1, "h": 1, "fit": "cover" },
+        "scrim": { "type": "gradient", "from": "#000000", "opacity": 0.65, "y0": 0.58, "y1": 0.95 }
+      },
+      "slots": [
+        { "id": "title", "role": "title", "align": "left", "box": { "x": 0.08, "y": 0.70, "w": 0.84, "h": 0.12 }, "maxChars": 8, "maxLines": 1, "color": "#FFFFFF", "shadow": true },
+        { "id": "subtitle", "role": "subtitle", "align": "left", "box": { "x": 0.08, "y": 0.83, "w": 0.84, "h": 0.07 }, "maxChars": 14, "maxLines": 1, "color": "#FFFFFF", "opacity": 0.85 }
+      ],
+      "paletteIds": ["P5-morandi", "P4-deep-night"],
+      "rules": { "textAreaRatio": [0.05, 0.2], "minContrast": 7.0, "safeInset": 0.08, "requireSubjectInUpper2of3": true }
+    }
+  ],
+
+  "reviewRules": [
+    {
+      "id": "C1-ratio",
+      "group": "画幅",
+      "weight": 6,
+      "check": "实际宽高比与模板 canvas.ratioValue 偏差 <= 1.5%",
+      "method": "sharp metadata → w/h 与目标比做相对误差",
+      "fail": "画幅不符：当前 4:3，小红书信息流占屏会比 3:4 小约 40%"
+    },
+    {
+      "id": "C2-resolution",
+      "group": "画幅",
+      "weight": 4,
+      "check": "宽度 >= 1080 且短边 >= 1080",
+      "method": "metadata",
+      "fail": "分辨率不足，上传后被二次压缩会糊掉文字"
+    },
+    {
+      "id": "S1-safe-zone",
+      "group": "安全区",
+      "weight": 8,
+      "check": "所有 OCR 文本框（含角标/水印）落在 platform.safeInset 内",
+      "method": "OCR 框 {x,y,w,h} 与安全区内框求差，任一边越界即扣分",
+      "fail": "标题越界：抖音底部 18% 会被文案区压住，小红书底部 8% 会被标题栏遮挡"
+    },
+    {
+      "id": "S2-subject-overlap",
+      "group": "安全区",
+      "weight": 5,
+      "check": "文字框与人脸/主体框 IOU <= 0.15",
+      "method": "人脸检测或主体分割框 vs OCR 框",
+      "fail": "文字压住人脸/主体，缩略图会显得脏"
+    },
+    {
+      "id": "T1-min-font-size",
+      "group": "文字可读",
+      "weight": 9,
+      "check": "主标题等效字号 >= 0.055 * 画布高（1080x1440 下约 >= 79px）",
+      "method": "OCR 框高度 h_chars 反推 capHeight，字号 ≈ h / 0.72",
+      "fail": "标题字号偏小，信息流缩略图状态不可读"
+    },
+    {
+      "id": "T2-contrast",
+      "group": "文字可读",
+      "weight": 10,
+      "check": "文字与背景 WCAG 对比度 >= 7:1（标题）；>= 4.5:1（副标/标签）",
+      "method": "OCR 框内像素 k-means 两簇 → 取两簇均值 RGB 计算相对亮度比",
+      "fail": "文字与背景对比不足，手机 OLED 上容易糊成一片"
+    },
+    {
+      "id": "T3-text-area-ratio",
+      "group": "文字可读",
+      "weight": 6,
+      "check": "文字并集面积占画布 模板规定区间（小红书 25-50%，抖音 18-38%）",
+      "method": "OCR 框并集面积 / 画布面积",
+      "fail": "文字面积过小等于没写 / 过大变成字墙"
+    },
+    {
+      "id": "T4-char-count",
+      "group": "文字可读",
+      "weight": 6,
+      "check": "主标题 <= platform.coverTitleHardMax 字（小红书 12 / 抖音 10）",
+      "method": "OCR 全文 - 副标 - 标签 后取最大字块计数",
+      "fail": "标题超字数，0.3 秒内扫不完"
+    },
+    {
+      "id": "T5-line-count",
+      "group": "文字可读",
+      "weight": 5,
+      "check": "主标题行数 <= 2（T3 骨架允许 3）",
+      "method": "同字号 OCR 框的 y 聚类数",
+      "fail": "标题超过 2 行，视觉重心散掉"
+    },
+    {
+      "id": "L1-skeleton-match",
+      "group": "版式",
+      "weight": 8,
+      "check": "文字区重心与模板 slots 声明的区域重合度 >= 0.6",
+      "method": "OCR 并集框中心点落在 slot 框内，或框内覆盖率",
+      "fail": "版式偏离模板：该在上 1/3 的标题跑到了图片中段"
+    },
+    {
+      "id": "L2-whitespace",
+      "group": "版式",
+      "weight": 6,
+      "check": "四边留白 >= safeInset，且行间距 >= 1.1 * 行高",
+      "method": "OCR 框到画布边距；同行框 y 间距",
+      "fail": "贴边或行距过挤，缺呼吸感"
+    },
+    {
+      "id": "P1-color-count",
+      "group": "配色",
+      "weight": 7,
+      "check": "高饱和色（HSV S>=0.35 且 V>=0.35）簇数 <= 2",
+      "method": "缩放到 64x64 → k-means k=5 → 统计高饱和簇占比 > 8% 的个数",
+      "fail": "配色超过 3 色显廉价，高饱和主色只允许 1 主 1 点缀"
+    },
+    {
+      "id": "P2-palette-match",
+      "group": "配色",
+      "weight": 5,
+      "check": "主色与模板 paletteIds 中任一套的色相距离 <= 25 度，或用户自定义 palette 一致",
+      "method": "主色簇 Hue 值与 palette 色板做环形距离",
+      "fail": "配色与所选模板家族不一致，账号视觉资产无法沉淀"
+    },
+    {
+      "id": "P3-temperature-unity",
+      "group": "配色",
+      "weight": 4,
+      "check": "全图色温标准差 <= 0.12（拼图/对比图必查）",
+      "method": "分区计算 R-B 均值差",
+      "fail": "多图拼合色温不统一，像拼凑"
+    },
+    {
+      "id": "W1-copy-pattern",
+      "group": "文案",
+      "weight": 7,
+      "check": "标题命中 >= 2 个要素：数字 / 人群词 / 痛点反差词 / 结果词",
+      "method": "正则词典匹配（见 copyLexicon）",
+      "fail": "标题缺少具体信息，含数字的封面平均点击率高 22%"
+    },
+    {
+      "id": "W2-title-cover-consistency",
+      "group": "文案",
+      "weight": 4,
+      "check": "封面标题与帖子标题不同义重复，且封面标题关键词出现在帖子标题前 16 字",
+      "method": "分词后 Jaccard 相似度 <= 0.6，且关键词命中",
+      "fail": "封面和标题说同一句话，浪费一次说服机会"
+    }
+  ],
+
+  "copyLexicon": {
+    "number": ["\\d+", "一|两|三|四|五|六|七|八|九|十", "百|千|万"],
+    "audience": ["学生党", "上班族", "打工人", "新手", "宝妈", "小个子", "微胖", "黄皮", "油皮", "干皮", "敏感肌", "租房", "宿舍", "预算", "平价"],
+    "pain": ["别再", "千万别", "后悔", "踩坑", "翻车", "交学费", "白花钱", "救命", "崩溃", "救了我", "才发现"],
+    "result": ["搞定", "秒变", "显白", "显瘦", "显高", "省", "提升", "亲测", "实测", "抄作业", "照抄", "搞定"],
+    "reversal": ["竟然", "原来", "居然", "反而", "不如", "没必要"]
+  },
+
+  "scoring": {
+    "total": 100,
+    "bands": [
+      { "min": 90, "label": "A 可直接发布", "action": "pass" },
+      { "min": 75, "label": "B 微调后发布", "action": "suggest" },
+      { "min": 60, "label": "C 需重排", "action": "rebuild" },
+      { "min": 0, "label": "D 建议重做", "action": "regenerate" }
+    ],
+    "hardBlockers": ["C1-ratio", "S1-safe-zone", "T2-contrast"],
+    "hardBlockerNote": "任一 hardBlocker 失败，总分直接封顶 59 并给出 rewrite 建议"
+  },
+
+  "diagnosisExample": {
+    "taskId": "gen_20261025_0001",
+    "templateId": "T2-top-text-bottom-image",
+    "platform": "xhs",
+    "score": 62,
+    "band": "C 需重排",
+    "dims": { "画幅": 10, "安全区": 8, "文字可读": 17, "版式": 9, "配色": 12, "文案": 6 },
+    "findings": [
+      { "ruleId": "S1-safe-zone", "level": "blocker", "detail": "标题下沿 y=0.925H，越出底部安全线 0.92H", "fix": "整体上移 1.5%H 或缩到 1 行" },
+      { "ruleId": "T2-contrast", "level": "blocker", "detail": "白字压浅米色图，对比度 2.1:1", "fix": "加 10px 黑描边或把标题移到色块区" },
+      { "ruleId": "W1-copy-pattern", "level": "warn", "detail": "标题「夏日穿搭分享」未命中数字/人群/痛点", "fix": "改为「155小个子｜3套显高穿搭」" }
+    ],
+    "applyableFixes": ["raise-title", "add-stroke", "rewrite-title", "switch-palette"]
+  }
+}

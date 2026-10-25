@@ -1,0 +1,248 @@
+{
+  "__styleByToneGrade": {
+    "cool|clean": "冷色调，偏青蓝，自然饱和，自然通透，细节锐利",
+    "cool|dark": "冷色调，偏青蓝，自然饱和，暗调压缩，阴影厚重",
+    "cool|film": "冷色调，偏青蓝，自然饱和，胶片颗粒，低对比，轻微褪色",
+    "cool|tinted": "冷色调，偏青蓝，自然饱和，复古港风调色，暖黄褪色感",
+    "high_sat|clean": "冷色调，偏青蓝，色彩浓郁，自然通透，细节锐利",
+    "high_sat|dark": "暖色调，偏橙黄，色彩浓郁，暗调压缩，阴影厚重",
+    "high_sat|film": "暖色调，偏橙黄，色彩浓郁，暖调胶片质感",
+    "high_sat|tinted": "暖色调，偏橙黄，色彩浓郁，复古港风调色，暖黄褪色感",
+    "low_sat|film": "中性色调，低饱和，柔和低对比，颗粒细腻",
+    "low_sat|tinted": "中性色调，低饱和，复古港风调色，暖黄褪色感",
+    "mono|mono": "黑白影调，灰阶层次丰富，黑白高对比，银盐颗粒质感",
+    "neutral|clean": "中性色调，自然饱和，自然通透，细节锐利",
+    "neutral|contrast": "中性色调，自然饱和，高反差剪影，边缘光晕",
+    "neutral|dark": "中性色调，自然饱和，暗调压缩，阴影厚重",
+    "neutral|film": "中性色调，自然饱和，胶片颗粒，低对比，轻微褪色",
+    "neutral|tinted": "中性色调，自然饱和，复古港风调色，暖黄褪色感",
+    "warm|dark": "暖色调，偏橙黄，自然饱和，暗调压缩，阴影厚重",
+    "warm|film": "暖色调，偏橙黄，自然饱和，暖调胶片质感",
+    "warm|tinted": "暖色调，偏橙黄，自然饱和，复古港风调色，暖黄褪色感"
+  },
+  "angle": {
+    "eye_level": "平视机位",
+    "high": "航拍俯视",
+    "low": "低机位仰拍",
+    "phone": "手机视角",
+    "selfie": "自拍视角"
+  },
+  "background": {
+    "blurred": "背景虚化，主体分离",
+    "clean": "背景简洁，衬托人物",
+    "detailed": "环境细节清晰，信息层次丰富",
+    "patterned": "图案化背景，视觉节奏强"
+  },
+  "colorTemp": {
+    "cool": "冷色温",
+    "mono": "黑白（无彩色）",
+    "neutral": "中性色温",
+    "warm": "暖色温"
+  },
+  "composition": {
+    "center": "中心构图",
+    "frame": "框架式构图",
+    "geometric": "俯视几何构图，大景深，环境清晰，横幅构图",
+    "negative_space": "留白构图",
+    "off_center": "半身构图，主体偏右，大景深，环境清晰，竖幅构图",
+    "rule_of_thirds": "三分法构图"
+  },
+  "dof": {
+    "deep": "大景深，环境清晰",
+    "medium": "中等景深",
+    "shallow": "浅景深，背景虚化"
+  },
+  "expression": {
+    "calm": "自然平和",
+    "confident": "自信",
+    "gentle": "温柔",
+    "melancholy": "忧郁",
+    "serious": "冷峻",
+    "smiling": "微笑",
+    "surprised": "惊讶"
+  },
+  "foreground": {
+    "fabric": "纱帘或薄纱作为前景",
+    "foliage": "植物枝叶作为前景",
+    "frame": "窗框或门框作为前景",
+    "mirror": "镜面反射作为前景",
+    "none": "无前景遮挡",
+    "rail": "栏杆作为前景"
+  },
+  "frame": {
+    "landscape": "横幅构图",
+    "portrait": "竖幅构图",
+    "square": "方形构图"
+  },
+  "gaze": {
+    "away": "背对镜头",
+    "camera": "直视镜头",
+    "closed": "闭眼",
+    "distance": "凝视远方",
+    "generic": "自然视线",
+    "offframe": "望向画外",
+    "side": "侧视"
+  },
+  "grade": {
+    "clean": "自然通透，细节锐利",
+    "contrast": "高反差剪影，边缘光晕",
+    "dark": "暗调压缩，阴影厚重",
+    "film": "暖调胶片质感",
+    "mono": "黑白高对比，银盐颗粒质感",
+    "tinted": "复古港风调色，暖黄褪色感"
+  },
+  "lens": {
+    "medium_tele": "中长焦 85mm，背景压缩自然",
+    "standard": "标准人像焦段（50–85mm）",
+    "tele": "长焦 300mm，空间压缩明显",
+    "ultra_wide": "广角 21mm，环境信息丰富",
+    "wide": "广角环境人像（24–35mm）"
+  },
+  "lightDir": {
+    "back": "逆光",
+    "bottom": "底光",
+    "front": "顺光",
+    "left": "左侧光",
+    "right": "右侧光",
+    "side": "侧光",
+    "top": "顶光"
+  },
+  "lightQuality": {
+    "hard": "硬光",
+    "mixed": "霓虹混合光",
+    "mono": "黑白光影",
+    "soft": "自然柔光"
+  },
+  "mood": {
+    "bright": "明亮轻快",
+    "distant": "孤独",
+    "dramatic": "热烈",
+    "natural": "自然真实",
+    "nostalgic": "复古",
+    "quiet": "沉静内敛",
+    "romantic": "浪漫",
+    "warm": "温暖柔和"
+  },
+  "motion": {
+    "dynamic": "动态抓拍，瞬间感强",
+    "static": "静态摆拍，姿态稳定"
+  },
+  "narrative": {
+    "city_life": "街头偶遇的瞬间关系",
+    "commercial": "精致克制的商业肖像",
+    "culture": "文化身份与地域气息",
+    "daily_wander": "日常漫游的安静片段",
+    "editorial": "时尚大片的表现力",
+    "family_time": "日常亲子时光",
+    "geometry": "城市几何与空间秩序",
+    "intimacy": "亲密关系的温柔瞬间",
+    "journey": "人在旅途中的场景叙事",
+    "light_order": "自然秩序与光线层次",
+    "mood_environment": "情绪与环境的互相渗透",
+    "portrait_state": "自然流露的人物状态",
+    "quiet_portrait": "沉静克制的人物肖像",
+    "retro_slice": "复古胶片的生活切片",
+    "retro_urban": "复古都市的怀旧氛围",
+    "solitude": "诗意而孤独的剪影"
+  },
+  "outfit": {
+    "accessory": "穿着围巾",
+    "camisole": "身穿红色吊带",
+    "casual": "穿着牛仔材质服装",
+    "dress": "穿着连衣裙",
+    "ethnic": "穿着纱丽",
+    "formal": "穿着白色衬衫",
+    "gown": "身穿白色婚纱",
+    "hanfu": "身穿汉服",
+    "kimono": "穿着黑色和服",
+    "outerwear": "穿着连帽卫衣",
+    "qipao": "身穿旗袍",
+    "textured": "穿着皮草材质服装"
+  },
+  "pose": {
+    "back": "背对镜头",
+    "dancing": "起舞",
+    "gazing_up": "指向远处",
+    "generic": "自然放松的姿态",
+    "holding": "手持道具",
+    "intimate": "亲吻",
+    "leaning": "倚靠着",
+    "lying": "躺卧",
+    "moving": "跃起",
+    "playing": "玩耍中",
+    "profile": "侧脸示人",
+    "sitting": "坐着",
+    "sport": "骑行中",
+    "standing": "站立",
+    "walking": "行走中",
+    "working": "工作状态"
+  },
+  "prop": {
+    "accessory": "扇子",
+    "animal": "狗",
+    "balloon": "气球",
+    "basket": "篮子",
+    "book": "书",
+    "camera": "相机",
+    "device": "手机",
+    "drink_food": "咖啡杯",
+    "flag": "旗帜",
+    "flower": "花",
+    "lantern": "蜡烛",
+    "mirror": "镜子",
+    "smoke": "烟雾",
+    "umbrella": "雨伞",
+    "vehicle": "自行车"
+  },
+  "scene": {
+    "aerial_land": "俯瞰的大地上",
+    "dusk_outdoor": "黄昏时分",
+    "garden": "园林庭院中",
+    "generic": "环境细节丰富的场景中",
+    "indoor": "窗边",
+    "mirror": "镜面前",
+    "mountain": "山峦之间",
+    "nature_green": "花丛中",
+    "night": "夜色灯光中",
+    "outdoor": "夏日户外",
+    "rain": "雨中",
+    "snow": "雪地中",
+    "street": "城市街道上",
+    "studio_wall": "简洁纯净的背景前",
+    "urban": "城市建筑间",
+    "water": "海边"
+  },
+  "shot": {
+    "closeup": "面部特写",
+    "full": "环境人像构图",
+    "medium": "半身构图",
+    "medium_close": "中近景，背景虚化",
+    "wide": "大场景构图"
+  },
+  "styling": {
+    "accessory": "眼镜",
+    "glam": "精致妆容",
+    "hair_style": "短发",
+    "natural": "自然发型与淡妆"
+  },
+  "tone": {
+    "cool": "冷色调，偏青蓝，自然饱和",
+    "high_sat": "暖色调，偏橙黄，色彩浓郁",
+    "low_sat": "中性色调，低饱和",
+    "mono": "黑白影调，灰阶层次丰富",
+    "neutral": "中性色调，自然饱和",
+    "warm": "暖色调，偏橙黄，自然饱和"
+  },
+  "weather": {
+    "autumn": "秋季",
+    "dawn": "清晨",
+    "dusk": "黄昏",
+    "fog": "雾天",
+    "night": "夜晚",
+    "rain": "雨天",
+    "spring": "春季",
+    "summer": "夏季",
+    "sunny": "晴天",
+    "winter": "雪天"
+  }
+}

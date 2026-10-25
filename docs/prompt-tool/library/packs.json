@@ -1,0 +1,1145 @@
+{
+  "version": "1.0",
+  "generatedAt": "2026-10-25",
+  "total": 2253,
+  "packs": {
+    "style": {
+      "name": "风格包",
+      "desc": "决定这张图拍成什么样",
+      "primary": [
+        "styleKey"
+      ],
+      "dims": [
+        "styleKey",
+        "lightDir",
+        "lightQuality",
+        "colorTemp",
+        "mood"
+      ],
+      "presets": [
+        {
+          "label": "暖调胶片",
+          "count": 484,
+          "share": 21.5,
+          "values": {
+            "styleKey": "warm_film",
+            "tone": "warm",
+            "grade": "film",
+            "lightDir": "right",
+            "lightQuality": "soft",
+            "colorTemp": "warm",
+            "mood": "warm"
+          },
+          "phrase": "右侧光，自然柔光，暖色温，暖色调，偏橙黄，自然饱和，暖调胶片质感，温暖柔和",
+          "example": "005_burst_girl-poses-by-trees.jpg",
+          "id": "style-01"
+        },
+        {
+          "label": "自然通透",
+          "count": 361,
+          "share": 16.0,
+          "values": {
+            "styleKey": "clean_natural",
+            "tone": "neutral",
+            "grade": "clean",
+            "lightDir": "left",
+            "lightQuality": "soft",
+            "colorTemp": "neutral",
+            "mood": "natural"
+          },
+          "phrase": "左侧光，自然柔光，中性色温，中性色调，自然饱和，自然通透，细节锐利，自然真实",
+          "example": "003_burst_woman-poses-by-large-window.jpg",
+          "id": "style-02"
+        },
+        {
+          "label": "低饱和胶片",
+          "count": 338,
+          "share": 15.0,
+          "values": {
+            "styleKey": "low_sat_film",
+            "tone": "low_sat",
+            "grade": "film",
+            "lightDir": "right",
+            "lightQuality": "soft",
+            "colorTemp": "neutral",
+            "mood": "natural"
+          },
+          "phrase": "右侧光，自然柔光，中性色温，中性色调，低饱和，柔和低对比，颗粒细腻，自然真实",
+          "example": "001_burst_young-woman-portrait-natural-light.jpg",
+          "id": "style-03"
+        },
+        {
+          "label": "黑白",
+          "count": 253,
+          "share": 11.2,
+          "values": {
+            "styleKey": "black_white",
+            "tone": "mono",
+            "grade": "mono",
+            "lightDir": "front",
+            "lightQuality": "mono",
+            "colorTemp": "mono",
+            "mood": "natural"
+          },
+          "phrase": "顺光，黑白光影，黑白（无彩色），黑白影调，灰阶层次丰富，黑白高对比，银盐颗粒质感，自然真实",
+          "example": "003_burst_cool-portrait-of-cool-person.jpg",
+          "id": "style-04"
+        },
+        {
+          "label": "暗调中性",
+          "count": 177,
+          "share": 7.9,
+          "values": {
+            "styleKey": "dark_neutral",
+            "tone": "neutral",
+            "grade": "dark",
+            "lightDir": "front",
+            "lightQuality": "soft",
+            "colorTemp": "neutral",
+            "mood": "quiet"
+          },
+          "phrase": "顺光，自然柔光，中性色温，中性色调，自然饱和，暗调压缩，阴影厚重，沉静内敛",
+          "example": "006_burst_woman-in-summer-fashion.jpg",
+          "id": "style-05"
+        },
+        {
+          "label": "暗调浓郁",
+          "count": 139,
+          "share": 6.2,
+          "values": {
+            "styleKey": "dark_vivid",
+            "tone": "high_sat",
+            "grade": "dark",
+            "lightDir": "front",
+            "lightQuality": "soft",
+            "colorTemp": "warm",
+            "mood": "quiet"
+          },
+          "phrase": "顺光，自然柔光，暖色温，暖色调，偏橙黄，色彩浓郁，暗调压缩，阴影厚重，沉静内敛",
+          "example": "007_burst_portrait-of-a-person-in-multiple-colored-light.jpg",
+          "id": "style-06"
+        },
+        {
+          "label": "浓郁胶片",
+          "count": 125,
+          "share": 5.5,
+          "values": {
+            "styleKey": "vivid_film",
+            "tone": "high_sat",
+            "grade": "film",
+            "lightDir": "front",
+            "lightQuality": "soft",
+            "colorTemp": "warm",
+            "mood": "warm"
+          },
+          "phrase": "顺光，自然柔光，暖色温，暖色调，偏橙黄，色彩浓郁，暖调胶片质感，温暖柔和",
+          "example": "001_burst_woman-standing-in-front-of-yellow-background.jpg",
+          "id": "style-07"
+        },
+        {
+          "label": "冷调清透",
+          "count": 110,
+          "share": 4.9,
+          "values": {
+            "styleKey": "cool_clean",
+            "tone": "cool",
+            "grade": "clean",
+            "lightDir": "top",
+            "lightQuality": "soft",
+            "colorTemp": "cool",
+            "mood": "natural"
+          },
+          "phrase": "顶光，自然柔光，冷色温，冷色调，偏青蓝，自然饱和，自然通透，细节锐利，自然真实",
+          "example": "001_burst_old-man-stroking-beard-and-thinking.jpg",
+          "id": "style-08"
+        },
+        {
+          "label": "高饱和清透",
+          "count": 80,
+          "share": 3.6,
+          "values": {
+            "styleKey": "vivid_clean",
+            "tone": "high_sat",
+            "grade": "clean",
+            "lightDir": "front",
+            "lightQuality": "soft",
+            "colorTemp": "cool",
+            "mood": "natural"
+          },
+          "phrase": "顺光，自然柔光，冷色温，冷色调，偏青蓝，色彩浓郁，自然通透，细节锐利，自然真实",
+          "example": "002_burst_woman-blue-wall-portrait.jpg",
+          "id": "style-09"
+        },
+        {
+          "label": "暖调暗部",
+          "count": 63,
+          "share": 2.8,
+          "values": {
+            "styleKey": "warm_dark",
+            "tone": "warm",
+            "grade": "dark",
+            "lightDir": "right",
+            "lightQuality": "hard",
+            "colorTemp": "warm",
+            "mood": "quiet"
+          },
+          "phrase": "右侧光，硬光，暖色温，暖色调，偏橙黄，自然饱和，暗调压缩，阴影厚重，沉静内敛",
+          "example": "007_burst_young-woman-in-hat.jpg",
+          "id": "style-10"
+        },
+        {
+          "label": "中性胶片",
+          "count": 34,
+          "share": 1.5,
+          "values": {
+            "styleKey": "neutral_film",
+            "tone": "neutral",
+            "grade": "film",
+            "lightDir": "right",
+            "lightQuality": "soft",
+            "colorTemp": "neutral",
+            "mood": "natural"
+          },
+          "phrase": "右侧光，自然柔光，中性色温，中性色调，自然饱和，胶片颗粒，低对比，轻微褪色，自然真实",
+          "example": "菠萝BOLUO-90433376.jpg",
+          "id": "style-11"
+        },
+        {
+          "label": "冷调暗部",
+          "count": 27,
+          "share": 1.2,
+          "values": {
+            "styleKey": "cool_dark",
+            "tone": "cool",
+            "grade": "dark",
+            "lightDir": "front",
+            "lightQuality": "soft",
+            "colorTemp": "cool",
+            "mood": "quiet"
+          },
+          "phrase": "顺光，自然柔光，冷色温，冷色调，偏青蓝，自然饱和，暗调压缩，阴影厚重，沉静内敛",
+          "example": "005_burst_silhouette-person-arms-up.jpg",
+          "id": "style-12"
+        }
+      ]
+    },
+    "lens": {
+      "name": "镜头包",
+      "desc": "决定怎么取景、站多高",
+      "primary": [
+        "shot"
+      ],
+      "dims": [
+        "shot",
+        "angle",
+        "dof",
+        "composition",
+        "frame"
+      ],
+      "presets": [
+        {
+          "label": "全景",
+          "count": 1111,
+          "share": 49.3,
+          "values": {
+            "shot": "full",
+            "angle": "eye_level",
+            "dof": "deep",
+            "composition": "center",
+            "frame": "landscape"
+          },
+          "phrase": "环境人像构图，平视机位，大景深，环境清晰，中心构图，横幅构图",
+          "example": "003_burst_woman-poses-by-large-window.jpg",
+          "id": "lens-01"
+        },
+        {
+          "label": "中景",
+          "count": 561,
+          "share": 24.9,
+          "values": {
+            "shot": "medium",
+            "angle": "eye_level",
+            "dof": "deep",
+            "composition": "center",
+            "frame": "landscape"
+          },
+          "phrase": "半身构图，平视机位，大景深，环境清晰，中心构图，横幅构图",
+          "example": "001_burst_young-woman-portrait-natural-light.jpg",
+          "id": "lens-02"
+        },
+        {
+          "label": "远景",
+          "count": 357,
+          "share": 15.8,
+          "values": {
+            "shot": "wide",
+            "angle": "eye_level",
+            "dof": "deep",
+            "composition": "rule_of_thirds",
+            "frame": "portrait"
+          },
+          "phrase": "大场景构图，平视机位，大景深，环境清晰，三分法构图，竖幅构图",
+          "example": "宇凡-90421901.jpg",
+          "id": "lens-03"
+        },
+        {
+          "label": "特写",
+          "count": 207,
+          "share": 9.2,
+          "values": {
+            "shot": "closeup",
+            "angle": "eye_level",
+            "dof": "deep",
+            "composition": "center",
+            "frame": "landscape"
+          },
+          "phrase": "面部特写，平视机位，大景深，环境清晰，中心构图，横幅构图",
+          "example": "002_burst_young-woman-gazes-out-of-a-rustic-window.jpg",
+          "id": "lens-04"
+        },
+        {
+          "label": "近景",
+          "count": 17,
+          "share": 0.8,
+          "values": {
+            "shot": "medium_close",
+            "angle": "eye_level",
+            "dof": "shallow",
+            "composition": "center",
+            "frame": "portrait"
+          },
+          "phrase": "中近景，背景虚化，平视机位，浅景深，中心构图，竖幅构图",
+          "example": "你七哥-90430544.jpg",
+          "id": "lens-05"
+        }
+      ]
+    },
+    "scene": {
+      "name": "场景包",
+      "desc": "决定在哪拍、什么季节天气、有没有前景",
+      "primary": [
+        "scene"
+      ],
+      "dims": [
+        "scene",
+        "weather",
+        "foreground",
+        "background"
+      ],
+      "presets": [
+        {
+          "label": "简洁纯净的背景前",
+          "count": 149,
+          "share": 6.6,
+          "values": {
+            "scene": "studio_wall",
+            "foreground": "none",
+            "background": "clean"
+          },
+          "phrase": "简洁纯净的背景前，无前景遮挡，背景简洁，衬托人物",
+          "example": "001_burst_woman-standing-in-front-of-yellow-background.jpg",
+          "id": "scene-01"
+        },
+        {
+          "label": "城市街道上",
+          "count": 130,
+          "share": 5.8,
+          "values": {
+            "scene": "street",
+            "background": "detailed"
+          },
+          "phrase": "城市街道上，环境细节清晰，信息层次丰富",
+          "example": "010_freestocks_redhead-woman-posing-in-th-city.jpg",
+          "id": "scene-02"
+        },
+        {
+          "label": "山峦之间",
+          "count": 130,
+          "share": 5.8,
+          "values": {
+            "scene": "mountain",
+            "background": "detailed"
+          },
+          "phrase": "山峦之间，环境细节清晰，信息层次丰富",
+          "example": "010_burst_child-picking-dandelions-in-field.jpg",
+          "id": "scene-03"
+        },
+        {
+          "label": "海边",
+          "count": 118,
+          "share": 5.2,
+          "values": {
+            "scene": "water",
+            "background": "detailed"
+          },
+          "phrase": "海边，环境细节清晰，信息层次丰富",
+          "example": "002_burst_woman-in-sari-on-beach.jpg",
+          "id": "scene-04"
+        },
+        {
+          "label": "窗边",
+          "count": 92,
+          "share": 4.1,
+          "values": {
+            "scene": "indoor",
+            "foreground": "none",
+            "background": "detailed"
+          },
+          "phrase": "窗边，无前景遮挡，环境细节清晰，信息层次丰富",
+          "example": "002_burst_young-woman-gazes-out-of-a-rustic-window.jpg",
+          "id": "scene-05"
+        },
+        {
+          "label": "花丛中",
+          "count": 81,
+          "share": 3.6,
+          "values": {
+            "scene": "nature_green",
+            "background": "detailed"
+          },
+          "phrase": "花丛中，环境细节清晰，信息层次丰富",
+          "example": "005_burst_girl-poses-by-trees.jpg",
+          "id": "scene-06"
+        },
+        {
+          "label": "城市建筑间",
+          "count": 48,
+          "share": 2.1,
+          "values": {
+            "scene": "urban",
+            "background": "detailed"
+          },
+          "phrase": "城市建筑间，环境细节清晰，信息层次丰富",
+          "example": "054_burst_man-standing-by-train.jpg",
+          "id": "scene-07"
+        },
+        {
+          "label": "雪地中",
+          "count": 37,
+          "share": 1.6,
+          "values": {
+            "scene": "snow",
+            "weather": "winter",
+            "foreground": "none",
+            "background": "detailed"
+          },
+          "phrase": "雪地中，雪天，无前景遮挡，环境细节清晰，信息层次丰富",
+          "example": "009_freestocks_boho-winter-shoot-in-black-and-white.jpg",
+          "id": "scene-08"
+        },
+        {
+          "label": "夏日户外",
+          "count": 25,
+          "share": 1.1,
+          "values": {
+            "scene": "outdoor",
+            "weather": "summer",
+            "foreground": "none",
+            "background": "detailed"
+          },
+          "phrase": "夏日户外，夏季，无前景遮挡，环境细节清晰，信息层次丰富",
+          "example": "004_burst_young-woman-in-sunlight.jpg",
+          "id": "scene-09"
+        },
+        {
+          "label": "园林庭院中",
+          "count": 25,
+          "share": 1.1,
+          "values": {
+            "scene": "garden",
+            "background": "detailed"
+          },
+          "phrase": "园林庭院中，环境细节清晰，信息层次丰富",
+          "example": "014_burst_looking-up-at-a-tall-temple.jpg",
+          "id": "scene-10"
+        },
+        {
+          "label": "黄昏时分",
+          "count": 12,
+          "share": 0.5,
+          "values": {
+            "scene": "dusk_outdoor",
+            "weather": "dusk",
+            "foreground": "none",
+            "background": "detailed"
+          },
+          "phrase": "黄昏时分，黄昏，无前景遮挡，环境细节清晰，信息层次丰富",
+          "example": "001_burst_woman-silhouette-sunset.jpg",
+          "id": "scene-11"
+        },
+        {
+          "label": "夜色灯光中",
+          "count": 12,
+          "share": 0.5,
+          "values": {
+            "scene": "night",
+            "weather": "night",
+            "background": "detailed"
+          },
+          "phrase": "夜色灯光中，夜晚，环境细节清晰，信息层次丰富",
+          "example": "064_burst_blonde-model-at-night.jpg",
+          "id": "scene-12"
+        }
+      ]
+    },
+    "story": {
+      "name": "叙事包",
+      "desc": "决定这张图在讲什么",
+      "primary": [
+        "narrative"
+      ],
+      "dims": [
+        "narrative",
+        "mood"
+      ],
+      "presets": [
+        {
+          "label": "自然流露的人物状态",
+          "count": 804,
+          "share": 35.7,
+          "values": {
+            "narrative": "portrait_state",
+            "mood": "natural"
+          },
+          "phrase": "自然流露的人物状态，自然真实",
+          "example": "001_burst_young-woman-portrait-natural-light.jpg",
+          "id": "story-01"
+        },
+        {
+          "label": "日常亲子时光",
+          "count": 291,
+          "share": 12.9,
+          "values": {
+            "narrative": "family_time",
+            "mood": "warm"
+          },
+          "phrase": "日常亲子时光，温暖柔和",
+          "example": "001_burst_girl-blowing-bubbles-at-park.jpg",
+          "id": "story-02"
+        },
+        {
+          "label": "街头偶遇的瞬间关系",
+          "count": 225,
+          "share": 10.0,
+          "values": {
+            "narrative": "city_life",
+            "mood": "natural"
+          },
+          "phrase": "街头偶遇的瞬间关系，自然真实",
+          "example": "001_skitter_man-on-bicycle.jpg",
+          "id": "story-03"
+        },
+        {
+          "label": "文化身份与地域气息",
+          "count": 159,
+          "share": 7.1,
+          "values": {
+            "narrative": "culture",
+            "mood": "natural"
+          },
+          "phrase": "文化身份与地域气息，自然真实",
+          "example": "001_burst_person-in-kimono-peaks-behind-a-black-curtain.jpg",
+          "id": "story-04"
+        },
+        {
+          "label": "自然秩序与光线层次",
+          "count": 131,
+          "share": 5.8,
+          "values": {
+            "narrative": "light_order",
+            "mood": "natural"
+          },
+          "phrase": "自然秩序与光线层次，自然真实",
+          "example": "小鱼儿zxb-90433417.jpg",
+          "id": "story-05"
+        },
+        {
+          "label": "亲密关系的温柔瞬间",
+          "count": 123,
+          "share": 5.5,
+          "values": {
+            "narrative": "intimacy",
+            "mood": "natural"
+          },
+          "phrase": "亲密关系的温柔瞬间，自然真实",
+          "example": "001_burst_park-portrait-of-a-smiling-couple.jpg",
+          "id": "story-06"
+        },
+        {
+          "label": "城市几何与空间秩序",
+          "count": 114,
+          "share": 5.1,
+          "values": {
+            "narrative": "geometry",
+            "mood": "natural"
+          },
+          "phrase": "城市几何与空间秩序，自然真实",
+          "example": "川页-90433352.jpg",
+          "id": "story-07"
+        },
+        {
+          "label": "时尚大片的表现力",
+          "count": 110,
+          "share": 4.9,
+          "values": {
+            "narrative": "editorial",
+            "mood": "warm"
+          },
+          "phrase": "时尚大片的表现力，温暖柔和",
+          "example": "001_burst_woman-in-fur-under-neon.jpg",
+          "id": "story-08"
+        },
+        {
+          "label": "人在旅途中的场景叙事",
+          "count": 70,
+          "share": 3.1,
+          "values": {
+            "narrative": "journey",
+            "mood": "natural"
+          },
+          "phrase": "人在旅途中的场景叙事，自然真实",
+          "example": "secretdada-90432246.jpg",
+          "id": "story-09"
+        },
+        {
+          "label": "情绪与环境的互相渗透",
+          "count": 62,
+          "share": 2.8,
+          "values": {
+            "narrative": "mood_environment",
+            "mood": "natural"
+          },
+          "phrase": "情绪与环境的互相渗透，自然真实",
+          "example": "阿拉贡-90426496.jpg",
+          "id": "story-10"
+        },
+        {
+          "label": "复古都市的怀旧氛围",
+          "count": 62,
+          "share": 2.8,
+          "values": {
+            "narrative": "retro_urban",
+            "mood": "natural"
+          },
+          "phrase": "复古都市的怀旧氛围，自然真实",
+          "example": "阿拉贡-90403565.jpg",
+          "id": "story-11"
+        },
+        {
+          "label": "日常漫游的安静片段",
+          "count": 61,
+          "share": 2.7,
+          "values": {
+            "narrative": "daily_wander",
+            "mood": "natural"
+          },
+          "phrase": "日常漫游的安静片段，自然真实",
+          "example": "菠萝BOLUO-90428270.jpg",
+          "id": "story-12"
+        },
+        {
+          "label": "诗意而孤独的剪影",
+          "count": 14,
+          "share": 0.6,
+          "values": {
+            "narrative": "solitude",
+            "mood": "natural"
+          },
+          "phrase": "诗意而孤独的剪影，自然真实",
+          "example": "005_burst_monochrome-person-with-a-leaf-silhouette-on-their-face.jpg",
+          "id": "story-13"
+        }
+      ]
+    }
+  },
+  "subjectOptions": {
+    "gender": {
+      "name": "性别",
+      "options": [
+        {
+          "value": "female",
+          "label": "女性",
+          "count": 698,
+          "render": ""
+        },
+        {
+          "value": "unspecified",
+          "label": "未指定",
+          "count": 690,
+          "render": ""
+        },
+        {
+          "value": "male",
+          "label": "男性",
+          "count": 265,
+          "render": ""
+        },
+        {
+          "value": "mixed",
+          "label": "混合",
+          "count": 208,
+          "render": ""
+        }
+      ]
+    },
+    "age": {
+      "name": "年龄",
+      "options": [
+        {
+          "value": "young",
+          "label": "青年",
+          "count": 330,
+          "render": ""
+        },
+        {
+          "value": "child",
+          "label": "儿童",
+          "count": 145,
+          "render": ""
+        },
+        {
+          "value": "baby",
+          "label": "婴儿",
+          "count": 60,
+          "render": ""
+        },
+        {
+          "value": "senior",
+          "label": "老年",
+          "count": 24,
+          "render": ""
+        }
+      ]
+    },
+    "people": {
+      "name": "人数",
+      "options": [
+        {
+          "value": "single",
+          "label": "单人",
+          "count": 1591,
+          "render": ""
+        },
+        {
+          "value": "two",
+          "label": "双人",
+          "count": 178,
+          "render": ""
+        },
+        {
+          "value": "group",
+          "label": "群体",
+          "count": 99,
+          "render": ""
+        }
+      ]
+    },
+    "pose": {
+      "name": "姿势",
+      "options": [
+        {
+          "value": "generic",
+          "label": "generic",
+          "count": 1512,
+          "render": "自然放松的姿态"
+        },
+        {
+          "value": "holding",
+          "label": "holding",
+          "count": 78,
+          "render": "手持道具"
+        },
+        {
+          "value": "sitting",
+          "label": "sitting",
+          "count": 67,
+          "render": "坐着"
+        },
+        {
+          "value": "walking",
+          "label": "walking",
+          "count": 49,
+          "render": "行走中"
+        },
+        {
+          "value": "standing",
+          "label": "standing",
+          "count": 34,
+          "render": "站立"
+        },
+        {
+          "value": "working",
+          "label": "working",
+          "count": 33,
+          "render": "工作状态"
+        },
+        {
+          "value": "leaning",
+          "label": "leaning",
+          "count": 22,
+          "render": "倚靠着"
+        },
+        {
+          "value": "playing",
+          "label": "playing",
+          "count": 19,
+          "render": "玩耍中"
+        },
+        {
+          "value": "intimate",
+          "label": "intimate",
+          "count": 10,
+          "render": "亲吻"
+        },
+        {
+          "value": "lying",
+          "label": "lying",
+          "count": 10,
+          "render": "躺卧"
+        },
+        {
+          "value": "dancing",
+          "label": "dancing",
+          "count": 10,
+          "render": "起舞"
+        },
+        {
+          "value": "moving",
+          "label": "moving",
+          "count": 9,
+          "render": "跃起"
+        },
+        {
+          "value": "profile",
+          "label": "profile",
+          "count": 6,
+          "render": "侧脸示人"
+        },
+        {
+          "value": "back",
+          "label": "back",
+          "count": 4,
+          "render": "背对镜头"
+        },
+        {
+          "value": "gazing_up",
+          "label": "gazing_up",
+          "count": 3,
+          "render": "指向远处"
+        },
+        {
+          "value": "sport",
+          "label": "sport",
+          "count": 2,
+          "render": "骑行中"
+        }
+      ]
+    },
+    "expression": {
+      "name": "表情",
+      "options": [
+        {
+          "value": "calm",
+          "label": "calm",
+          "count": 1669,
+          "render": "自然平和"
+        },
+        {
+          "value": "smiling",
+          "label": "smiling",
+          "count": 153,
+          "render": "微笑"
+        },
+        {
+          "value": "gentle",
+          "label": "gentle",
+          "count": 21,
+          "render": "温柔"
+        },
+        {
+          "value": "serious",
+          "label": "serious",
+          "count": 9,
+          "render": "冷峻"
+        },
+        {
+          "value": "surprised",
+          "label": "surprised",
+          "count": 9,
+          "render": "惊讶"
+        },
+        {
+          "value": "melancholy",
+          "label": "melancholy",
+          "count": 6,
+          "render": "忧郁"
+        },
+        {
+          "value": "confident",
+          "label": "confident",
+          "count": 1,
+          "render": "自信"
+        }
+      ]
+    },
+    "gaze": {
+      "name": "视线",
+      "options": [
+        {
+          "value": "generic",
+          "label": "generic",
+          "count": 1755,
+          "render": "自然视线"
+        },
+        {
+          "value": "offframe",
+          "label": "offframe",
+          "count": 93,
+          "render": "望向画外"
+        },
+        {
+          "value": "side",
+          "label": "side",
+          "count": 5,
+          "render": "侧视"
+        },
+        {
+          "value": "camera",
+          "label": "camera",
+          "count": 5,
+          "render": "直视镜头"
+        },
+        {
+          "value": "distance",
+          "label": "distance",
+          "count": 4,
+          "render": "凝视远方"
+        },
+        {
+          "value": "closed",
+          "label": "closed",
+          "count": 4,
+          "render": "闭眼"
+        },
+        {
+          "value": "away",
+          "label": "away",
+          "count": 2,
+          "render": "背对镜头"
+        }
+      ]
+    },
+    "styling": {
+      "name": "造型",
+      "options": [
+        {
+          "value": "natural",
+          "label": "natural",
+          "count": 1795,
+          "render": "自然发型与淡妆"
+        },
+        {
+          "value": "accessory",
+          "label": "accessory",
+          "count": 59,
+          "render": "眼镜"
+        },
+        {
+          "value": "hair_style",
+          "label": "hair_style",
+          "count": 10,
+          "render": "短发"
+        },
+        {
+          "value": "glam",
+          "label": "glam",
+          "count": 4,
+          "render": "精致妆容"
+        }
+      ]
+    },
+    "outfit": {
+      "name": "服装",
+      "options": [
+        {
+          "value": "dress",
+          "label": "dress",
+          "count": 46,
+          "render": "穿着连衣裙"
+        },
+        {
+          "value": "outerwear",
+          "label": "outerwear",
+          "count": 29,
+          "render": "穿着连帽卫衣"
+        },
+        {
+          "value": "qipao",
+          "label": "qipao",
+          "count": 20,
+          "render": "身穿旗袍"
+        },
+        {
+          "value": "formal",
+          "label": "formal",
+          "count": 14,
+          "render": "穿着白色衬衫"
+        },
+        {
+          "value": "hanfu",
+          "label": "hanfu",
+          "count": 13,
+          "render": "身穿汉服"
+        },
+        {
+          "value": "textured",
+          "label": "textured",
+          "count": 7,
+          "render": "穿着皮草材质服装"
+        },
+        {
+          "value": "gown",
+          "label": "gown",
+          "count": 6,
+          "render": "身穿白色婚纱"
+        },
+        {
+          "value": "casual",
+          "label": "casual",
+          "count": 6,
+          "render": "穿着牛仔材质服装"
+        },
+        {
+          "value": "kimono",
+          "label": "kimono",
+          "count": 4,
+          "render": "穿着黑色和服"
+        },
+        {
+          "value": "accessory",
+          "label": "accessory",
+          "count": 2,
+          "render": "穿着围巾"
+        },
+        {
+          "value": "ethnic",
+          "label": "ethnic",
+          "count": 1,
+          "render": "穿着纱丽"
+        },
+        {
+          "value": "camisole",
+          "label": "camisole",
+          "count": 1,
+          "render": "身穿红色吊带"
+        }
+      ]
+    },
+    "prop": {
+      "name": "道具",
+      "options": [
+        {
+          "value": "flower",
+          "label": "flower",
+          "count": 69,
+          "render": "花"
+        },
+        {
+          "value": "camera",
+          "label": "camera",
+          "count": 65,
+          "render": "相机"
+        },
+        {
+          "value": "mirror",
+          "label": "mirror",
+          "count": 40,
+          "render": "镜子"
+        },
+        {
+          "value": "book",
+          "label": "book",
+          "count": 23,
+          "render": "书"
+        },
+        {
+          "value": "drink_food",
+          "label": "drink_food",
+          "count": 16,
+          "render": "咖啡杯"
+        },
+        {
+          "value": "device",
+          "label": "device",
+          "count": 14,
+          "render": "手机"
+        },
+        {
+          "value": "vehicle",
+          "label": "vehicle",
+          "count": 12,
+          "render": "自行车"
+        },
+        {
+          "value": "flag",
+          "label": "flag",
+          "count": 9,
+          "render": "旗帜"
+        },
+        {
+          "value": "animal",
+          "label": "animal",
+          "count": 9,
+          "render": "狗"
+        },
+        {
+          "value": "lantern",
+          "label": "lantern",
+          "count": 6,
+          "render": "蜡烛"
+        },
+        {
+          "value": "smoke",
+          "label": "smoke",
+          "count": 6,
+          "render": "烟雾"
+        },
+        {
+          "value": "umbrella",
+          "label": "umbrella",
+          "count": 5,
+          "render": "雨伞"
+        },
+        {
+          "value": "accessory",
+          "label": "accessory",
+          "count": 5,
+          "render": "扇子"
+        },
+        {
+          "value": "basket",
+          "label": "basket",
+          "count": 2,
+          "render": "篮子"
+        },
+        {
+          "value": "balloon",
+          "label": "balloon",
+          "count": 1,
+          "render": "气球"
+        }
+      ]
+    }
+  },
+  "recipe": {
+    "order": [
+      "lens",
+      "scene",
+      "subject",
+      "style",
+      "story"
+    ],
+    "skeleton": "【景别+机位+焦段+景深+构图+画幅】+【环境+天气+前景】+【主体+造型+服装+姿势+表情+视线+道具】+【光位+光质+色温+色调+后期+情绪】+【叙事】",
+    "note": "前 20 个字决定构图，景别与机位要最先说；情绪放最后，给 1-2 个词的落点。"
+  }
+}

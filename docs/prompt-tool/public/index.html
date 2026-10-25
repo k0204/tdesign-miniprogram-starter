@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>提示词出图工具</title>
+<style>
+  :root {
+    --bg: #f4f4f2;
+    --pane: #ffffff;
+    --line: #e4e4e0;
+    --line-strong: #d0d0cb;
+    --text: #18181b;
+    --text-2: #6b6b70;
+    --text-3: #9a9a9e;
+    --accent: #1d4ed8;
+    --ok: #15803d;
+    --warn: #b45309;
+    --err: #b91c1c;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 400 13px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; cursor: pointer; }
+  input, select { font: inherit; }
+
+  header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 20px; background: var(--pane);
+    border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 10;
+  }
+  header h1 { margin: 0; font-size: 15px; font-weight: 500; letter-spacing: -0.01em; }
+  header .meta { color: var(--text-2); font-size: 12px; }
+  header .spacer { flex: 1; }
+  .stat { display: flex; gap: 14px; font-size: 12px; color: var(--text-2); }
+  .stat b { color: var(--text); font-weight: 500; font-variant-numeric: tabular-nums; }
+
+  .seg { display: flex; border: 1px solid var(--line-strong); border-radius: 7px; overflow: hidden; }
+  .seg button { border: 0; background: var(--pane); padding: 5px 11px; color: var(--text-2); font-size: 12px; }
+  .seg button + button { border-left: 1px solid var(--line-strong); }
+  .seg button.on { background: var(--text); color: #fff; }
+
+  .btn { border: 1px solid var(--line-strong); background: var(--pane); color: var(--text); padding: 6px 12px; border-radius: 7px; font-size: 12px; }
+  .btn:hover { border-color: var(--text-3); }
+  .btn.primary { background: var(--text); border-color: var(--text); color: #fff; }
+  .btn.primary:hover { background: #000; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  main { display: flex; height: calc(100vh - 57px); }
+
+  .list-pane {
+    width: 460px; min-width: 380px; display: flex; flex-direction: column;
+    background: var(--pane); border-right: 1px solid var(--line);
+  }
+  .filters { padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+  .search { position: relative; }
+  .search input {
+    width: 100%; padding: 8px 11px 8px 30px; border: 1px solid var(--line-strong);
+    border-radius: 7px; background: #fbfbfa; outline: none; color: var(--text);
+  }
+  .search input:focus { border-color: var(--accent); background: #fff; }
+  .search svg { position: absolute; left: 9px; top: 9px; opacity: .4; }
+  .filter-row { display: flex; gap: 8px; }
+  .filter-row select {
+    flex: 1; padding: 6px 9px; border: 1px solid var(--line-strong); border-radius: 7px;
+    background: #fbfbfa; color: var(--text); outline: none; min-width: 0;
+  }
+  .filter-row select:focus { border-color: var(--accent); }
+
+  .list { flex: 1; overflow-y: auto; }
+  .item { display: flex; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #f0f0ed; }
+  .item:hover { background: #fafaf8; }
+  .item.sel { background: #f3f6fe; }
+  .item .check { flex: 0 0 auto; margin-top: 3px; }
+  .item .check input { width: 15px; height: 15px; cursor: pointer; accent-color: var(--accent); }
+  .item .body { flex: 1; min-width: 0; }
+  .item .top { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .code { font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--text); }
+  .tag {
+    font-size: 11px; padding: 1px 6px; border-radius: 4px; background: #f1f1ee;
+    color: var(--text-2); white-space: nowrap;
+  }
+  .tag.done { background: #e8f5ec; color: var(--ok); }
+  .tag.run { background: #e8effc; color: var(--accent); }
+  .tag.fail { background: #fdeaea; color: var(--err); }
+  .item .txt { color: var(--text-2); font-size: 12px; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .item.open .txt { -webkit-line-clamp: unset; }
+  .item .foot { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .item .len { font-size: 11px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .item .mini {
+    border: 0; background: none; color: var(--accent); font-size: 11px; padding: 0;
+  }
+  .item .mini:hover { text-decoration: underline; }
+
+  .pager { display: flex; align-items: center; gap: 8px; padding: 9px 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--text-2); }
+  .pager .spacer { flex: 1; }
+  .pager button { border: 1px solid var(--line-strong); background: var(--pane); border-radius: 6px; padding: 3px 9px; font-size: 12px; color: var(--text); }
+  .pager button:disabled { opacity: .35; cursor: not-allowed; }
+
+  .wall { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .wall-head { display: flex; align-items: center; gap: 10px; padding: 11px 20px; border-bottom: 1px solid var(--line); background: var(--pane); }
+  .wall-head h2 { margin: 0; font-size: 13px; font-weight: 500; }
+  .wall-head .hint { font-size: 12px; color: var(--text-3); }
+  .grid {
+    flex: 1; overflow-y: auto; padding: 16px 20px 90px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; align-content: start;
+  }
+  .card { background: var(--pane); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .card .thumb {
+    position: relative; aspect-ratio: 3 / 2; background: #f0f0ed;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in; }
+  .card .thumb .ph { color: var(--text-3); font-size: 12px; text-align: center; padding: 0 20px; }
+  .card .thumb .spin {
+    width: 22px; height: 22px; border: 2px solid #dcdcd8; border-top-color: var(--accent);
+    border-radius: 50%; animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .card .thumb .fail { color: var(--err); font-size: 12px; padding: 0 16px; text-align: center; line-height: 1.5; }
+  .card .cap { padding: 9px 11px; display: flex; align-items: center; gap: 7px; }
+  .card .cap .code { font-size: 12px; }
+  .card .cap .spacer { flex: 1; }
+  .card .cap .t { font-size: 11px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+
+  .empty { grid-column: 1/-1; text-align: center; color: var(--text-3); padding: 70px 0; font-size: 13px; }
+
+  .actionbar {
+    position: fixed; left: 460px; right: 0; bottom: 0;
+    display: none; align-items: center; gap: 12px;
+    padding: 11px 20px; background: var(--pane); border-top: 1px solid var(--line);
+    box-shadow: 0 -1px 0 rgba(0,0,0,.02);
+  }
+  .actionbar.show { display: flex; }
+  .actionbar .n { font-size: 13px; }
+  .actionbar .n b { font-variant-numeric: tabular-nums; }
+  .actionbar .chk { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-2); cursor: pointer; }
+  .actionbar .chk input { accent-color: var(--accent); cursor: pointer; }
+  .actionbar .spacer { flex: 1; }
+
+  .lightbox {
+    position: fixed; inset: 0; background: rgba(20,20,20,.86); display: none;
+    align-items: center; justify-content: center; z-index: 100; padding: 40px;
+  }
+  .lightbox.show { display: flex; }
+  .lightbox img { max-width: 100%; max-height: 100%; border-radius: 6px; }
+  .lightbox .close { position: absolute; top: 18px; right: 22px; color: #fff; background: none; border: 0; font-size: 22px; opacity: .7; }
+
+  .toast {
+    position: fixed; bottom: 74px; left: 50%; transform: translateX(-50%);
+    background: #18181b; color: #fff; padding: 8px 16px; border-radius: 8px;
+    font-size: 12px; opacity: 0; pointer-events: none; transition: opacity .2s;
+    z-index: 200;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>提示词出图工具</h1>
+  <span class="meta" id="libMeta">载入中…</span>
+  <span class="spacer"></span>
+  <div class="stat">
+    <span>已完成 <b id="sDone">0</b></span>
+    <span>排队 <b id="sQueue">0</b></span>
+    <span>失败 <b id="sFail">0</b></span>
+  </div>
+  <div class="seg" id="sizeSeg">
+    <button data-size="1K" class="on">1K</button>
+    <button data-size="2K">2K</button>
+    <button data-size="3K">3K</button>
+  </div>
+  <button class="btn" id="btnPause">暂停</button>
+</header>
+
+<main>
+  <aside class="list-pane">
+    <div class="filters">
+      <div class="search">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <circle cx="7" cy="7" r="4.5" stroke="#18181b" stroke-width="1.3"/>
+          <path d="M10.5 10.5L14 14" stroke="#18181b" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+        <input id="q" type="text" placeholder="搜提示词 / 编号 / 分组">
+      </div>
+      <div class="filter-row">
+        <select id="fGroup"><option value="">全部分组</option></select>
+        <select id="fRatio">
+          <option value="">全部画幅</option>
+          <option value="2:3">竖幅 2:3</option>
+          <option value="3:2">横幅 3:2</option>
+          <option value="1:1">方形 1:1</option>
+        </select>
+      </div>
+    </div>
+    <div class="list" id="list"></div>
+    <div class="pager">
+      <button id="prev">上一页</button>
+      <button id="next">下一页</button>
+      <span class="spacer"></span>
+      <span id="pageInfo">—</span>
+    </div>
+  </aside>
+
+  <section class="wall">
+    <div class="wall-head">
+      <h2>生成结果</h2>
+      <span class="hint" id="wallHint">勾选左侧提示词开始生成</span>
+      <span class="spacer" style="flex:1"></span>
+      <button class="btn" id="btnClear">清空队列</button>
+    </div>
+    <div class="grid" id="grid">
+      <div class="empty">还没有生成任何图片</div>
+    </div>
+  </section>
+</main>
+
+<div class="actionbar" id="actionbar">
+  <span class="n">已选 <b id="selCount">0</b> 条</span>
+  <label class="chk"><input type="checkbox" id="optSafe" checked> 追加着装约束</label>
+  <span class="spacer"></span>
+  <button class="btn" id="btnClearSel">取消选择</button>
+  <button class="btn primary" id="btnGenerate">开始生成</button>
+</div>
+
+<div class="lightbox" id="lightbox"><button class="close" id="lbClose">&times;</button><img id="lbImg" alt=""></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const state = {
+  page: 1, pages: 1, size: '1K',
+  q: '', group: '', ratio: '',
+  items: [], selected: new Set(),
+  jobs: [], paused: false, stats: null,
+  doneCodes: new Set(),
+};
+
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, text) => {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+};
+
+let toastTimer = null;
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+async function api(url, opts) {
+  const res = await fetch(url, opts);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+async function loadPrompts() {
+  const params = new URLSearchParams();
+  params.set('page', state.page);
+  params.set('size', '30');
+  if (state.q) params.set('q', state.q);
+  if (state.group) params.set('group', state.group);
+  if (state.ratio) params.set('ratio', state.ratio);
+
+  const data = await api('/api/prompts?' + params.toString());
+  state.items = data.items;
+  state.page = data.page;
+  state.pages = data.pages;
+
+  const sel = $('fGroup');
+  if (sel.options.length <= 1 && data.groups) {
+    data.groups.forEach((g) => {
+      const o = el('option', null, `${g.name} (${g.count})`);
+      o.value = g.name;
+      sel.appendChild(o);
+    });
+  }
+  const narrowed = data.total !== data.all;
+  $('libMeta').textContent = narrowed
+    ? `筛出 ${data.total} 条 / 共 ${data.all}`
+    : `共 ${data.all} 条提示词`;
+  renderList();
+  renderPager();
+}
+
+function renderPager() {
+  $('pageInfo').textContent = `${state.page} / ${state.pages || 1}`;
+  $('prev').disabled = state.page <= 1;
+  $('next').disabled = state.page >= state.pages;
+}
+
+function renderList() {
+  const box = $('list');
+  box.innerHTML = '';
+  if (!state.items.length) {
+    box.appendChild(el('div', 'empty', '没有匹配的提示词'));
+    return;
+  }
+  state.items.forEach((it) => {
+    const wrap = el('div', 'item' + (state.selected.has(it.code) ? ' sel' : ''));
+    wrap.dataset.code = it.code;
+
+    const check = el('div', 'check');
+    const cb = el('input');
+    cb.type = 'checkbox';
+    cb.checked = state.selected.has(it.code);
+    cb.addEventListener('change', () => toggle(it.code, cb.checked));
+    check.appendChild(cb);
+
+    const body = el('div', 'body');
+    const top = el('div', 'top');
+    top.appendChild(el('span', 'code', it.code));
+    top.appendChild(el('span', 'tag', it.group));
+    top.appendChild(el('span', 'tag', it.ratio));
+    if (state.doneCodes.has(it.code)) top.appendChild(el('span', 'tag done', '已生成'));
+    if (it.dup > 1) top.appendChild(el('span', 'tag', '×' + it.dup));
+    body.appendChild(top);
+
+    const txt = el('div', 'txt', it.prompt);
+    body.appendChild(txt);
+
+    const foot = el('div', 'foot');
+    foot.appendChild(el('span', 'len', it.chars + ' 字'));
+    const expand = el('button', 'mini', '展开');
+    expand.addEventListener('click', () => {
+      wrap.classList.toggle('open');
+      expand.textContent = wrap.classList.contains('open') ? '收起' : '展开';
+    });
+    foot.appendChild(expand);
+    const one = el('button', 'mini', '生成这条');
+    one.addEventListener('click', () => generate([it.code]));
+    foot.appendChild(one);
+    body.appendChild(foot);
+
+    wrap.appendChild(check);
+    wrap.appendChild(body);
+    box.appendChild(wrap);
+  });
+}
+
+function toggle(code, on) {
+  if (on) state.selected.add(code);
+  else state.selected.delete(code);
+  const node = document.querySelector(`.item[data-code="${code}"]`);
+  if (node) node.classList.toggle('sel', on);
+  renderActionbar();
+}
+
+function renderActionbar() {
+  const n = state.selected.size;
+  $('actionbar').classList.toggle('show', n > 0);
+  $('selCount').textContent = n;
+}
+
+async function generate(codes) {
+  if (!codes.length) return;
+  const safe = $('optSafe') ? $('optSafe').checked : true;
+  try {
+    const r = await api('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ codes, size: state.size, safe }),
+    });
+    toast(`已加入队列 ${r.added} 条`);
+    state.selected.clear();
+    renderActionbar();
+    renderList();
+    pollJobs();
+  } catch (err) {
+    toast('加入队列失败：' + err.message);
+  }
+}
+
+function fmtSec(ms) {
+  return (ms / 1000).toFixed(1) + 's';
+}
+
+let lastSignature = '';
+
+function renderJobs(force) {
+  const grid = $('grid');
+  const list = state.jobs;
+  const signature = list.map((j) => j.id + ':' + j.status).join('|');
+  /* 状态没变就不重绘：否则每 2s 一次 innerHTML 会把滚动位置顶回顶部 */
+  if (!force && signature === lastSignature) return;
+  lastSignature = signature;
+
+  const keepScroll = grid.scrollTop;
+  if (!list.length) {
+    grid.innerHTML = '<div class="empty">还没有生成任何图片</div>';
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  list.forEach((j) => {
+    const card = el('div', 'card');
+    const thumb = el('div', 'thumb');
+
+    if (j.status === 'done' && j.file) {
+      const img = el('img');
+      img.src = '/output/' + j.file;
+      img.alt = j.code;
+      img.loading = 'lazy';
+      img.addEventListener('click', () => {
+        $('lbImg').src = img.src;
+        $('lightbox').classList.add('show');
+      });
+      thumb.appendChild(img);
+    } else if (j.status === 'running') {
+      const sp = el('div', 'spin');
+      thumb.appendChild(sp);
+    } else if (j.status === 'failed') {
+      thumb.appendChild(el('div', 'fail', j.error || '生成失败'));
+    } else {
+      thumb.appendChild(el('div', 'ph', '排队中'));
+    }
+    card.appendChild(thumb);
+
+    const cap = el('div', 'cap');
+    cap.appendChild(el('span', 'code', j.code));
+    cap.appendChild(el('span', 'spacer'));
+    if (j.status === 'running') cap.appendChild(el('span', 't', '生成中…'));
+    else if (j.status === 'done' && j.elapsed) cap.appendChild(el('span', 't', fmtSec(j.elapsed)));
+    else if (j.status === 'failed') {
+      const btn = el('button', 'mini', '重试');
+      btn.style.color = 'var(--err)';
+      btn.addEventListener('click', async () => {
+        try { await api('/api/retry', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: j.id }) }); pollJobs(); }
+        catch (e) { toast(e.message); }
+      });
+      cap.appendChild(btn);
+    }
+    card.appendChild(cap);
+    frag.appendChild(card);
+  });
+  grid.innerHTML = '';
+  grid.appendChild(frag);
+  grid.scrollTop = keepScroll;
+}
+
+function markDone(codes) {
+  codes.forEach((code) => {
+    const top = document.querySelector(`.item[data-code="${code}"] .top`);
+    if (top && !top.querySelector('.tag.done')) top.appendChild(el('span', 'tag done', '已生成'));
+  });
+}
+
+async function pollJobs() {
+  try {
+    const data = await api('/api/jobs');
+    state.jobs = data.jobs;
+    state.paused = data.paused;
+    state.stats = data.stats;
+
+    const next = new Set(data.jobs.filter((j) => j.status === 'done').map((j) => j.code));
+    const fresh = [...next].filter((c) => !state.doneCodes.has(c));
+    state.doneCodes = next;
+    if (fresh.length) markDone(fresh);
+    $('sDone').textContent = data.stats.done;
+    $('sQueue').textContent = data.queueLength;
+    $('sFail').textContent = data.stats.failed;
+    $('btnPause').textContent = data.paused ? '继续' : '暂停';
+    const active = data.jobs.filter((j) => j.status === 'running' || j.status === 'queued').length;
+    $('wallHint').textContent = active ? `${active} 张进行中` : (data.stats.done ? `已生成 ${data.stats.done} 张` : '勾选左侧提示词开始生成');
+    renderJobs();
+  } catch (err) {
+    /* 服务重启时轮询会短暂失败，下一轮自己恢复 */
+  }
+}
+
+let debounce = null;
+$('q').addEventListener('input', (e) => {
+  clearTimeout(debounce);
+  debounce = setTimeout(() => {
+    state.q = e.target.value.trim();
+    state.page = 1;
+    loadPrompts();
+  }, 280);
+});
+$('fGroup').addEventListener('change', (e) => { state.group = e.target.value; state.page = 1; loadPrompts(); });
+$('fRatio').addEventListener('change', (e) => { state.ratio = e.target.value; state.page = 1; loadPrompts(); });
+$('prev').addEventListener('click', () => { if (state.page > 1) { state.page -= 1; loadPrompts(); } });
+$('next').addEventListener('click', () => { if (state.page < state.pages) { state.page += 1; loadPrompts(); } });
+
+$('sizeSeg').addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  state.size = b.dataset.size;
+  [...$('sizeSeg').children].forEach((x) => x.classList.toggle('on', x === b));
+});
+
+$('btnGenerate').addEventListener('click', () => generate([...state.selected]));
+$('btnClearSel').addEventListener('click', () => { state.selected.clear(); renderActionbar(); renderList(); });
+$('btnPause').addEventListener('click', async () => {
+  await api('/api/pause', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paused: !state.paused }) });
+  pollJobs();
+});
+$('btnClear').addEventListener('click', async () => {
+  await api('/api/clear', { method: 'POST' });
+  pollJobs();
+});
+$('lbClose').addEventListener('click', () => $('lightbox').classList.remove('show'));
+$('lightbox').addEventListener('click', (e) => { if (e.target.id === 'lightbox') $('lightbox').classList.remove('show'); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') $('lightbox').classList.remove('show');
+  if (e.key === 'a' && (e.metaKey || e.ctrlKey)) {
+    e.preventDefault();
+    state.items.forEach((i) => state.selected.add(i.code));
+    renderActionbar(); renderList();
+  }
+});
+
+loadPrompts();
+pollJobs();
+setInterval(pollJobs, 2000);
+</script>
+</body>
+</html>

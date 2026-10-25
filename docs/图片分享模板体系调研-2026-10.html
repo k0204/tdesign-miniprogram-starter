@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>图片分享文案 · 加字 · 配色调研 — 及 AI 审图环节的模板方案</title>
+<style>
+  :root{
+    --ink:#14161A; --ink2:#3D424B; --ink3:#6B7280; --line:#E6E4DF;
+    --bg:#FBFAF7; --card:#FFFFFF; --brand:#FF2E4D; --deep:#0E1B33;
+    --amber:#B26B00; --green:#1F7A4D; --blue:#1B5FBF;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+    font-size:15px; line-height:1.75; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:56px 28px 96px;}
+  header.top{border-bottom:2px solid var(--ink);padding-bottom:28px;margin-bottom:44px;}
+  .kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--brand);font-weight:700;margin-bottom:14px;}
+  h1{font-size:33px;line-height:1.28;margin:0 0 16px;letter-spacing:-.4px;font-weight:800;}
+  h1 em{font-style:normal;color:var(--brand);}
+  .meta{font-size:13px;color:var(--ink3);display:flex;gap:22px;flex-wrap:wrap;}
+  h2{font-size:22px;margin:64px 0 20px;letter-spacing:-.2px;font-weight:800;display:flex;align-items:baseline;gap:12px;}
+  h2 .num{font-size:12px;font-weight:700;color:#fff;background:var(--deep);padding:3px 8px;border-radius:4px;letter-spacing:.08em;transform:translateY(-3px);}
+  h3{font-size:16px;margin:32px 0 12px;font-weight:700;}
+  p{margin:0 0 16px;color:var(--ink2);}
+  .lead{font-size:16.5px;color:var(--ink);line-height:1.8;}
+  strong{color:var(--ink);font-weight:700;}
+  code{font-family:ui-monospace,"SF Mono",Consolas,monospace;font-size:12.5px;background:#F1EFE9;padding:1px 5px;border-radius:3px;color:#8A2B12;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:22px 24px;margin:18px 0;}
+  .card.flat{background:transparent;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  @media(max-width:760px){.grid2,.grid3{grid-template-columns:1fr;}}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px;}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{font-size:12px;letter-spacing:.04em;color:var(--ink3);font-weight:700;background:#F7F5F0;border-bottom:1px solid #DDD9D0;}
+  td b{font-weight:700;}
+  tbody tr:hover{background:#FDFCF9;}
+  .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:26px 0;}
+  @media(max-width:760px){.kpi{grid-template-columns:1fr 1fr;}}
+  .kpi div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 16px 14px;}
+  .kpi .v{font-size:26px;font-weight:800;line-height:1.2;letter-spacing:-1px;}
+  .kpi .l{font-size:12px;color:var(--ink3);margin-top:6px;line-height:1.5;}
+  .badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:.03em;vertical-align:1px;}
+  .b-red{background:#FFE8EC;color:#C4122F;}
+  .b-blue{background:#E7F0FE;color:#1B5FBF;}
+  .b-amber{background:#FFF3DE;color:#9A5B00;}
+  .b-green{background:#E4F5EC;color:#146B43;}
+  .b-gray{background:#EFEDE8;color:#5B5F66;}
+  blockquote{margin:20px 0;padding:16px 20px;background:#FFF8F0;border-left:3px solid var(--brand);border-radius:0 8px 8px 0;font-size:14.5px;color:#5A3A12;}
+  blockquote p{margin:0;color:inherit;}
+  pre{background:#12151C;color:#D8DEE9;padding:18px 20px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.7;font-family:ui-monospace,"SF Mono",Consolas,monospace;}
+  pre .c{color:#6B7A90;}
+  pre .k{color:#FF8FA3;}
+  pre .s{color:#9BE3A8;}
+  .swatches{display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--line);}
+  .swatches div{height:56px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:5px;font-size:10px;font-family:ui-monospace,monospace;letter-spacing:.02em;}
+  .pal{margin:0 0 18px;}
+  .pal-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;gap:12px;flex-wrap:wrap;}
+  .pal-hd b{font-size:14px;}
+  .pal-hd span{font-size:12px;color:var(--ink3);}
+  .pal-note{font-size:12.5px;color:var(--ink3);margin:7px 0 0;}
+  /* 3:4 画布预览 */
+  .frames{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:22px 0;}
+  @media(max-width:760px){.frames{grid-template-columns:1fr 1fr;}}
+  .frame-cap{font-size:12.5px;color:var(--ink3);margin-top:8px;line-height:1.5;}
+  .frame-cap b{display:block;color:var(--ink);font-size:13.5px;margin-bottom:2px;}
+  .cv{position:relative;width:100%;aspect-ratio:3/4;border-radius:6px;overflow:hidden;border:1px solid rgba(0,0,0,.12);}
+  .cv .img{position:absolute;background:linear-gradient(135deg,#C9BBA6,#8E9E8B);}
+  .cv .tx{position:absolute;font-weight:900;letter-spacing:-.02em;line-height:1.12;}
+  .cv .tx.sm{font-weight:500;}
+  .cv .pill{position:absolute;border-radius:99px;font-size:7px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+  .cv .grid{position:absolute;display:grid;gap:2px;}
+  .cv .grid i{background:linear-gradient(135deg,#D7C7B0,#93A08C);display:block;}
+  .scale-note{font-size:12px;color:var(--ink3);}
+  ul,ol{margin:0 0 16px;padding-left:22px;color:var(--ink2);}
+  li{margin-bottom:7px;}
+  .rule-row{display:grid;grid-template-columns:56px 1fr;gap:12px;font-size:13.5px;}
+  .tick{color:var(--green);font-weight:700;}
+  .cross{color:var(--brand);font-weight:700;}
+  .flex{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .copy-ex{font-size:13.5px;line-height:1.7;}
+  .copy-ex div{padding:8px 0;border-bottom:1px dashed var(--line);}
+  .copy-ex div:last-child{border:0;}
+  .copy-ex s{color:#A8A29A;text-decoration-color:var(--brand);}
+  .copy-ex b{color:var(--green);}
+  footer{margin-top:80px;padding-top:24px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink3);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="kicker">Research · Image Sharing Templates</div>
+  <h1>抖音 / 小红书 图片分享的<em>文案 · 加字 · 配色</em><br>以及把它做成「模板」塞进 AI 审图环节</h1>
+  <div class="meta">
+    <span>2026-10-25</span>
+    <span>面向：AI 照相馆（小程序 + 生图后端）</span>
+    <span>配套文件：share-templates.v0.1.json</span>
+  </div>
+</header>
+
+<p class="lead">
+  结论先说：<strong>把「模板」理解成一张设计稿是错的，它应该是一份可被程序消费的规则数据（JSON）</strong>。
+  同一份数据在三个环节复用——生成时约束构图、合成时决定字号与坐标、审图时变成 16 条可打分的检查项。
+  这样模板不是装饰，而是可量化、可回归、可 A/B 的产品资产。
+</p>
+
+<div class="kpi">
+  <div><div class="v">0.3<span style="font-size:14px">s</span></div><div class="l">小红书用户停留在单张封面上的平均时间，决定生死的窗口</div></div>
+  <div><div class="v">8.1<span style="font-size:14px">%</span></div><div class="l">高饱和封面平均点击率，莫兰迪仅 4.3%，差近一倍</div></div>
+  <div><div class="v">+22<span style="font-size:14px">%</span></div><div class="l">封面含具体数字（年龄/金额/天数）带来的点击率提升</div></div>
+  <div><div class="v">3:4</div><div class="l">竖版 vs 横版显示面积大约 +40%，两平台共同首选</div></div>
+</div>
+
+<h2><span class="num">01</span>两个平台到底差在哪：一个靠「文字被搜到」，一个靠「文字被扫到」</h2>
+
+<p>
+  这是整套方案的前提。抖音和小红书的封面都在加字，但<strong>文字承担的任务完全不同</strong>，
+  照抄一套参数必定翻车。
+</p>
+
+<div class="card flat" style="padding:0">
+<table>
+  <thead>
+    <tr><th style="width:150px">维度</th><th>小红书</th><th>抖音</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><b>信息流形态</b></td><td>双列瀑布流，3:4 占屏大</td><td>单列全屏，或主页双列（3:4）</td></tr>
+    <tr><td><b>决策窗口</b></td><td>约 0.3 秒，看封面 + 标题</td><td>约 0.8 秒，看封面大字 + 首帧</td></tr>
+    <tr><td><b>封面标题字数</b></td><td>5–12 字（最优 5–9），标题上限 20 字、<b>16 字内放核心</b></td><td><b>≤ 8 字</b>（硬上限 10），再多扫不完</td></tr>
+    <tr><td><b>文字面积占比</b></td><td>25%–50%，文字本身就是内容</td><td>18%–38%，文字只是钩子</td></tr>
+    <tr><td><b>图内文字的作用</b></td><td><b>搜索资产</b>：图片 OCR 文本会被算法读取，是可被检索的关键词载体</td><td><b>钩子</b>：不参与搜索，只为 0.8 秒内抓眼</td></tr>
+    <tr><td><b>底部安全区</b></td><td>底部约 8% 被标题栏/头像压住</td><td>底部 <b>15%–18%</b> 被文案区/进度条压住</td></tr>
+    <tr><td><b>核心指标</b></td><td>收藏 &gt; 完读 &gt; 点赞，搜索流量占比已超 60%</td><td>完播 &gt; 点赞 &gt; 转发，连续 3–5 期同骨架建立识别</td></tr>
+    <tr><td><b>内页</b></td><td>6–9 张，<b>整篇只允许一种比例</b>，不能混</td><td>视频封面固定骨架，主页双列还会二次裁切</td></tr>
+    <tr><td><b>文案语气</b></td><td>第一人称体验、场景化、可抄作业</td><td>结论前置、强断言、口语化钩子</td></tr>
+  </tbody>
+</table>
+</div>
+
+<blockquote>
+  <p><b>由此得到一个直接的产品判断：</b>小红书模板必须"文字能被 OCR 读出来并成为关键词"，所以字号下限、对比度是硬指标；抖音模板必须"缩略图状态下 3 米外能认出"，所以<b>字数上限和字重</b>是硬指标。两套阈值不能共用一个。</p>
+</blockquote>
+
+<h2><span class="num">02</span>文案：四个可套用的公式，和一次「压缩三步法」</h2>
+
+<p>封面文案不是写出来的，是<strong>从正文里压缩出来的</strong>。这是整个环节最值钱的动作，也最适合做成模板槽位。</p>
+
+<h3>压缩三步法</h3>
+<div class="grid3">
+  <div class="card" style="margin:0">
+    <div class="badge b-gray">STEP 1</div>
+    <p style="margin:10px 0 0;font-size:13.5px"><b>找结果</b><br>用户最关心的变化：变白、变瘦、省钱、省时间、少踩坑。</p>
+  </div>
+  <div class="card" style="margin:0">
+    <div class="badge b-gray">STEP 2</div>
+    <p style="margin:10px 0 0;font-size:13.5px"><b>加具体</b><br>塞进一个数字或场景：3 天 / 5 款 / 155cm / 出租屋 / 通勤。</p>
+  </div>
+  <div class="card" style="margin:0">
+    <div class="badge b-gray">STEP 3</div>
+    <p style="margin:10px 0 0;font-size:13.5px"><b>造反差</b><br>对比、反问、否定常识："别买了""原来不用花这个钱"。</p>
+  </div>
+</div>
+
+<h3>四个封面标题公式（附改造示例）</h3>
+<div class="card copy-ex">
+  <div><b>公式 1 · 数字清单型</b> ＝ 数字 + 核心词 + 结果承诺<br>
+    <s>分享一下我最近在用的面霜</s> → <b>3 款平价面霜，敏感肌褪红实测</b></div>
+  <div><b>公式 2 · 痛点提问型</b> ＝ 痛点场景 + 解决方案暗示<br>
+    <s>关于油皮定妆的一些经验</s> → <b>油皮夏天脱妆到崩溃？这手法持妆 12 小时</b></div>
+  <div><b>公式 3 · 对比反转型</b> ＝ 常识 vs 真相 / Before vs After<br>
+    <s>装修预算怎么省</s> → <b>花 1000 块买面霜，不如这 100 块的</b></div>
+  <div><b>公式 4 · 身份锁定型</b> ＝ 身份标签 + 具体场景 + 方案<br>
+    <s>备菜方法分享</s> → <b>上班族妈妈｜每天 10 分钟搞定早晚饭</b></div>
+</div>
+
+<p>实测数据显示：同时具备<strong>痛点共鸣</strong>与<strong>数字量化</strong>的标题，点击率平均高出 30%–50%；同一款产品，把「优质猫粮推荐」（CTR 6.8%）改成「养猫 3 年换了 10 种猫粮，终于找到这款不软便的」（CTR 23.5%），点击率提升 245%。</p>
+
+<h3>正文结构（决定完读与收藏）</h3>
+<table>
+  <thead><tr><th style="width:96px">段落</th><th>该写什么</th><th style="width:150px">硬约束</th></tr></thead>
+  <tbody>
+    <tr><td><b>开头</b></td><td>直接抛结论或最强卖点，含核心关键词</td><td>≤ 80 字，前 5 字含核心词</td></tr>
+    <tr><td><b>中段</b></td><td>分 3 点展开，每点配一张图；用 1️⃣2️⃣3️⃣ 或 ✅❌ 做路标</td><td>每段 ≤ 3 行（40–60 字），段间空行</td></tr>
+    <tr><td><b>结尾</b></td><td>引导收藏或提问：「收藏这篇对照买」</td><td>1 句，不要「求关注」</td></tr>
+    <tr><td><b>标签</b></td><td>3–5 个精准语义标签，品牌词放前 3 位</td><td>不堆 10 个泛流量标签</td></tr>
+  </tbody>
+</table>
+
+<h2><span class="num">03</span>加字：一套可换算的层级，和五条绝对不能碰的禁区</h2>
+
+<p>
+  字号不要用绝对 px 交付，要用<strong>画布宽度的百分比</strong>。这样 1080×1440 和 1242×1656 共用一套模板，
+  换画布只换乘数，不用重做设计。
+</p>
+
+<table>
+  <thead><tr><th>层级</th><th>字重</th><th>字号 @1080宽</th><th>占宽</th><th>行距</th><th>行数</th><th>字数</th><th>用途</th></tr></thead>
+  <tbody>
+    <tr><td><b>Display</b></td><td>900</td><td>112–132</td><td>10.4%–12.2%</td><td>1.10</td><td>≤2</td><td>4–7</td><td>大字报主钩子</td></tr>
+    <tr><td><b>Title</b></td><td>900</td><td>88–112</td><td>8.1%–10.4%</td><td>1.15</td><td>≤2</td><td>5–9</td><td>常规封面标题</td></tr>
+    <tr><td><b>Subtitle</b></td><td>500</td><td>44–56</td><td>4.1%–5.2%</td><td>1.30</td><td>≤2</td><td>8–16</td><td>补充信息</td></tr>
+    <tr><td><b>Label</b></td><td>700</td><td>32–40</td><td>3.0%–3.7%</td><td>1.00</td><td>1</td><td>2–6</td><td>胶囊标签/身份词</td></tr>
+    <tr><td><b>Corner</b></td><td>500</td><td>26–32</td><td>2.4%–3.0%</td><td>1.00</td><td>1</td><td>≤6</td><td>角标/栏目标</td></tr>
+  </tbody>
+</table>
+
+<p class="scale-note">可读性红线：<b>等效字号低于 40px（＜3.7% 画布宽）在信息流缩略图状态不可读</b>，直接判不合格。</p>
+
+<div class="grid2">
+  <div class="card">
+    <h3 style="margin-top:0">压图必须加的两件事</h3>
+    <ul style="margin-bottom:0">
+      <li><b>描边</b>：白字压任何照片，加 8–12px 黑描边（不透明度 0.35）</li>
+      <li><b>投影</b>：y 偏移 0.8%H，模糊 2%H，黑 28%</li>
+      <li>或改用底部渐变蒙层（0.58H → 0.95H，黑 65%）</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">五条禁区</h3>
+    <ul style="margin-bottom:0">
+      <li>手写体 / 艺术字叠加，缩略图必糊</li>
+      <li>细衬线小字直接压照片</li>
+      <li>单行超过 12 字</li>
+      <li>文字距边 &lt; 5% 宽</li>
+      <li>全大写英文长串（中文场景无识别效率）</li>
+    </ul>
+  </div>
+</div>
+
+<h2><span class="num">04</span>配色：三段模型，六套可直接用的色板</h2>
+
+<p>
+  数据结论很明确：<strong>高饱和 &gt; 低饱和</strong>（8.1% vs 4.3%），但"高饱和"不等于"颜色多"。
+  表现最好的封面都是 <strong>60% 高饱和主色块 + 30% 辅助色 + 10% 互补色点缀</strong>，
+  主色不超过 2 个，且必有一个高饱和强调色只出现在数字/箭头上。
+</p>
+
+<div class="card">
+  <div class="flex" style="margin-bottom:14px">
+    <span class="badge b-red">主色 60%</span><span style="font-size:13px;color:var(--ink3)">承担整体情绪</span>
+    <span class="badge b-blue" style="margin-left:14px">辅色 30%</span><span style="font-size:13px;color:var(--ink3)">区分区块</span>
+    <span class="badge b-amber" style="margin-left:14px">点缀 10%</span><span style="font-size:13px;color:var(--ink3)">放在数字/箭头/标签上</span>
+  </div>
+  <div class="swatches">
+    <div style="flex:6;background:#FF2E4D;color:#fff">#FF2E4D</div>
+    <div style="flex:3;background:#FFF3E0;color:#8A5A20">#FFF3E0</div>
+    <div style="flex:1;background:#FFD400;color:#5C4A00">#FFD400</div>
+  </div>
+</div>
+
+<h3>六套色板（已写入模板 JSON 的 <code>palettes</code>）</h3>
+
+<div class="grid2">
+  <div class="pal">
+    <div class="pal-hd"><b>P1 干货白底</b><span>教程 / 清单 / 知识卡</span></div>
+    <div class="swatches">
+      <div style="flex:4;background:#FFFFFF;color:#999;border-right:1px solid #eee">#FFFFFF</div>
+      <div style="flex:2;background:#111111;color:#fff">#111</div>
+      <div style="flex:1;background:#FF2E4D;color:#fff">#FF2E4D</div>
+    </div>
+    <p class="pal-note">对比度 18.9:1。红色只能做小面积色块，不能做正文色（4.0:1 不足）。</p>
+  </div>
+
+  <div class="pal">
+    <div class="pal-hd"><b>P2 小红书红</b><span>种草 / 好物 / 促销</span></div>
+    <div class="swatches">
+      <div style="flex:5;background:#FF2E4D;color:#fff">#FF2E4D</div>
+      <div style="flex:3;background:#FFF3E0;color:#8A5A20">#FFF3E0</div>
+      <div style="flex:1;background:#FFD400;color:#5C4A00">#FFD400</div>
+    </div>
+    <p class="pal-note">白字压红只有 3.6:1，必须大字号加粗；副标题改用 #FFF3E0。</p>
+  </div>
+
+  <div class="pal">
+    <div class="pal-hd"><b>P3 奶油生活</b><span>家居 / 日常 / 生活流</span></div>
+    <div class="swatches">
+      <div style="flex:4;background:#F8F4EC;color:#9A8B78;border-right:1px solid #eee">#F8F4EC</div>
+      <div style="flex:2;background:#2B2622;color:#fff">#2B2622</div>
+      <div style="flex:1;background:#C4602F;color:#fff">#C4602F</div>
+    </div>
+    <p class="pal-note">对比度 12.4:1。真实感强，适合实拍图，不适合大字报。</p>
+  </div>
+
+  <div class="pal">
+    <div class="pal-hd"><b>P4 深蓝知识</b><span>职场 / 数码 / 测评</span></div>
+    <div class="swatches">
+      <div style="flex:4;background:#0E1B33;color:#7F8CA3">#0E1B33</div>
+      <div style="flex:2;background:#A8B4C8;color:#1B2330">#A8B4C8</div>
+      <div style="flex:1;background:#FFC53D;color:#3D2E00">#FFC53D</div>
+    </div>
+    <p class="pal-note">对比度 16.2:1，点缀色高达 10.9:1。理性感强，注意别做成"深灰叠深灰"。</p>
+  </div>
+
+  <div class="pal">
+    <div class="pal-hd"><b>P5 莫兰迪柔光</b> <span class="badge b-amber">慎用</span><span>氛围 / 已有粉丝盘</span></div>
+    <div class="swatches">
+      <div style="flex:4;background:#E7E3DC;color:#8C877D;border-right:1px solid #eee">#E7E3DC</div>
+      <div style="flex:2;background:#3A3A38;color:#fff">#3A3A38</div>
+      <div style="flex:1;background:#B5796A;color:#fff">#B5796A</div>
+    </div>
+    <p class="pal-note">点缀色对比仅 2.9:1。低饱和平均 CTR 4.3%，新号首图不建议用。</p>
+  </div>
+
+  <div class="pal">
+    <div class="pal-hd"><b>P6 高饱和撞色</b><span>强钩子 / 避坑 / 对比</span></div>
+    <div class="swatches">
+      <div style="flex:4;background:#FFD400;color:#5C4A00">#FFD400</div>
+      <div style="flex:2;background:#1A1A1A;color:#fff">#1A1A1A</div>
+      <div style="flex:1;background:#FF2E4D;color:#fff">#FF2E4D</div>
+    </div>
+    <p class="pal-note">13.1:1。黄底黑字是最稳的强钩子组合，但只允许 1 主 1 点缀两个高饱和色。</p>
+  </div>
+</div>
+
+<h3>赛道配色参考</h3>
+<table>
+  <thead><tr><th style="width:110px">赛道</th><th>主色</th><th>点缀色</th><th>要避开的坑</th></tr></thead>
+  <tbody>
+    <tr><td>美妆护肤</td><td>低饱和裸粉、米白</td><td>亮橘、玫红</td><td>大面积深紫显脏</td></tr>
+    <tr><td>职场成长</td><td>深蓝、墨绿</td><td>明黄、正橙</td><td>灰蓝互压没重点</td></tr>
+    <tr><td>家居生活</td><td>原木、奶油白</td><td>橄榄绿、砖红</td><td>纯白背景在信息流里发飘</td></tr>
+    <tr><td>美食探店</td><td>暖棕、砖橙</td><td>鲜红、柠檬黄</td><td>全画面同暖色缺对比</td></tr>
+    <tr><td>母婴育儿</td><td>浅蓝、淡黄</td><td>珊瑚粉、湖蓝</td><td>颜色超过 3 组显廉价</td></tr>
+    <tr><td>数码测评</td><td>深灰、石墨</td><td>荧光蓝、荧光绿</td><td>深灰叠深灰，OLED 上糊成一团</td></tr>
+  </tbody>
+</table>
+
+<h2><span class="num">05</span>模板做成什么：三个层次，一份数据，三处复用</h2>
+
+<p>
+  这是整个方案的核心设计。模板<strong>不是</strong>一张 PNG 底图，而是三个可解耦的层：
+</p>
+
+<div class="grid3">
+  <div class="card" style="margin:0;border-top:3px solid var(--deep)">
+    <div class="badge b-gray">LAYER 1</div>
+    <h3 style="margin:8px 0 8px;font-size:15px">骨架 Skeleton</h3>
+    <p style="margin:0;font-size:13px">图片区、色块区、蒙层的归一化坐标（0–1）。决定"图在哪、字在哪"，不含任何具体文字。</p>
+  </div>
+  <div class="card" style="margin:0;border-top:3px solid var(--brand)">
+    <div class="badge b-gray">LAYER 2</div>
+    <h3 style="margin:8px 0 8px;font-size:15px">样式令牌 Type Tokens</h3>
+    <p style="margin:0;font-size:13px">字号/字重/行距/描边/配色，全部相对画布宽高。换画布只换乘数。</p>
+  </div>
+  <div class="card" style="margin:0;border-top:3px solid var(--amber)">
+    <div class="badge b-gray">LAYER 3</div>
+    <h3 style="margin:8px 0 8px;font-size:15px">文案槽位 Slots</h3>
+    <p style="margin:0;font-size:13px">每个槽位声明角色、最大字数、行数、是否必填。AI 填槽，不负责排版。</p>
+  </div>
+</div>
+
+<h3>六种骨架（按内容类型选，一条笔记只用一种）</h3>
+
+<div class="frames">
+  <!-- T1 -->
+  <div>
+    <div class="cv" style="background:#FFF">
+      <div class="img" style="inset:0;opacity:.18;filter:blur(6px)"></div>
+      <div class="tx" style="left:8%;top:34%;width:84%;color:#111;font-size:15px;line-height:1.15">别再乱<br>买面霜</div>
+      <div class="tx sm" style="left:8%;top:60%;width:84%;color:#5C5C5C;font-size:7px">3 款平价，敏感肌亲测</div>
+      <div style="position:absolute;left:6%;top:44%;width:88%;height:2px;background:#FF2E4D;opacity:.9"></div>
+    </div>
+    <div class="frame-cap"><b>T1 大字报</b>干货 / 观点 / 避坑<br>文字面积 20–42%</div>
+  </div>
+  <!-- T2 -->
+  <div>
+    <div class="cv" style="background:#F8F4EC">
+      <div class="tx" style="left:8%;top:8%;width:84%;color:#2B2622;font-size:12px">夏天<br>不脱妆</div>
+      <div class="tx sm" style="left:8%;top:31%;width:84%;color:#7A6E60;font-size:6.5px">油皮亲测持妆 12 小时</div>
+      <div class="pill" style="left:8%;top:36%;width:26%;height:3.4%;background:#C4602F;color:#fff">油皮</div>
+      <div class="img" style="left:0;top:38%;width:100%;height:62%"></div>
+    </div>
+    <div class="frame-cap"><b>T2 上字下图</b>种草 / 教程 / 好物<br>小红书默认骨架</div>
+  </div>
+  <!-- T3 -->
+  <div>
+    <div class="cv" style="background:#0E1B33">
+      <div class="pill" style="left:7%;top:20%;width:24%;height:3.4%;background:#FFC53D;color:#1A1A1A">职场</div>
+      <div class="tx" style="left:7%;top:30%;width:38%;color:#fff;font-size:12px">30 岁<br>才懂的<br>3 件事</div>
+      <div class="tx sm" style="left:7%;top:63%;width:38%;color:#A8B4C8;font-size:6px">别在错的方向努力</div>
+      <div class="img" style="left:45%;top:0;width:55%;height:100%"></div>
+    </div>
+    <div class="frame-cap"><b>T3 左字右图</b>观点 / 知识 / 人物出镜<br>抖音高频</div>
+  </div>
+  <!-- T4 -->
+  <div>
+    <div class="cv">
+      <div class="img" style="left:0;top:0;width:100%;height:50%;filter:saturate(.35)"></div>
+      <div class="img" style="left:0;top:50%;width:100%;height:50%"></div>
+      <div style="position:absolute;left:0;top:49.6%;width:100%;height:3px;background:#fff"></div>
+      <div class="tx sm" style="left:6%;top:5%;color:#fff;font-size:6px;font-weight:700">BEFORE</div>
+      <div class="tx sm" style="left:6%;top:54%;color:#fff;font-size:6px;font-weight:700">AFTER</div>
+      <div class="tx" style="left:10%;top:88%;width:80%;color:#fff;font-size:8px;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,.6)">7 天，衣柜扩容一倍</div>
+    </div>
+    <div class="frame-cap"><b>T4 对比型</b>改造 / 测评 / 效果<br>必须同角度同光线</div>
+  </div>
+  <!-- T5 -->
+  <div>
+    <div class="cv" style="background:#F5EEE3">
+      <div class="grid" style="left:0;top:0;width:100%;height:82%;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr">
+        <i></i><i style="background:linear-gradient(135deg,#C8B49A,#7E8F7C)"></i>
+        <i style="background:linear-gradient(135deg,#DCC9B3,#8C9B88)"></i><i style="background:linear-gradient(135deg,#C0AE97,#6F8370)"></i>
+      </div>
+      <div style="position:absolute;left:0;top:82%;width:100%;height:18%;background:#1A1A1A;display:flex;align-items:center;justify-content:center">
+        <span style="color:#fff;font-weight:900;font-size:8px">4 款平替，第 3 个最值</span>
+      </div>
+    </div>
+    <div class="frame-cap"><b>T5 拼图型</b>合集 / 清单 / 多品对比<br>必须统一色温与间距</div>
+  </div>
+  <!-- T6 -->
+  <div>
+    <div class="cv">
+      <div class="img" style="inset:0"></div>
+      <div style="position:absolute;left:0;top:58%;width:100%;height:37%;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.72))"></div>
+      <div class="tx" style="left:8%;top:70%;width:84%;color:#fff;font-size:11px;text-shadow:0 1px 4px rgba(0,0,0,.5)">这家店<br>值得排队</div>
+      <div class="tx sm" style="left:8%;top:85%;width:84%;color:rgba(255,255,255,.85);font-size:6px">巷子深处，人均 68</div>
+    </div>
+    <div class="frame-cap"><b>T6 场景氛围</b>探店 / 旅行 / 情绪<br>文字最少，代入感最强</div>
+  </div>
+</div>
+
+<h3>模板 JSON 长什么样（节选）</h3>
+<p>坐标全部归一化，<code>box</code> 是 <code>{x, y, w, h}</code>，渲染时乘以实际像素。这份结构已写入配套文件，6 套模板、6 组色板、16 条审图规则齐备。</p>
+
+<pre>{
+  <span class="s">"id"</span>: <span class="s">"T2-top-text-bottom-image"</span>,
+  <span class="s">"platforms"</span>: [<span class="s">"xhs"</span>, <span class="s">"douyin"</span>],
+  <span class="s">"skeleton"</span>: {
+    <span class="s">"image"</span>: { <span class="s">"x"</span>: 0, <span class="s">"y"</span>: 0.38, <span class="s">"w"</span>: 1, <span class="s">"h"</span>: 0.62, <span class="s">"fit"</span>: <span class="s">"cover"</span> }
+  },
+  <span class="s">"slots"</span>: [
+    { <span class="s">"id"</span>: <span class="s">"title"</span>, <span class="s">"role"</span>: <span class="s">"title"</span>,
+      <span class="s">"box"</span>: { <span class="s">"x"</span>: 0.08, <span class="s">"y"</span>: 0.08, <span class="s">"w"</span>: 0.84, <span class="s">"h"</span>: 0.18 },
+      <span class="s">"maxChars"</span>: 9, <span class="s">"maxLines"</span>: 2, <span class="s">"color"</span>: <span class="s">"primary"</span> }
+  ],
+  <span class="s">"rules"</span>: { <span class="s">"textAreaRatio"</span>: [0.22, 0.45], <span class="s">"minContrast"</span>: 7.0, <span class="s">"safeInset"</span>: 0.08 }
+}</pre>
+
+<h2><span class="num">06</span>塞进 AI 审图：从「审合规」变成「审模板符合度」</h2>
+
+<p>
+  现有链路里的「审」只有<strong>合规</strong>一层（微信 <code>media_check_async</code> + 回调兜底），
+  它只回答"能不能发"，不回答"发了有没有人看"。新增模板审，本质是把
+  <strong>运营经验翻译成可计算的检查项</strong>。
+</p>
+
+<div class="card">
+  <div class="rule-row" style="padding:12px 0;border-bottom:1px solid var(--line)">
+    <div><span class="badge b-gray">L1</span></div>
+    <div><b>合规审（已有，不动）</b><br><span style="color:var(--ink3);font-size:13px">微信内容安全 / 敏感词 / 版权。答案：能不能发。</span></div>
+  </div>
+  <div class="rule-row" style="padding:12px 0;border-bottom:1px solid var(--line)">
+    <div><span class="badge b-blue">L2</span></div>
+    <div><b>质量审（新增，与技术指标相关）</b><br><span style="color:var(--ink3);font-size:13px">分辨率、是否糊、人脸是否变形、文字是否被裁、水印是否合规。答案：这张图是不是废片。</span></div>
+  </div>
+  <div class="rule-row" style="padding:12px 0">
+    <div><span class="badge b-red">L3</span></div>
+    <div><b>模板审（本次新增，与分发效果相关）</b><br><span style="color:var(--ink3);font-size:13px">按选中模板的规则集逐项校验并打分。答案：这张图发出去能不能被点。</span></div>
+  </div>
+</div>
+
+<h3>16 条规则，全部可计算</h3>
+<p>每条规则都有明确的计算方法，不依赖大模型的主观判断——这样才能做回归测试和阈值调优。权重合计 100。</p>
+
+<table>
+  <thead><tr><th style="width:112px">规则</th><th style="width:44px">权重</th><th>判定方式</th><th style="width:210px">不合格时的用户话术</th></tr></thead>
+  <tbody>
+    <tr><td><b>C1</b> 画幅比例</td><td>6</td><td>宽高比与目标偏差 ≤ 1.5%</td><td>4:3 在小红书信息流占屏比 3:4 小约 40%</td></tr>
+    <tr><td><b>C2</b> 分辨率</td><td>4</td><td>宽度 ≥ 1080</td><td>上传后二次压缩会把字糊掉</td></tr>
+    <tr><td><b>S1</b> 安全区</td><td>8</td><td>所有 OCR 框落在平台安全区内</td><td>抖音底部 18% 会被文案区压住</td></tr>
+    <tr><td><b>S2</b> 主体遮挡</td><td>5</td><td>文字框与人脸框 IOU ≤ 0.15</td><td>字压住人脸，缩略图显脏</td></tr>
+    <tr><td><b>T1</b> 最小字号</td><td>9</td><td>标题等效字号 ≥ 5.5%H（≈79px）</td><td>缩略图状态下读不清</td></tr>
+    <tr><td><b>T2</b> 对比度</td><td>10</td><td>标题 ≥ 7:1，副标 ≥ 4.5:1</td><td>白字压浅底，OLED 上糊成一片</td></tr>
+    <tr><td><b>T3</b> 文字面积</td><td>6</td><td>OCR 并集面积占画布在模板区间内</td><td>文字太少等于没写 / 太多变字墙</td></tr>
+    <tr><td><b>T4</b> 标题字数</td><td>6</td><td>≤ 12 字（小红书）/ 10 字（抖音）</td><td>0.3 秒内扫不完</td></tr>
+    <tr><td><b>T5</b> 标题行数</td><td>5</td><td>≤ 2 行（T3 骨架允许 3 行）</td><td>视觉重心散掉</td></tr>
+    <tr><td><b>L1</b> 骨架吻合</td><td>8</td><td>文字重心与 slot 区域重合 ≥ 0.6</td><td>标题跑到了图片中段，版式失衡</td></tr>
+    <tr><td><b>L2</b> 留白与行距</td><td>6</td><td>边距 ≥ 安全区，行距 ≥ 1.1 倍行高</td><td>贴边 / 行距过挤，缺呼吸感</td></tr>
+    <tr><td><b>P1</b> 色彩数量</td><td>7</td><td>高饱和色簇（S≥.35,V≥.35）≤ 2 个</td><td>配色超过 3 色显廉价</td></tr>
+    <tr><td><b>P2</b> 色板吻合</td><td>5</td><td>主色色相与模板色板距离 ≤ 25°</td><td>与账号视觉资产不一致，认不出你</td></tr>
+    <tr><td><b>P3</b> 色温统一</td><td>4</td><td>全图 R−B 均值标准差 ≤ 0.12</td><td>多图拼合色温不一，像拼凑</td></tr>
+    <tr><td><b>W1</b> 文案要素</td><td>7</td><td>命中 ≥ 2 项：数字/人群/痛点/结果</td><td>含数字的封面平均点击率高 22%</td></tr>
+    <tr><td><b>W2</b> 封标互补</td><td>4</td><td>与帖子标题相似度 ≤ 0.6 且关键词命中</td><td>封面和标题说同一句话，浪费一次说服</td></tr>
+  </tbody>
+</table>
+
+<h3>评分与三个硬性拦截</h3>
+<div class="grid2">
+  <div class="card">
+    <h3 style="margin-top:0">分档</h3>
+    <ul style="margin-bottom:0">
+      <li><b>90+　A</b>　可直接发布（pass）</li>
+      <li><b>75–89　B</b>　微调后发布（suggest）</li>
+      <li><b>60–74　C</b>　需重排（rebuild）</li>
+      <li><b>&lt;60　D</b>　建议重做（regenerate）</li>
+    </ul>
+  </div>
+  <div class="card" style="border-left:3px solid var(--brand)">
+    <h3 style="margin-top:0">硬拦截（任一失败，总分封顶 59）</h3>
+    <ul style="margin-bottom:0">
+      <li><b>C1 画幅比例</b> — 平台侧直接损失占屏</li>
+      <li><b>S1 安全区</b> — 关键文字会被 UI 压住</li>
+      <li><b>T2 对比度</b> — 文字实际不可读</li>
+    </ul>
+    <p class="pal-note">这三条不是"扣分项"，是"发出去就是废图"，必须先修。</p>
+  </div>
+</div>
+
+<h3>审图输出的不是分数，是「可执行修改」</h3>
+<p>每条 finding 必须绑定一个可自动执行的 <code>fix</code> 动作，用户点一下就能改，而不是给一段文字建议。</p>
+
+<pre>{
+  <span class="s">"templateId"</span>: <span class="s">"T2-top-text-bottom-image"</span>,
+  <span class="s">"platform"</span>: <span class="s">"xhs"</span>,
+  <span class="s">"score"</span>: 62, <span class="s">"band"</span>: <span class="s">"C 需重排"</span>,
+  <span class="s">"dims"</span>: { <span class="s">"画幅"</span>:10, <span class="s">"安全区"</span>:8, <span class="s">"文字可读"</span>:17, <span class="s">"版式"</span>:9, <span class="s">"配色"</span>:12, <span class="s">"文案"</span>:6 },
+  <span class="s">"findings"</span>: [
+    { <span class="s">"ruleId"</span>:<span class="s">"S1-safe-zone"</span>, <span class="s">"level"</span>:<span class="s">"blocker"</span>,
+      <span class="s">"detail"</span>:<span class="s">"标题下沿 y=0.925H，越出底部安全线 0.92H"</span>,
+      <span class="s">"fix"</span>:<span class="s">"整体上移 1.5%H 或缩到 1 行"</span>, <span class="s">"action"</span>:<span class="s">"raise-title"</span> },
+    { <span class="s">"ruleId"</span>:<span class="s">"T2-contrast"</span>, <span class="s">"level"</span>:<span class="s">"blocker"</span>,
+      <span class="s">"detail"</span>:<span class="s">"白字压浅米色图，对比度 2.1:1"</span>,
+      <span class="s">"fix"</span>:<span class="s">"加 10px 黑描边，或把标题移到色块区"</span>, <span class="s">"action"</span>:<span class="s">"add-stroke"</span> },
+    { <span class="s">"ruleId"</span>:<span class="s">"W1-copy-pattern"</span>, <span class="s">"level"</span>:<span class="s">"warn"</span>,
+      <span class="s">"detail"</span>:<span class="s">"「夏日穿搭分享」未命中数字/人群/痛点"</span>,
+      <span class="s">"fix"</span>:<span class="s">"改为「155 小个子｜3 套显高穿搭」"</span>, <span class="s">"action"</span>:<span class="s">"rewrite-title"</span> }
+  ]
+}</pre>
+
+<p>
+  注意最后一条：<strong>文案类问题必须由模板的槽位约束反推出修改</strong>。
+  因为 <code>maxChars: 9</code> 已声明在槽位上，AI 改写时就能保证"改完不超字数、不超行数"，
+  不会出现"建议很好但塞不进去"的尴尬。
+</p>
+
+<h2><span class="num">07</span>工程落地：一个必须先说的坑</h2>
+
+<div class="card" style="border-left:3px solid var(--amber);background:#FFFCF5">
+  <h3 style="margin-top:0">不要在服务端用 sharp 渲中文文字</h3>
+  <p style="margin-bottom:0">
+    现有 <code>watermark.js</code> 用 sharp 烧「AI 生成」角标是可行的（纯 ASCII + 简单图形），
+    但 sharp 的文字走 librsvg，<strong>依赖系统 fontconfig</strong>。Linux 容器缺中文字体时输出空白，
+    Windows 下更容易出现字宽错乱、标点错位。用它做模板排版会得到"线上好好的、换台机器全乱"的经典故障。
+  </p>
+</div>
+
+<p>正确分工：</p>
+<table>
+  <thead><tr><th style="width:150px">环节</th><th>技术选型</th><th>理由</th></tr></thead>
+  <tbody>
+    <tr><td><b>模板合成</b></td><td>小程序端 <code>canvas 2d</code>（类型 <code>2d</code>，非旧版）</td><td>字体跟随系统、所见即所得、文案可实时拖动改，无需服务端往返</td></tr>
+    <tr><td><b>字体策略</b></td><td>系统字（苹方/思源黑体）+ 关键模板内嵌一份 woff2 子集</td><td>1080 宽下系统字已够；仅当需要固定字形时才内嵌，避免包体膨胀</td></tr>
+    <tr><td><b>OCR</b></td><td>腾讯云文字识别（已在微信生态内，无需新增合规面）</td><td>输出带坐标的文本框，正好是规则计算需要的输入</td></tr>
+    <tr><td><b>颜色分析</b></td><td>sharp 缩放到 64×64 → k-means k=5</td><td>纯像素统计，与文字无关，服务端做最省</td></tr>
+    <tr><td><b>人脸/主体框</b></td><td>微信侧已有能力或轻量检测模型</td><td>只用于 S2 遮挡判定，精度要求低</td></tr>
+  </tbody>
+</table>
+
+<p>接入位置建议：<code>watermark.js</code> 之后、入库之前加一道 <code>templateReview</code>。此时图已带 AI 标识，审的是最终交付物。</p>
+
+<pre><span class="c">// src/services/templateReview.js  （伪代码）</span>
+<span class="k">async function</span> review(filePath, { templateId, platform }) {
+  <span class="k">const</span> tpl  = loadTemplate(templateId);          <span class="c">// 读 JSON</span>
+  <span class="k">const</span> meta = <span class="k">await</span> sharp(filePath).metadata();   <span class="c">// C1 / C2</span>
+  <span class="k">const</span> ocr  = <span class="k">await</span> ocrBoxes(filePath);          <span class="c">// 带坐标的文本框</span>
+  <span class="k">const</span> pal  = <span class="k">await</span> dominantColors(filePath, 5);  <span class="c">// P1 / P2 / P3</span>
+
+  <span class="k">const</span> hits = tpl.ruleset.map(r =&gt; r.evaluate({ meta, ocr, pal, tpl, platform }));
+  <span class="k">const</span> score = clamp(100 - sum(hits.filter(h =&gt; !h.pass).map(h =&gt; h.weight)));
+  <span class="k">return</span> {
+    score: hasBlocker(hits) ? Math.min(score, 59) : score,
+    band: toBand(score),
+    findings: hits.filter(h =&gt; !h.pass).map(toFinding),
+    applyableFixes: hits.map(h =&gt; h.action).filter(Boolean)
+  };
+}</pre>
+
+<h2><span class="num">08</span>排期与验收</h2>
+
+<table>
+  <thead><tr><th style="width:90px">阶段</th><th>做什么</th><th style="width:230px">验收标准</th></tr></thead>
+  <tbody>
+    <tr><td><b>MVP</b><br><span class="badge b-gray">2 周</span></td><td>T2 上字下图 + T1 大字报两个骨架；C1/C2/S1/T1/T2/T4 六条规则；评分与诊断卡</td><td>100 张人工标注集上，blocker 判定准确率 ≥ 85%，误杀 ≤ 10%</td></tr>
+    <tr><td><b>V1</b><br><span class="badge b-gray">4 周</span></td><td>六骨架齐备；16 条规则全开；一键修正（raise-title / add-stroke / rewrite-title / switch-palette）；模板市场</td><td>用户平均修正轮次 ≤ 1.5；A 档占比 ≥ 40%</td></tr>
+    <tr><td><b>V2</b><br><span class="badge b-gray">+3 周</span></td><td>发布后回采 CTR / 收藏，反哺模板权重与色板推荐（账号级视觉资产沉淀）</td><td>同模板 A/B 组 CTR 差异可被解释，权重迭代有数据依据</td></tr>
+  </tbody>
+</table>
+
+<div class="card flat" style="background:#F7F5F0;border:0;border-left:3px solid var(--deep)">
+  <p style="margin:0;font-size:13.5px">
+    <b>三个必须提前想清楚的产品问题：</b><br>
+    1. 模板是<b>用户选</b>还是<b>系统推荐</b>？建议按内容类型自动给 2 个候选，用户只做减法——选型成本是这类功能最大的流失点。<br>
+    2. 审图<b>何时触发</b>？建议生成后立即跑，但 UI 上做成"建议"而非"拦截"，只有三个 blocker 才拦。<br>
+    3. 模板的<b>归属</b>：官方模板与账号私有模板要分表，否则后面做"账号视觉资产"会推倒重来。
+  </p>
+</div>
+
+<footer>
+  数据来源：小红书封面尺寸规范 2026（resouci / oimi.ai）、小红书封面设计数据分析（九数云，含点击率分组统计）、小红书封面转化力设计指南（红人馆）、2026 小红书算法 CES 模型解读（Hashmeta）、抖音封面尺寸与排版实践（大胡笔记 / 80tg）、抖音账号视觉体系（uni-cern）。<br>
+  所有阈值均为上述数据与平台 UI 实测的合成结论，落地前需用自有样本回归校准。<br>
+  配套数据文件：<code>docs/share-templates.v0.1.json</code> — 6 骨架 / 6 色板 / 16 规则 / 评分与诊断结构。
+</footer>
+
+</div>
+</body>
+</html>

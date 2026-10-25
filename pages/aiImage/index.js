@@ -3,8 +3,12 @@ import useToastBehavior from '~/behaviors/useToast';
 import {
   CAPABILITIES,
   findCapability,
-  findOption,
   buildEditPrompt,
+  defaultSelection,
+  selectionReady,
+  buildDimensionView,
+  describeSelection,
+  selectionKey,
   ANCHOR_PHOTO,
   CONSTRAINT_TAIL,
 } from './editPresets';
@@ -58,12 +62,17 @@ Page({
     outputLabel: '1024x1024',
     uploading: false,
 
-    // 能力与选项
+    // 能力与维度
     caps: CAPABILITIES,
     activeCapId: CAPABILITIES[0].id,
     activeCap: CAPABILITIES[0],
-    optionsView: [], // 带 selected 标记，供 wxml 直接渲染
-    picked: [], // 单选效果 id；保留数组形态以兼容模板的长度判断
+    /** 当前功能下可用的维度组，带 selected 标记，供 wxml 直接渲染 */
+    dimensions: [],
+    /** 选择结果：{ direction: 'film', issue: 'auto', strength: 'medium', texture: ['grain'] } */
+    selection: {},
+    /** 已选项的一行摘要，折叠态显示 */
+    selectionSummary: '',
+    ready: false, // 这组选择能不能出图（拼出来有没有内容）
     promptPreview: '',
     /** 拼装后是否超过当前引擎的字数上限，交给模板标红，不在这里截断 */
     promptTooLong: false,
@@ -99,10 +108,14 @@ Page({
     this.alive = true;
     const sys = wx.getSystemInfoSync();
     const navHeight = (sys.statusBarHeight || 20) + 44;
+    const selection = defaultSelection(CAPABILITIES[0].id);
     this.setData({
       pageStyle: `height: calc(100vh - ${navHeight}px)`,
-      optionsView: CAPABILITIES[0].options.map((item) => ({ ...item, selected: false })),
+      selection,
+      dimensions: buildDimensionView(CAPABILITIES[0].id, selection),
+      ready: selectionReady(CAPABILITIES[0].id, selection),
     });
+    this.refreshPreview();
   },
 
   onUnload() {
@@ -341,7 +354,7 @@ Page({
     wx.previewImage({ current: urls[index], urls });
   },
 
-  /* ---------------- 能力与选项 ---------------- */
+  /* ---------------- 能力与维度 ---------------- */
 
   chooseCap(e) {
     if (this.data.generating) return;
@@ -349,36 +362,56 @@ Page({
     if (!id || id === this.data.activeCapId) return;
     const cap = findCapability(id);
     if (!cap) return;
-    // 每个效果都是一套完整方案。切换类型时清空旧效果，防止风格互相冲突。
+    // 换功能时给该功能自己的默认选择，而不是清空：
+    // 清空会让用户每次切功能都得重新点一遍，且「一键处理」按钮一直灰着
+    const selection = defaultSelection(id);
     this.setData({
       activeCapId: id,
       activeCap: cap,
-      optionsView: cap.options.map((item) => ({ ...item, selected: false })),
-      picked: [],
-      promptPreview: '',
-      promptParts: [],
-      promptTooLong: false,
-      promptDigits: '待生成',
+      selection,
+      dimensions: buildDimensionView(id, selection),
+      ready: selectionReady(id, selection),
       error: '',
     });
+    this.refreshPreview();
   },
 
-  toggleOption(e) {
+  /** 点一个维度值。单选维度互斥，多选维度累加（有上限） */
+  chooseDimension(e) {
     if (this.data.generating) return;
-    const { id } = e.currentTarget.dataset;
-    if (!id) return;
-    const found = findOption(id);
-    if (!found || found.capability.id !== this.data.activeCapId) return;
-    const picked = this.data.picked[0] === id ? [] : [id];
+    const { key, id } = e.currentTarget.dataset;
+    if (!key || !id) return;
+    const capId = this.data.activeCapId;
+    const dim = DIMENSIONS[key];
+    if (!dim) return;
+
+    const selection = { ...this.data.selection };
+    if (dim.multi) {
+      const list = Array.isArray(selection[key]) ? selection[key].slice() : [];
+      const at = list.indexOf(id);
+      if (at === -1) {
+        if (dim.maxPick && list.length >= dim.maxPick) {
+          this.showHint(`${dim.name}最多选 ${dim.maxPick} 项`);
+          return;
+        }
+        list.push(id);
+      } else {
+        list.splice(at, 1);
+      }
+      selection[key] = list;
+    } else {
+      // 单选不允许清空：点已选项就回到第一项。
+      // 否则用户连点两下会把维度清掉，指令突然变空、按钮变灰，很难理解。
+      selection[key] = selection[key] === id ? dim.options[0].id : id;
+    }
+
     this.setData({
-      picked,
-      optionsView: this.data.activeCap.options.map((item) => ({
-        ...item,
-        selected: picked[0] === item.id,
-      })),
+      selection,
+      dimensions: buildDimensionView(capId, selection),
+      ready: selectionReady(capId, selection),
       error: '',
     });
-    this.refreshPreview(picked);
+    this.refreshPreview();
   },
 
   /** 底部单行输入（原生 input） */
@@ -389,13 +422,12 @@ Page({
     this.refreshPreview();
   },
 
-  refreshPreview(pickedArg) {
-    const picked = pickedArg || this.data.picked;
-    const { extra, engineId, imageCount, engine } = this.data;
-
-    const found = picked[0] ? findOption(picked[0]) : null;
+  refreshPreview() {
+    const { selection, activeCapId, activeCap, extra, engineId, imageCount, engine } = this.data;
     const userText = String(extra || '').trim();
-    if (!found) {
+    const mods = buildMods(selection, activeCapId);
+
+    if (!mods.trim()) {
       this.setData({
         promptPreview: '',
         promptParts: [],
@@ -404,10 +436,9 @@ Page({
       });
       return;
     }
-    const { capability, option } = found;
+
     const reference = referenceHint(engineId, imageCount);
-    const mods = [option.prompt, userText].filter(Boolean).join('。');
-    const prompt = buildEditPrompt({ option, capability, extra: userText, reference });
+    const prompt = buildEditPrompt({ selection, capability: activeCap, extra: userText, reference });
     // 超长只标红，不静默截断——截断会让用户以为自己写的都生效了
     const tooLong = !!prompt && prompt.length > engine.maxPromptLength;
 
@@ -417,9 +448,9 @@ Page({
       promptDigits: prompt ? `${prompt.length} 字${tooLong ? ' · 超长' : ''}` : '待生成',
       promptParts: [
         { key: '基础', text: ANCHOR_PHOTO },
-        { key: '改动', text: mods },
+        { key: '改动', text: [mods, userText].filter(Boolean).join('。') },
         { key: '参考', text: reference },
-        { key: '保留', text: capability.keepHint },
+        { key: '保留', text: activeCap && activeCap.keepHint },
         { key: '质量', text: CONSTRAINT_TAIL },
       ].filter((item) => item.text),
     });
@@ -483,7 +514,7 @@ Page({
       uploading,
       generating,
       activeCap,
-      picked,
+      ready,
       sourceSize,
       ratio,
     } = this.data;
@@ -509,8 +540,8 @@ Page({
       this.showHint('请先选择要使用的功能');
       return;
     }
-    if (!picked.length) {
-      this.showHint(`请在「${activeCap.name}」里选择一种效果`);
+    if (!ready) {
+      this.showHint(`「${activeCap.name}」还没选够条件，请至少选一项`);
       return;
     }
 
@@ -750,15 +781,15 @@ Page({
    */
   openAdvice() {
     if (this.data.generating || this.data.uploading) return;
-    const { sourceFileID, picked, activeCap } = this.data;
+    const { sourceFileID, ready, activeCap } = this.data;
 
     if (!sourceFileID) {
       this.showHint('请先选择一张图片');
       return;
     }
-    if (!picked.length) {
+    if (!ready) {
       const name = activeCap ? activeCap.name : '上面';
-      this.showHint(`先在「${name}」里选一种效果，AI 才知道该往哪个方向改`);
+      this.showHint(`先在「${name}」里选好条件，AI 才知道该往哪个方向改`);
       return;
     }
 
@@ -785,15 +816,15 @@ Page({
    */
   async runAdvice(force) {
     if (this.data.advising) return;
-    const { sourceFileID, activeCap, picked, extra, engine } = this.data;
-    const found = picked[0] ? findOption(picked[0]) : null;
-    if (!sourceFileID || !found || !activeCap) return;
+    const { sourceFileID, activeCap, selection, extra, engine } = this.data;
+    if (!sourceFileID || !activeCap) return;
+    if (!selectionReady(activeCap.id, selection)) return;
 
     const demand = String(extra || '').trim();
     const key = buildAdviceKey({
       fileID: sourceFileID,
-      capId: activeCap ? activeCap.id : '',
-      optionId: found.option.id,
+      capId: activeCap.id,
+      optionId: selectionKey(activeCap.id, selection),
       demand,
     });
 
@@ -816,8 +847,8 @@ Page({
       const advice = await requestAdvice({
         fileID: sourceFileID,
         demand,
-        // scope 决定「这份建议服务于哪个效果」，模型据此判断该往哪个方向改
-        scope: `${activeCap.name}·${found.option.label}：${found.option.desc}`,
+        // scope 决定「这份建议服务于哪种处理」，模型据此判断该往哪个方向改
+        scope: `${activeCap.name}：${describeSelection(activeCap.id, selection)}`,
         // keepHint 只作为边界喂给模型（别建议改脸、改背景），不要求它复述
         keepHint: activeCap.keepHint,
         engineName: engine.name,

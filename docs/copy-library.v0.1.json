@@ -1,0 +1,114 @@
+{
+  "version": "0.1",
+  "updatedAt": "2026-10-25",
+  "note": "配图文案库。用户不做生成，只做选择：主题 → 语气 → 卡片。每条 main 进版式 title 槽（≤9 字），sub 进 subtitle 槽（≤16 字）。模板由 theme 定配色、tone 定版式，见 outfitMatrix。",
+
+  "constraints": {
+    "mainMaxChars": 9,
+    "subMaxChars": 16,
+    "mainMinChars": 4,
+    "rationale": "超过 9 字在 3:4 封面里必然折行，折 3 行视觉重心就散了；低于 4 字信息量不足，缩略图看着像装饰"
+  },
+
+  "tones": [
+    { "id": "clear", "name": "清冷", "desc": "克制、不解释、留白多", "styleHint": "短句为主，句末不加情绪词，宁可少说一句", "templateId": "T6-scene-overlay" },
+    { "id": "heal", "name": "治愈", "desc": "温柔、有出口、允许脆弱", "styleHint": "第二人称，给一个具体的小动作而不是空泛安慰", "templateId": "T2-top-text-bottom-image" },
+    { "id": "story", "name": "叙事", "desc": "有时间地点，像一小段片段", "styleHint": "只写一个瞬间，不写完整故事", "templateId": "T2-top-text-bottom-image" },
+    { "id": "chill", "name": "松弛", "desc": "口语、轻幽默、不端着", "styleHint": "允许自嘲，用日常词，不用书面语", "templateId": "T1-big-type" }
+  ],
+
+  "themes": [
+    { "id": "travel", "name": "旅行", "paletteId": "P5-morandi", "stampPattern": "{{city}} · {{date}}", "icon": "mountain" },
+    { "id": "mood", "name": "心情", "paletteId": "P4-deep-night", "stampPattern": "{{date}}", "icon": "moon" },
+    { "id": "love", "name": "爱情", "paletteId": "P3-cream-life", "stampPattern": null, "icon": "heart" }
+  ],
+
+  "outfitMatrix": {
+    "travel.clear": { "templateId": "T6-scene-overlay", "paletteId": "P5-morandi" },
+    "travel.heal": { "templateId": "T2-top-text-bottom-image", "paletteId": "P5-morandi" },
+    "travel.story": { "templateId": "T2-top-text-bottom-image", "paletteId": "P3-cream-life" },
+    "travel.chill": { "templateId": "T1-big-type", "paletteId": "P6-pop-clash" },
+    "mood.clear": { "templateId": "T1-big-type", "paletteId": "P4-deep-night" },
+    "mood.heal": { "templateId": "T2-top-text-bottom-image", "paletteId": "P3-cream-life" },
+    "mood.story": { "templateId": "T2-top-text-bottom-image", "paletteId": "P1-dry-white" },
+    "mood.chill": { "templateId": "T1-big-type", "paletteId": "P1-dry-white" },
+    "love.clear": { "templateId": "T6-scene-overlay", "paletteId": "P4-deep-night" },
+    "love.heal": { "templateId": "T2-top-text-bottom-image", "paletteId": "P3-cream-life" },
+    "love.story": { "templateId": "T2-top-text-bottom-image", "paletteId": "P1-dry-white" },
+    "love.chill": { "templateId": "T1-big-type", "paletteId": "P6-pop-clash" }
+  },
+
+  "items": [
+    { "id": "tr-cl-01", "theme": "travel", "tone": "clear", "main": "风把话都说完了", "sub": "在海边站了半小时，什么都没想", "tags": ["海边", "独行"], "stamp": true },
+    { "id": "tr-cl-02", "theme": "travel", "tone": "clear", "main": "路比答案长", "sub": "后来就不问了，一直往前开", "tags": ["公路", "自驾"], "stamp": false },
+    { "id": "tr-cl-03", "theme": "travel", "tone": "clear", "main": "山不说话", "sub": "但它比谁都清楚我为什么来", "tags": ["山", "徒步"], "stamp": true },
+    { "id": "tr-cl-04", "theme": "travel", "tone": "clear", "main": "过站就下车", "sub": "没有目的地的那趟，最好看", "tags": ["随性", "城市"], "stamp": false },
+
+    { "id": "tr-he-01", "theme": "travel", "tone": "heal", "main": "出门就会好", "sub": "真的，随便哪趟车都行", "tags": ["治愈", "散心"], "stamp": false },
+    { "id": "tr-he-02", "theme": "travel", "tone": "heal", "main": "海替你收着", "sub": "说不出口的，浪会带走", "tags": ["海边", "情绪"], "stamp": true },
+    { "id": "tr-he-03", "theme": "travel", "tone": "heal", "main": "慢一点也没事", "sub": "风景不会因为你晚到就关门", "tags": ["小镇", "慢游"], "stamp": false },
+    { "id": "tr-he-04", "theme": "travel", "tone": "heal", "main": "今天是晴天", "sub": "允许自己什么都不做", "tags": ["躺平", "发呆"], "stamp": true },
+
+    { "id": "tr-st-01", "theme": "travel", "tone": "story", "main": "六点的第一班车", "sub": "车上只有我和卖花的阿姨", "tags": ["清晨", "市井"], "stamp": true },
+    { "id": "tr-st-02", "theme": "travel", "tone": "story", "main": "在巷子里迷路", "sub": "转角闻到面包味，就不急了", "tags": ["老城", "面包店"], "stamp": false },
+    { "id": "tr-st-03", "theme": "travel", "tone": "story", "main": "酒店的窗朝西", "sub": "我把日落看了三遍才睡", "tags": ["酒店", "日落"], "stamp": true },
+    { "id": "tr-st-04", "theme": "travel", "tone": "story", "main": "老板多煮了碗粥", "sub": "说一个人出门要吃饱", "tags": ["民宿", "人情味"], "stamp": false },
+
+    { "id": "tr-ch-01", "theme": "travel", "tone": "chill", "main": "来都来了", "sub": "那就再坐一会儿", "tags": ["松弛", "景点"], "stamp": false },
+    { "id": "tr-ch-02", "theme": "travel", "tone": "chill", "main": "行程表撕了", "sub": "结果玩得比计划里开心", "tags": ["随性", "反内卷"], "stamp": false },
+    { "id": "tr-ch-03", "theme": "travel", "tone": "chill", "main": "只带了充电宝", "sub": "和一双走得动路的鞋", "tags": ["轻装", "极简"], "stamp": false },
+    { "id": "tr-ch-04", "theme": "travel", "tone": "chill", "main": "晒黑两个色号", "sub": "回去的事回去再说", "tags": ["海边", "度假"], "stamp": true },
+
+    { "id": "mo-cl-01", "theme": "mood", "tone": "clear", "main": "不必解释", "sub": "懂的人本来就不需要", "tags": ["边界", "克制"], "stamp": false },
+    { "id": "mo-cl-02", "theme": "mood", "tone": "clear", "main": "情绪自己会走", "sub": "像雨，下完就晴", "tags": ["低落", "自愈"], "stamp": false },
+    { "id": "mo-cl-03", "theme": "mood", "tone": "clear", "main": "安静也算回答", "sub": "不是所有话都要接", "tags": ["内向", "边界"], "stamp": false },
+    { "id": "mo-cl-04", "theme": "mood", "tone": "clear", "main": "留一盏灯给自己", "sub": "回家的时候不用摸黑", "tags": ["夜晚", "独处"], "stamp": true },
+
+    { "id": "mo-he-01", "theme": "mood", "tone": "heal", "main": "先照顾自己", "sub": "别的人才排得到后面", "tags": ["自我", "能量"], "stamp": false },
+    { "id": "mo-he-02", "theme": "mood", "tone": "heal", "main": "难过是允许的", "sub": "但别住在那儿", "tags": ["低落", "治愈"], "stamp": false },
+    { "id": "mo-he-03", "theme": "mood", "tone": "heal", "main": "今天只做一件", "sub": "做完了就算赢", "tags": ["摆烂", "轻努力"], "stamp": true },
+    { "id": "mo-he-04", "theme": "mood", "tone": "heal", "main": "你比想象中稳", "sub": "已经撑过很多次了", "tags": ["鼓励", "自我肯定"], "stamp": false },
+
+    { "id": "mo-st-01", "theme": "mood", "tone": "story", "main": "凌晨三点的便利店", "sub": "关东煮比谁都懂我", "tags": ["深夜", "城市"], "stamp": true },
+    { "id": "mo-st-02", "theme": "mood", "tone": "story", "main": "删了又打的字", "sub": "最后发了个表情包", "tags": ["社交", "内耗"], "stamp": false },
+    { "id": "mo-st-03", "theme": "mood", "tone": "story", "main": "地铁上哭了", "sub": "戴着口罩，没人发现", "tags": ["通勤", "崩溃"], "stamp": false },
+    { "id": "mo-st-04", "theme": "mood", "tone": "story", "main": "把旧衣服捐了", "sub": "衣柜空了，人也轻了", "tags": ["断舍离", "轻盈"], "stamp": false },
+
+    { "id": "mo-ch-01", "theme": "mood", "tone": "chill", "main": "算了也行", "sub": "不是所有事都要赢", "tags": ["松弛", "认输"], "stamp": false },
+    { "id": "mo-ch-02", "theme": "mood", "tone": "chill", "main": "今天不社交", "sub": "手机反扣，睡觉", "tags": ["独处", "宅"], "stamp": false },
+    { "id": "mo-ch-03", "theme": "mood", "tone": "chill", "main": "摆烂一小会儿", "sub": "明天再当个好人", "tags": ["摆烂", "自嘲"], "stamp": false },
+    { "id": "mo-ch-04", "theme": "mood", "tone": "chill", "main": "少想一点", "sub": "脑子空着比较舒服", "tags": ["内耗", "放空"], "stamp": false },
+
+    { "id": "lo-cl-01", "theme": "love", "tone": "clear", "main": "喜欢不必说破", "sub": "风知道就够了", "tags": ["暗恋", "克制"], "stamp": false },
+    { "id": "lo-cl-02", "theme": "love", "tone": "clear", "main": "我们刚好错过", "sub": "也不算遗憾", "tags": ["错过", "释怀"], "stamp": false },
+    { "id": "lo-cl-03", "theme": "love", "tone": "clear", "main": "他没回头", "sub": "我也没喊", "tags": ["分手", "体面"], "stamp": false },
+    { "id": "lo-cl-04", "theme": "love", "tone": "clear", "main": "爱是安静的", "sub": "不用说给谁听", "tags": ["稳定", "陪伴"], "stamp": false },
+
+    { "id": "lo-he-01", "theme": "love", "tone": "heal", "main": "会有人来接你", "sub": "不催你，也不走", "tags": ["期待", "治愈"], "stamp": false },
+    { "id": "lo-he-02", "theme": "love", "tone": "heal", "main": "被爱是有底气的", "sub": "走路都会抬头", "tags": ["被爱", "自信"], "stamp": false },
+    { "id": "lo-he-03", "theme": "love", "tone": "heal", "main": "慢一点的关系", "sub": "才走得远", "tags": ["慢热", "长期"], "stamp": false },
+    { "id": "lo-he-04", "theme": "love", "tone": "heal", "main": "他记得你不吃香菜", "sub": "这比情话好听", "tags": ["细节", "日常"], "stamp": false },
+
+    { "id": "lo-st-01", "theme": "love", "tone": "story", "main": "第一次牵手", "sub": "手心全是汗，谁也没松", "tags": ["初恋", "心动"], "stamp": false },
+    { "id": "lo-st-02", "theme": "love", "tone": "story", "main": "异地第183天", "sub": "视频里他瘦了", "tags": ["异地", "想念"], "stamp": true },
+    { "id": "lo-st-03", "theme": "love", "tone": "story", "main": "分手那天很晴", "sub": "像什么都没发生", "tags": ["分手", "反差"], "stamp": false },
+    { "id": "lo-st-04", "theme": "love", "tone": "story", "main": "他学会了做饭", "sub": "因为我总说外卖难吃", "tags": ["改变", "日常"], "stamp": false },
+
+    { "id": "lo-ch-01", "theme": "love", "tone": "chill", "main": "不谈恋爱也行", "sub": "先把自己爱明白", "tags": ["单身", "自洽"], "stamp": false },
+    { "id": "lo-ch-02", "theme": "love", "tone": "chill", "main": "暧昧太累了", "sub": "要么在一起，要么算了", "tags": ["暧昧", "直接"], "stamp": false },
+    { "id": "lo-ch-03", "theme": "love", "tone": "chill", "main": "他说随便", "sub": "那我就真随便了", "tags": ["情侣", "自嘲"], "stamp": false },
+    { "id": "lo-ch-04", "theme": "love", "tone": "chill", "main": "单身挺忙的", "sub": "忙着变好看", "tags": ["单身", "变美"], "stamp": false }
+  ],
+
+  "ops": {
+    "statusField": "online | draft | offline",
+    "defaultSort": "sortWeight desc, createdAt desc",
+    "fields": ["sortWeight", "status", "createdBy", "createdAt", "updatedAt"],
+    "rules": [
+      "新增条目只需填 theme/tone/main/sub，main 超过 9 字在保存时直接报错，不允许折行兜底",
+      "同一 theme 下 main 的字符相似度 > 0.8 判重，避免上架一堆近义句",
+      "每个 tone 至少保 4 条在线，低于 4 条时前端隐藏该语气 chip，不展示空列表",
+      "下线用 status=offline 软删除，已有作品的引用仍可正常渲染"
+    ]
+  }
+}

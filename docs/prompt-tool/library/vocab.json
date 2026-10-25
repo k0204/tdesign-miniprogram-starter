@@ -1,0 +1,1050 @@
+{
+  "age": [
+    {
+      "value": "young",
+      "count": 330
+    },
+    {
+      "value": "child",
+      "count": 145
+    },
+    {
+      "value": "baby",
+      "count": 60
+    },
+    {
+      "value": "senior",
+      "count": 24
+    }
+  ],
+  "angle": [
+    {
+      "value": "eye_level",
+      "count": 2047
+    },
+    {
+      "value": "phone",
+      "count": 125
+    },
+    {
+      "value": "high",
+      "count": 69
+    },
+    {
+      "value": "low",
+      "count": 10
+    },
+    {
+      "value": "selfie",
+      "count": 2
+    }
+  ],
+  "background": [
+    {
+      "value": "detailed",
+      "count": 1713
+    },
+    {
+      "value": "clean",
+      "count": 482
+    },
+    {
+      "value": "blurred",
+      "count": 42
+    },
+    {
+      "value": "patterned",
+      "count": 16
+    }
+  ],
+  "colorTemp": [
+    {
+      "value": "neutral",
+      "count": 924
+    },
+    {
+      "value": "warm",
+      "count": 814
+    },
+    {
+      "value": "cool",
+      "count": 262
+    },
+    {
+      "value": "mono",
+      "count": 253
+    }
+  ],
+  "composition": [
+    {
+      "value": "center",
+      "count": 1537
+    },
+    {
+      "value": "rule_of_thirds",
+      "count": 504
+    },
+    {
+      "value": "off_center",
+      "count": 74
+    },
+    {
+      "value": "geometric",
+      "count": 61
+    },
+    {
+      "value": "frame",
+      "count": 45
+    },
+    {
+      "value": "negative_space",
+      "count": 32
+    }
+  ],
+  "dof": [
+    {
+      "value": "deep",
+      "count": 2184
+    },
+    {
+      "value": "shallow",
+      "count": 42
+    },
+    {
+      "value": "medium",
+      "count": 27
+    }
+  ],
+  "expression": [
+    {
+      "value": "calm",
+      "count": 1669
+    },
+    {
+      "value": "smiling",
+      "count": 153
+    },
+    {
+      "value": "gentle",
+      "count": 21
+    },
+    {
+      "value": "serious",
+      "count": 9
+    },
+    {
+      "value": "surprised",
+      "count": 9
+    },
+    {
+      "value": "melancholy",
+      "count": 6
+    },
+    {
+      "value": "confident",
+      "count": 1
+    }
+  ],
+  "foreground": [
+    {
+      "value": "none",
+      "count": 1385
+    },
+    {
+      "value": "frame",
+      "count": 23
+    },
+    {
+      "value": "foliage",
+      "count": 23
+    },
+    {
+      "value": "fabric",
+      "count": 9
+    },
+    {
+      "value": "mirror",
+      "count": 7
+    },
+    {
+      "value": "rail",
+      "count": 3
+    }
+  ],
+  "frame": [
+    {
+      "value": "landscape",
+      "count": 1326
+    },
+    {
+      "value": "portrait",
+      "count": 909
+    },
+    {
+      "value": "square",
+      "count": 18
+    }
+  ],
+  "gaze": [
+    {
+      "value": "generic",
+      "count": 1755
+    },
+    {
+      "value": "offframe",
+      "count": 93
+    },
+    {
+      "value": "side",
+      "count": 5
+    },
+    {
+      "value": "camera",
+      "count": 5
+    },
+    {
+      "value": "distance",
+      "count": 4
+    },
+    {
+      "value": "closed",
+      "count": 4
+    },
+    {
+      "value": "away",
+      "count": 2
+    }
+  ],
+  "gender": [
+    {
+      "value": "female",
+      "count": 698
+    },
+    {
+      "value": "unspecified",
+      "count": 690
+    },
+    {
+      "value": "male",
+      "count": 265
+    },
+    {
+      "value": "mixed",
+      "count": 208
+    }
+  ],
+  "grade": [
+    {
+      "value": "film",
+      "count": 986
+    },
+    {
+      "value": "clean",
+      "count": 551
+    },
+    {
+      "value": "dark",
+      "count": 406
+    },
+    {
+      "value": "mono",
+      "count": 253
+    },
+    {
+      "value": "tinted",
+      "count": 56
+    },
+    {
+      "value": "contrast",
+      "count": 1
+    }
+  ],
+  "lens": [
+    {
+      "value": "wide",
+      "count": 1643
+    },
+    {
+      "value": "standard",
+      "count": 497
+    },
+    {
+      "value": "ultra_wide",
+      "count": 57
+    },
+    {
+      "value": "medium_tele",
+      "count": 51
+    },
+    {
+      "value": "tele",
+      "count": 5
+    }
+  ],
+  "lightDir": [
+    {
+      "value": "left",
+      "count": 518
+    },
+    {
+      "value": "right",
+      "count": 499
+    },
+    {
+      "value": "front",
+      "count": 477
+    },
+    {
+      "value": "top",
+      "count": 344
+    },
+    {
+      "value": "back",
+      "count": 294
+    },
+    {
+      "value": "bottom",
+      "count": 120
+    },
+    {
+      "value": "side",
+      "count": 1
+    }
+  ],
+  "lightQuality": [
+    {
+      "value": "soft",
+      "count": 1745
+    },
+    {
+      "value": "hard",
+      "count": 385
+    },
+    {
+      "value": "mono",
+      "count": 116
+    },
+    {
+      "value": "mixed",
+      "count": 7
+    }
+  ],
+  "mood": [
+    {
+      "value": "natural",
+      "count": 1229
+    },
+    {
+      "value": "warm",
+      "count": 465
+    },
+    {
+      "value": "quiet",
+      "count": 331
+    },
+    {
+      "value": "bright",
+      "count": 181
+    },
+    {
+      "value": "nostalgic",
+      "count": 29
+    },
+    {
+      "value": "dramatic",
+      "count": 11
+    },
+    {
+      "value": "distant",
+      "count": 6
+    },
+    {
+      "value": "romantic",
+      "count": 1
+    }
+  ],
+  "motion": [
+    {
+      "value": "static",
+      "count": 2174
+    },
+    {
+      "value": "dynamic",
+      "count": 79
+    }
+  ],
+  "narrative": [
+    {
+      "value": "portrait_state",
+      "count": 804
+    },
+    {
+      "value": "family_time",
+      "count": 291
+    },
+    {
+      "value": "city_life",
+      "count": 225
+    },
+    {
+      "value": "culture",
+      "count": 159
+    },
+    {
+      "value": "light_order",
+      "count": 131
+    },
+    {
+      "value": "intimacy",
+      "count": 123
+    },
+    {
+      "value": "geometry",
+      "count": 114
+    },
+    {
+      "value": "editorial",
+      "count": 110
+    },
+    {
+      "value": "journey",
+      "count": 70
+    },
+    {
+      "value": "mood_environment",
+      "count": 62
+    },
+    {
+      "value": "retro_urban",
+      "count": 62
+    },
+    {
+      "value": "daily_wander",
+      "count": 61
+    },
+    {
+      "value": "solitude",
+      "count": 14
+    },
+    {
+      "value": "commercial",
+      "count": 11
+    },
+    {
+      "value": "quiet_portrait",
+      "count": 8
+    },
+    {
+      "value": "retro_slice",
+      "count": 8
+    }
+  ],
+  "outfit": [
+    {
+      "value": "dress",
+      "count": 46
+    },
+    {
+      "value": "outerwear",
+      "count": 29
+    },
+    {
+      "value": "qipao",
+      "count": 20
+    },
+    {
+      "value": "formal",
+      "count": 14
+    },
+    {
+      "value": "hanfu",
+      "count": 13
+    },
+    {
+      "value": "textured",
+      "count": 7
+    },
+    {
+      "value": "gown",
+      "count": 6
+    },
+    {
+      "value": "casual",
+      "count": 6
+    },
+    {
+      "value": "kimono",
+      "count": 4
+    },
+    {
+      "value": "accessory",
+      "count": 2
+    },
+    {
+      "value": "ethnic",
+      "count": 1
+    },
+    {
+      "value": "camisole",
+      "count": 1
+    }
+  ],
+  "people": [
+    {
+      "value": "single",
+      "count": 1591
+    },
+    {
+      "value": "two",
+      "count": 178
+    },
+    {
+      "value": "group",
+      "count": 99
+    }
+  ],
+  "pose": [
+    {
+      "value": "generic",
+      "count": 1512
+    },
+    {
+      "value": "holding",
+      "count": 78
+    },
+    {
+      "value": "sitting",
+      "count": 67
+    },
+    {
+      "value": "walking",
+      "count": 49
+    },
+    {
+      "value": "standing",
+      "count": 34
+    },
+    {
+      "value": "working",
+      "count": 33
+    },
+    {
+      "value": "leaning",
+      "count": 22
+    },
+    {
+      "value": "playing",
+      "count": 19
+    },
+    {
+      "value": "intimate",
+      "count": 10
+    },
+    {
+      "value": "lying",
+      "count": 10
+    },
+    {
+      "value": "dancing",
+      "count": 10
+    },
+    {
+      "value": "moving",
+      "count": 9
+    },
+    {
+      "value": "profile",
+      "count": 6
+    },
+    {
+      "value": "back",
+      "count": 4
+    },
+    {
+      "value": "gazing_up",
+      "count": 3
+    },
+    {
+      "value": "sport",
+      "count": 2
+    }
+  ],
+  "prop": [
+    {
+      "value": "flower",
+      "count": 69
+    },
+    {
+      "value": "camera",
+      "count": 65
+    },
+    {
+      "value": "mirror",
+      "count": 40
+    },
+    {
+      "value": "book",
+      "count": 23
+    },
+    {
+      "value": "drink_food",
+      "count": 16
+    },
+    {
+      "value": "device",
+      "count": 14
+    },
+    {
+      "value": "vehicle",
+      "count": 12
+    },
+    {
+      "value": "flag",
+      "count": 9
+    },
+    {
+      "value": "animal",
+      "count": 9
+    },
+    {
+      "value": "lantern",
+      "count": 6
+    },
+    {
+      "value": "smoke",
+      "count": 6
+    },
+    {
+      "value": "umbrella",
+      "count": 5
+    },
+    {
+      "value": "accessory",
+      "count": 5
+    },
+    {
+      "value": "basket",
+      "count": 2
+    },
+    {
+      "value": "balloon",
+      "count": 1
+    }
+  ],
+  "scene": [
+    {
+      "value": "generic",
+      "count": 1380
+    },
+    {
+      "value": "studio_wall",
+      "count": 149
+    },
+    {
+      "value": "street",
+      "count": 130
+    },
+    {
+      "value": "mountain",
+      "count": 130
+    },
+    {
+      "value": "water",
+      "count": 118
+    },
+    {
+      "value": "indoor",
+      "count": 92
+    },
+    {
+      "value": "nature_green",
+      "count": 81
+    },
+    {
+      "value": "urban",
+      "count": 48
+    },
+    {
+      "value": "snow",
+      "count": 37
+    },
+    {
+      "value": "outdoor",
+      "count": 25
+    },
+    {
+      "value": "garden",
+      "count": 25
+    },
+    {
+      "value": "dusk_outdoor",
+      "count": 12
+    },
+    {
+      "value": "night",
+      "count": 12
+    },
+    {
+      "value": "mirror",
+      "count": 7
+    },
+    {
+      "value": "aerial_land",
+      "count": 4
+    },
+    {
+      "value": "rain",
+      "count": 3
+    }
+  ],
+  "school": [
+    {
+      "value": "warm_film",
+      "count": 427
+    },
+    {
+      "value": "clean_natural",
+      "count": 317
+    },
+    {
+      "value": "low_sat_film",
+      "count": 302
+    },
+    {
+      "value": "black_white",
+      "count": 243
+    },
+    {
+      "value": "dark_neutral",
+      "count": 140
+    },
+    {
+      "value": "dark_vivid",
+      "count": 119
+    },
+    {
+      "value": "vivid_film",
+      "count": 107
+    },
+    {
+      "value": "cool_clean",
+      "count": 101
+    },
+    {
+      "value": "vivid_clean",
+      "count": 77
+    },
+    {
+      "value": "guofeng",
+      "count": 62
+    },
+    {
+      "value": "moody",
+      "count": 62
+    },
+    {
+      "value": "hk_retro",
+      "count": 62
+    },
+    {
+      "value": "japanese_film",
+      "count": 61
+    },
+    {
+      "value": "warm_dark",
+      "count": 51
+    },
+    {
+      "value": "cool_dark",
+      "count": 25
+    },
+    {
+      "value": "studio_commercial",
+      "count": 11
+    },
+    {
+      "value": "traditional",
+      "count": 11
+    },
+    {
+      "value": "editorial",
+      "count": 10
+    },
+    {
+      "value": "environmental",
+      "count": 10
+    },
+    {
+      "value": "street_doc",
+      "count": 10
+    },
+    {
+      "value": "backlight_silhouette",
+      "count": 10
+    },
+    {
+      "value": "dark_moody",
+      "count": 9
+    },
+    {
+      "value": "neutral_film",
+      "count": 9
+    },
+    {
+      "value": "natural_light",
+      "count": 8
+    },
+    {
+      "value": "film_vintage",
+      "count": 8
+    },
+    {
+      "value": "cool_film",
+      "count": 1
+    }
+  ],
+  "shot": [
+    {
+      "value": "full",
+      "count": 1111
+    },
+    {
+      "value": "medium",
+      "count": 561
+    },
+    {
+      "value": "wide",
+      "count": 357
+    },
+    {
+      "value": "closeup",
+      "count": 207
+    },
+    {
+      "value": "medium_close",
+      "count": 17
+    }
+  ],
+  "styleKey": [
+    {
+      "value": "warm_film",
+      "count": 484
+    },
+    {
+      "value": "clean_natural",
+      "count": 361
+    },
+    {
+      "value": "low_sat_film",
+      "count": 338
+    },
+    {
+      "value": "black_white",
+      "count": 253
+    },
+    {
+      "value": "dark_neutral",
+      "count": 177
+    },
+    {
+      "value": "dark_vivid",
+      "count": 139
+    },
+    {
+      "value": "vivid_film",
+      "count": 125
+    },
+    {
+      "value": "cool_clean",
+      "count": 110
+    },
+    {
+      "value": "vivid_clean",
+      "count": 80
+    },
+    {
+      "value": "warm_dark",
+      "count": 63
+    },
+    {
+      "value": "neutral_film",
+      "count": 34
+    },
+    {
+      "value": "cool_dark",
+      "count": 27
+    },
+    {
+      "value": "cool_film",
+      "count": 5
+    },
+    {
+      "value": "neutral_contrast",
+      "count": 1
+    }
+  ],
+  "styling": [
+    {
+      "value": "natural",
+      "count": 1795
+    },
+    {
+      "value": "accessory",
+      "count": 59
+    },
+    {
+      "value": "hair_style",
+      "count": 10
+    },
+    {
+      "value": "glam",
+      "count": 4
+    }
+  ],
+  "subjectGenre": [
+    {
+      "value": "women",
+      "count": 405
+    },
+    {
+      "value": "general_portrait",
+      "count": 316
+    },
+    {
+      "value": "men",
+      "count": 165
+    },
+    {
+      "value": "family",
+      "count": 154
+    },
+    {
+      "value": "children",
+      "count": 152
+    },
+    {
+      "value": "street_life",
+      "count": 143
+    },
+    {
+      "value": "couple",
+      "count": 130
+    },
+    {
+      "value": "fashion",
+      "count": 100
+    },
+    {
+      "value": "culture",
+      "count": 86
+    },
+    {
+      "value": "portrait_studio",
+      "count": 84
+    },
+    {
+      "value": "elderly",
+      "count": 72
+    },
+    {
+      "value": "humanist",
+      "count": 72
+    },
+    {
+      "value": "lifestyle",
+      "count": 71
+    },
+    {
+      "value": "travel",
+      "count": 70
+    },
+    {
+      "value": "landscape",
+      "count": 69
+    },
+    {
+      "value": "urban_architecture",
+      "count": 60
+    },
+    {
+      "value": "aerial",
+      "count": 54
+    },
+    {
+      "value": "scenery",
+      "count": 47
+    },
+    {
+      "value": "group",
+      "count": 3
+    }
+  ],
+  "tone": [
+    {
+      "value": "neutral",
+      "count": 601
+    },
+    {
+      "value": "warm",
+      "count": 561
+    },
+    {
+      "value": "high_sat",
+      "count": 348
+    },
+    {
+      "value": "low_sat",
+      "count": 345
+    },
+    {
+      "value": "mono",
+      "count": 253
+    },
+    {
+      "value": "cool",
+      "count": 145
+    }
+  ],
+  "weather": [
+    {
+      "value": "autumn",
+      "count": 57
+    },
+    {
+      "value": "winter",
+      "count": 55
+    },
+    {
+      "value": "summer",
+      "count": 43
+    },
+    {
+      "value": "night",
+      "count": 39
+    },
+    {
+      "value": "dusk",
+      "count": 36
+    },
+    {
+      "value": "spring",
+      "count": 22
+    },
+    {
+      "value": "fog",
+      "count": 21
+    },
+    {
+      "value": "rain",
+      "count": 18
+    },
+    {
+      "value": "dawn",
+      "count": 14
+    },
+    {
+      "value": "sunny",
+      "count": 10
+    }
+  ]
+}

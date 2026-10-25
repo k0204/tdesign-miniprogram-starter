@@ -1,0 +1,5 @@
+{
+  "api_key": "cpk-2mNFaHIiokhUATaGjjw6athgOjc4p6WZpsZsX6lkluT3XWxO",
+  "endpoint": "https://apihub.agnes-ai.com/v1/images/generations",
+  "model": "agnes-image-2.5-flash"
+}

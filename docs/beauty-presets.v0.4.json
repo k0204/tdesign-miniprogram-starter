@@ -1,0 +1,620 @@
+{
+  "version": "0.4",
+  "updatedAt": "2026-10-25",
+  "note": "修图预设（变白 / 变美）。核心决策：变白走确定性色彩工程，不走生图模型重绘——重绘会改变身份，这是人像产品最大的信任风险。v0.3 已用实测标定替换 v0.1 的错误矩阵与 v0.2 的失效 gamma。",
+  "changelog": [
+    {
+      "from": "v0.1",
+      "problem": "用「提高蓝通道增益」实现降黄，蓝增益同时抬高了整体亮度，与 brightness 叠加后浅色衣物大面积溢出。实测 B2 冷白皮 standard 档把 19.75% 的像素推到纯白。",
+      "fix": "拆成两个解耦维度：(1) 色温用亮度中性的三通道矩阵 r/g/b 增益，降黄时压低 R、G 并抬高 B，总亮度贡献≈1，不再顺带提亮；(2) 提亮改用 gamma，对高光收敛、对中间调提升，天然抗溢出。",
+      "evidence": "修正后 6 个预设 3 档共 18 组参数，高光溢出全部 < 1.5%（见 docs/beauty-presets-preview.jpg 与终端量化表）"
+    },
+    {
+      "from": "v0.2",
+      "problem": "用 sharp.gamma() 做提亮，实测完全无效——同一张图传 gamma 1.4~2.2 输出像素完全一致（肤色亮度恒定 171.3）。gamma 对已解码的 sRGB JPEG 不生效，只对 raw/未标定输入有意义。因此 v0.2 六个预设的亮度差异实际全部来自 tone 与 contrast，B2 冷白皮只有 +2.8%，撑不起「显白最明显」的标签。",
+      "fix": "提亮改用 modulate({ brightness })。标定后建立线性响应：每 +0.01 约 +2.3% 肤色区亮度。同时把亮度职责从 tone 完全剥离，tone 只做色温。",
+      "evidence": "B2 冷白皮 standard 档由 +2.8% 提升到 +9.0%，色温 -10，溢出仍 <0.3%"
+    },
+    {
+      "from": "v0.3-beta",
+      "problem": "纯全局参数在含浅色衣物的图上必然烧掉白区：B2/B3 把 19.7% 的像素推到纯白（正好等于白衬衫面积），而这两个正是主推的显白档。",
+      "fix": "改为肤色蒙版合成：全局先算出目标图，再用 RGBA 蒙版只把肤色区贴回去。关键实现细节——蒙版必须写成 RGBA，blend dest-in 读的是 alpha 通道，单通道灰度图 alpha 恒为 1，等于没遮罩。",
+      "evidence": "蒙版模式下 B2 肤色提亮 13.3%（全局 13.5%，几乎无损失），溢出 19.72% → 0%；18 组参数溢出超标从 6 组降到 0 组。"
+    }
+  ],
+  "principle": {
+    "split": {
+      "color": "变白、通透、降黄、氛围 —— 纯色彩变换，sharp 本地完成，零失真、百毫秒级、可实时预览",
+      "retouch": "磨皮、去瑕、光泽 —— 局部像素处理，可本地可服务端",
+      "ai": "五官微调、发丝、光影重塑 —— 必须图生图，有身份漂移风险，默认关闭，需显式开启"
+    },
+    "whyNotAiForWhiten": "生图模型的「美白」本质是重绘。1080 宽的图重绘后脸型、痣、双眼皮宽度都会变，用户第一眼觉得「不像我」就流失了。更致命的是每次生成结果不稳定，同一张图两次出片肤色不一致，无法做可靠的前后对比。",
+    "identityGuard": "AI 档强制 facesim 校验：与原图人脸相似度 < 0.85 直接判失败并回退到色彩档结果"
+  },
+  "params": {
+    "brightness": {
+      "range": [
+        0.97,
+        1.12
+      ],
+      "api": "sharp.modulate({ brightness })",
+      "calibration": "实测（内置测试图，肤色区基准 172）：1.00→0%，1.04→+4.6%，1.06→+6.9%，1.08→+9.2%，1.10→+10.9%（溢出 0.23%），1.12→+13.2%（溢出 0.48%）。约每 +0.01 ≈ 肤色区亮度 +2.3%。",
+      "why": "线性乘，对肤色等比放大且不改色温（实测 R-B 恒定 62.7），与 tone 矩阵正交，可以两个维度独立调。",
+      "overdo": "> 1.10 时浅色衣物开始溢出；真实照片肤色比测试图暗，安全余量更大，但仍需 Q2 拦截"
+    },
+    "tone": {
+      "api": "sharp.recomb([[r,0,0],[0,g,0],[0,0,b]])",
+      "brightnessNeutral": "0.299*r + 0.587*g + 0.114*b ≈ 1.0",
+      "effect": "r/g 压低 + b 抬高 = 降黄（显白）；r 抬高 + b 压低 = 加暖（日落）",
+      "why": "把「色温」和「亮度」解耦：降黄时压低 R 与 G、抬高 B，总亮度贡献≈1（实测 0.965/0.988/1.06 只让肤色亮度 -1.5%）。这是唯一能在不提亮的前提下把 R-B 差压掉 10 个单位的方法。",
+      "overdo": "b > 1.09 时白墙发青；r < 0.94 时嘴唇失血色"
+    },
+    "saturation": {
+      "range": [
+        0.8,
+        1.08
+      ],
+      "api": "sharp.modulate({ saturation })",
+      "effect": "降饱和去火气，是「高级感」的主要来源",
+      "overdo": "< 0.85 时嘴唇失去血色，显病态"
+    },
+    "contrast": {
+      "range": [
+        0.9,
+        1.06
+      ],
+      "api": "sharp.linear(a, 128*(1-a))",
+      "effect": "通透感来源，但会放大瑕疵",
+      "overdo": "> 1.06 时毛孔和阴影被强调"
+    },
+    "shadowLift": {
+      "range": [
+        0,
+        14
+      ],
+      "api": "sharp.linear(1, +b)",
+      "effect": "提亮暗部，去「脏」感，奶油肌关键",
+      "overdo": "> 14 时画面发灰没有层次"
+    },
+    "soften": {
+      "range": [
+        0,
+        1
+      ],
+      "api": "sharp.median(3).blur(0.3+v*1.2)",
+      "effect": "轻磨皮，只压高频噪点",
+      "overdo": "> 0.7 时五官边界糊掉，像糊了层塑料膜"
+    },
+    "sharpen": {
+      "range": [
+        0,
+        0.5
+      ],
+      "api": "sharp.sharpen({ sigma: 0.5 + v })",
+      "effect": "补回磨皮损失的细节，眼睛和发丝变清晰",
+      "overdo": "> 0.5 时出现白边"
+    },
+    "grain": {
+      "range": [
+        0,
+        0.06
+      ],
+      "api": "叠加半透明噪点层",
+      "effect": "胶片质感，掩盖磨皮后的塑料感",
+      "overdo": "手机上看是脏点"
+    }
+  },
+  "presets": [
+    {
+      "id": "B0-natural",
+      "name": "自然光",
+      "tag": "几乎看不出修过",
+      "intent": "只做基础还原，给不想被看出修图的用户",
+      "bestFor": [
+        "日常",
+        "证件照",
+        "长辈"
+      ],
+      "whitenLevel": 0,
+      "levels": {
+        "light": {
+          "brightness": 1.005,
+          "tone": {
+            "r": 1,
+            "g": 1,
+            "b": 1
+          },
+          "saturation": 1,
+          "contrast": 1,
+          "shadowLift": 0,
+          "soften": 0,
+          "sharpen": 0,
+          "grain": 0
+        },
+        "standard": {
+          "brightness": 1.015,
+          "tone": {
+            "r": 0.995,
+            "g": 1,
+            "b": 1.01
+          },
+          "saturation": 1,
+          "contrast": 1.01,
+          "shadowLift": 2,
+          "soften": 0,
+          "sharpen": 0.1,
+          "grain": 0
+        },
+        "strong": {
+          "brightness": 1.025,
+          "tone": {
+            "r": 0.99,
+            "g": 0.998,
+            "b": 1.02
+          },
+          "saturation": 0.99,
+          "contrast": 1.02,
+          "shadowLift": 4,
+          "soften": 0.2,
+          "sharpen": 0.1,
+          "grain": 0
+        }
+      },
+      "aiPrompt": null,
+      "measured": {
+        "method": "tools/beauty-preset-preview.js / standard 档 / 内置测试图",
+        "global": {
+          "skinLiftPct": 2.8,
+          "clipPct": 0
+        },
+        "masked": {
+          "skinLiftPct": 2.7,
+          "clipPct": 0
+        },
+        "dSkinWarm": -2.1,
+        "verdict": "非变白档，不适用显白判据"
+      }
+    },
+    {
+      "id": "B1-clear",
+      "name": "通透感",
+      "tag": "不白，但干净",
+      "intent": "解决「照片看着脏、闷、没气色」，主要靠 gamma + 提暗部",
+      "bestFor": [
+        "室内",
+        "阴天",
+        "原相机直出"
+      ],
+      "whitenLevel": 2,
+      "levels": {
+        "light": {
+          "brightness": 1.03,
+          "tone": {
+            "r": 0.99,
+            "g": 1,
+            "b": 1.02
+          },
+          "saturation": 0.99,
+          "contrast": 1.02,
+          "shadowLift": 4,
+          "soften": 0,
+          "sharpen": 0.2,
+          "grain": 0
+        },
+        "standard": {
+          "brightness": 1.045,
+          "tone": {
+            "r": 0.985,
+            "g": 0.998,
+            "b": 1.035
+          },
+          "saturation": 0.98,
+          "contrast": 1.03,
+          "shadowLift": 6,
+          "soften": 0.2,
+          "sharpen": 0.3,
+          "grain": 0
+        },
+        "strong": {
+          "brightness": 1.06,
+          "tone": {
+            "r": 0.98,
+            "g": 0.995,
+            "b": 1.048
+          },
+          "saturation": 0.97,
+          "contrast": 1.04,
+          "shadowLift": 8,
+          "soften": 0.3,
+          "sharpen": 0.3,
+          "grain": 0
+        }
+      },
+      "aiPrompt": null,
+      "measured": {
+        "method": "tools/beauty-preset-preview.js / standard 档 / 内置测试图",
+        "global": {
+          "skinLiftPct": 8.4,
+          "clipPct": 0.3
+        },
+        "masked": {
+          "skinLiftPct": 8.2,
+          "clipPct": 0
+        },
+        "dSkinWarm": -5.9,
+        "verdict": "轻度显白/氛围档"
+      }
+    },
+    {
+      "id": "B2-cool-white",
+      "name": "冷白皮",
+      "tag": "显白最明显",
+      "intent": "主推档。以压低 R、抬高 B 的色温偏移为主，提亮只做辅助",
+      "bestFor": [
+        "自拍",
+        "黄皮",
+        "暖光环境"
+      ],
+      "whitenLevel": 4,
+      "levels": {
+        "light": {
+          "brightness": 1.075,
+          "tone": {
+            "r": 0.975,
+            "g": 0.992,
+            "b": 1.045
+          },
+          "saturation": 0.96,
+          "contrast": 1.03,
+          "shadowLift": 4,
+          "soften": 0.2,
+          "sharpen": 0.3,
+          "grain": 0
+        },
+        "standard": {
+          "brightness": 1.095,
+          "tone": {
+            "r": 0.965,
+            "g": 0.988,
+            "b": 1.06
+          },
+          "saturation": 0.93,
+          "contrast": 1.04,
+          "shadowLift": 6,
+          "soften": 0.3,
+          "sharpen": 0.3,
+          "grain": 0
+        },
+        "strong": {
+          "brightness": 1.11,
+          "tone": {
+            "r": 0.955,
+            "g": 0.982,
+            "b": 1.072
+          },
+          "saturation": 0.9,
+          "contrast": 1.04,
+          "shadowLift": 8,
+          "soften": 0.4,
+          "sharpen": 0.3,
+          "grain": 0
+        }
+      },
+      "aiPrompt": null,
+      "measured": {
+        "method": "tools/beauty-preset-preview.js / standard 档 / 内置测试图",
+        "global": {
+          "skinLiftPct": 13.5,
+          "clipPct": 19.72
+        },
+        "masked": {
+          "skinLiftPct": 13.3,
+          "clipPct": 0
+        },
+        "dSkinWarm": -15.8,
+        "verdict": "达标：明显显白"
+      }
+    },
+    {
+      "id": "B3-cream",
+      "name": "奶油肌",
+      "tag": "柔、软、有光泽",
+      "intent": "降对比 + 提暗部 + 轻磨皮，皮肤像有光",
+      "bestFor": [
+        "人像",
+        "母婴",
+        "室内暖光"
+      ],
+      "whitenLevel": 3,
+      "levels": {
+        "light": {
+          "brightness": 1.06,
+          "tone": {
+            "r": 0.985,
+            "g": 1,
+            "b": 1.025
+          },
+          "saturation": 0.95,
+          "contrast": 0.98,
+          "shadowLift": 8,
+          "soften": 0.4,
+          "sharpen": 0.2,
+          "grain": 0
+        },
+        "standard": {
+          "brightness": 1.08,
+          "tone": {
+            "r": 0.98,
+            "g": 0.996,
+            "b": 1.035
+          },
+          "saturation": 0.94,
+          "contrast": 0.97,
+          "shadowLift": 10,
+          "soften": 0.6,
+          "sharpen": 0.2,
+          "grain": 0
+        },
+        "strong": {
+          "brightness": 1.095,
+          "tone": {
+            "r": 0.975,
+            "g": 0.992,
+            "b": 1.042
+          },
+          "saturation": 0.92,
+          "contrast": 0.95,
+          "shadowLift": 12,
+          "soften": 0.8,
+          "sharpen": 0.2,
+          "grain": 0.02
+        }
+      },
+      "aiPrompt": "subtle skin retouching, soft glowing skin, keep facial features and identity unchanged, preserve natural skin texture, no reshaping, no beauty filter look",
+      "measured": {
+        "method": "tools/beauty-preset-preview.js / standard 档 / 内置测试图",
+        "global": {
+          "skinLiftPct": 12.5,
+          "clipPct": 19.68
+        },
+        "masked": {
+          "skinLiftPct": 12.3,
+          "clipPct": 0
+        },
+        "dSkinWarm": -11,
+        "verdict": "达标：明显显白"
+      }
+    },
+    {
+      "id": "B4-film",
+      "name": "胶片感",
+      "tag": "不显白，但显贵",
+      "intent": "降饱和 + 压对比 + 提暗部 + 颗粒，做氛围而不是做皮肤",
+      "bestFor": [
+        "街拍",
+        "旅拍",
+        "情绪片"
+      ],
+      "whitenLevel": 1,
+      "levels": {
+        "light": {
+          "brightness": 0.99,
+          "tone": {
+            "r": 1.005,
+            "g": 1,
+            "b": 0.995
+          },
+          "saturation": 0.92,
+          "contrast": 0.96,
+          "shadowLift": 10,
+          "soften": 0,
+          "sharpen": 0,
+          "grain": 0.03
+        },
+        "standard": {
+          "brightness": 0.98,
+          "tone": {
+            "r": 1.01,
+            "g": 1,
+            "b": 0.99
+          },
+          "saturation": 0.86,
+          "contrast": 0.93,
+          "shadowLift": 12,
+          "soften": 0,
+          "sharpen": 0,
+          "grain": 0.05
+        },
+        "strong": {
+          "brightness": 0.97,
+          "tone": {
+            "r": 1.015,
+            "g": 1,
+            "b": 0.985
+          },
+          "saturation": 0.8,
+          "contrast": 0.9,
+          "shadowLift": 14,
+          "soften": 0.2,
+          "sharpen": 0,
+          "grain": 0.06
+        }
+      },
+      "aiPrompt": null,
+      "measured": {
+        "method": "tools/beauty-preset-preview.js / standard 档 / 内置测试图",
+        "global": {
+          "skinLiftPct": 2.8,
+          "clipPct": 0
+        },
+        "masked": {
+          "skinLiftPct": 2.8,
+          "clipPct": 0
+        },
+        "dSkinWarm": -8.9,
+        "verdict": "轻度显白/氛围档"
+      }
+    },
+    {
+      "id": "B5-sunset",
+      "name": "日落暖",
+      "tag": "反向操作，加黄",
+      "intent": "不做变白，做氛围；给风景、餐厅、傍晚场景",
+      "bestFor": [
+        "旅拍",
+        "餐厅",
+        "傍晚"
+      ],
+      "whitenLevel": 0,
+      "levels": {
+        "light": {
+          "brightness": 1.01,
+          "tone": {
+            "r": 1.03,
+            "g": 1.005,
+            "b": 0.965
+          },
+          "saturation": 1.04,
+          "contrast": 1.02,
+          "shadowLift": 2,
+          "soften": 0,
+          "sharpen": 0.2,
+          "grain": 0.01
+        },
+        "standard": {
+          "brightness": 1.02,
+          "tone": {
+            "r": 1.045,
+            "g": 1.005,
+            "b": 0.955
+          },
+          "saturation": 1.06,
+          "contrast": 1.04,
+          "shadowLift": 4,
+          "soften": 0,
+          "sharpen": 0.2,
+          "grain": 0.02
+        },
+        "strong": {
+          "brightness": 1.03,
+          "tone": {
+            "r": 1.06,
+            "g": 1.008,
+            "b": 0.945
+          },
+          "saturation": 1.08,
+          "contrast": 1.05,
+          "shadowLift": 6,
+          "soften": 0,
+          "sharpen": 0.2,
+          "grain": 0.03
+        }
+      },
+      "aiPrompt": null,
+      "measured": {
+        "method": "tools/beauty-preset-preview.js / standard 档 / 内置测试图",
+        "global": {
+          "skinLiftPct": 6.1,
+          "clipPct": 0
+        },
+        "masked": {
+          "skinLiftPct": 6,
+          "clipPct": 0
+        },
+        "dSkinWarm": 23.5,
+        "verdict": "非变白档，不适用显白判据"
+      }
+    }
+  ],
+  "skinProtection": {
+    "needed": true,
+    "why": "全局提亮/降黄必然烧掉浅色区。实测 B2 全局模式把 19.72% 的像素推到纯白，面积正好等于白衬衫；而 B2 恰恰是主推的显白档。",
+    "maskRule": {
+      "space": "HSL",
+      "hueDeg": [
+        8,
+        42
+      ],
+      "sat": [
+        0.15,
+        0.55
+      ],
+      "light": [
+        0.28,
+        0.85
+      ],
+      "why": "l 上限必须压到 0.85：白衬衫 hsl 约 (h=41,s=0.21,l=0.89)，不压就会被当成肤色一起修"
+    },
+    "blend": {
+      "skinWeight": 1,
+      "bgWeight": 0.3,
+      "why": "肤色满强度 + 非肤色 30% 弱补偿。只修脸会让「脸白了身子还黄」，画面割裂；给背景 30% 既统一色调又不至于把白衣服烧掉。",
+      "impl": "蒙版写成 RGBA，alpha 在肤色区 = 255、非肤色区 = 76（255×0.3），羽化 blur 4px，用 blend dest-in 裁出处理后图再 over 回原图",
+      "trap": "dest-in 读的是 alpha 通道。单通道灰度 PNG 的 alpha 恒为 1，合成等于没遮罩——这是最容易踩的一步。"
+    },
+    "measured": {
+      "source": "tools/beauty-preset-preview.js / 18 组参数 / 内置测试图",
+      "globalClipOverLimit": "6 / 18",
+      "maskedClipOverLimit": "0 / 18",
+      "skinLiftLoss": "13.5% → 13.4%，蒙版几乎不损失提亮效果"
+    },
+    "fallback": "蒙版覆盖率 < 6%（几乎无人像）时，跳过蒙版直接走全局参数，但把 brightness 与 tone.b 各衰减 50%"
+  },
+  "qa": {
+    "checks": [
+      {
+        "id": "Q1",
+        "name": "肤色合理性",
+        "check": "处理后肤色区 Lab 的 a* 落在 [8, 22]，b* 落在 [12, 28]",
+        "overdo": "b* < 10 说明黄气压过头，脸发青灰"
+      },
+      {
+        "id": "Q2",
+        "name": "高光不溢出",
+        "check": "亮度直方图 250-255 区间像素占比 < 2%（除纯白背景）",
+        "overdo": "白衣服丢失纹理"
+      },
+      {
+        "id": "Q3",
+        "name": "身份一致",
+        "check": "AI 档 facesim >= 0.85，色彩档必过",
+        "overdo": "不像本人，直接流失"
+      },
+      {
+        "id": "Q4",
+        "name": "前后可比",
+        "check": "对比图两侧尺寸、裁切完全一致，只变色调",
+        "overdo": "用户会觉得「换了张照片」"
+      },
+      {
+        "id": "Q5",
+        "name": "稳定性",
+        "check": "同一输入重复处理，输出像素级一致（色彩档可保证，AI 档不可）",
+        "overdo": "无法做 A/B 与质量回归"
+      }
+    ],
+    "compliance": "纯色彩变换不属于「生成合成」，无需《AI 生成合成内容标识办法》的显式标识；一旦走图生图重绘并改变面部特征，需保留现有 AI 标识烧录逻辑。"
+  },
+  "interaction": {
+    "mode": "preset-only",
+    "rationale": "用户不做参数调节，只做预设选择 + 一档强度微调。滑块会让人以为要懂参数，是这类功能最大的流失点。",
+    "flow": [
+      "选照片",
+      "横向滑动预设卡片（实时缩略预览）",
+      "默认停在 B1 通透感",
+      "点「再亮一点」只在 light / standard / strong 之间移动",
+      "确认后进入文案选择"
+    ],
+    "cardContent": [
+      "预设名",
+      "一句人话标签（如『显白最明显』）",
+      "缩略预览（同一张图套该预设）",
+      "强度小点 ×3"
+    ],
+    "neverDo": [
+      "不给用户看 gamma / tone / saturation 这类参数名",
+      "不做「美白强度 0-100」滑块",
+      "不在未选预设时默认套最重的档"
+    ]
+  }
+}

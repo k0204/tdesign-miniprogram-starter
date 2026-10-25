@@ -110,3 +110,4 @@ miniprogram_npm
 
 project.private.config.json
 /output
+/.npm-cache

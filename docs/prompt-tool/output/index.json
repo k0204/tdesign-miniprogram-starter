@@ -1,0 +1,22 @@
+[
+  {
+    "id": "jmvnty68d1",
+    "code": "P0002",
+    "ratio": "3:2",
+    "size": "1K",
+    "file": "P0002_3x2_ty68d1.png",
+    "elapsed": 25970,
+    "finishedAt": 1792932913791,
+    "group": "01_natural-light"
+  },
+  {
+    "id": "jmvnty68h2",
+    "code": "P0005",
+    "ratio": "2:3",
+    "size": "1K",
+    "file": "P0005_2x3_ty68h2.png",
+    "elapsed": 16307,
+    "finishedAt": 1792932931603,
+    "group": "01_natural-light"
+  }
+]

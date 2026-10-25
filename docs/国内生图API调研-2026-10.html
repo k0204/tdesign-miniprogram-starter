@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>国内图片生成 API 调研 · 2026-10</title>
+<style>
+  :root{
+    --bg:#ffffff; --panel:#f7f8fa; --line:#e5e7eb; --ink:#16181d; --ink2:#4b5563;
+    --ink3:#8a919c; --brand:#1f5eff; --brand-weak:#eef3ff; --warn:#b45309;
+    --warn-bg:#fff8ed; --ok:#0f7b4f; --ok-bg:#eefaf3; --bad:#b42318; --bad-bg:#fef3f2;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:15px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:56px 32px 96px}
+  header{border-bottom:1px solid var(--line);padding-bottom:28px;margin-bottom:36px}
+  .kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);font-weight:600}
+  h1{font-size:34px;line-height:1.25;margin:12px 0 10px;letter-spacing:-.02em}
+  .sub{color:var(--ink2);font-size:15px;max-width:760px}
+  .meta{margin-top:18px;font-size:13px;color:var(--ink3);display:flex;gap:18px;flex-wrap:wrap}
+  h2{font-size:22px;margin:56px 0 16px;letter-spacing:-.01em;padding-left:12px;border-left:4px solid var(--brand)}
+  h3{font-size:16px;margin:28px 0 10px}
+  p{margin:10px 0}
+  a{color:var(--brand);text-decoration:none;border-bottom:1px solid #c7d6ff}
+  code{font-family:var(--mono);font-size:13px;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+
+  .verdict{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:22px 0 8px}
+  .vcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .vcard .tag{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--brand);background:var(--brand-weak);display:inline-block;padding:2px 8px;border-radius:20px;margin-bottom:10px}
+  .vcard h4{margin:0 0 6px;font-size:15px}
+  .vcard p{margin:0;font-size:13.5px;color:var(--ink2);line-height:1.65}
+  .vcard .price{margin-top:10px;font-family:var(--mono);font-size:13px;color:var(--ink)}
+
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:12px;letter-spacing:.04em;color:var(--ink3);font-weight:600;background:var(--panel);white-space:nowrap}
+  tbody tr:hover{background:#fafbff}
+  td.num{font-family:var(--mono);white-space:nowrap}
+  .best{color:var(--ok);font-weight:600}
+  .muted{color:var(--ink3)}
+  .tagline{display:inline-block;font-size:11px;padding:1px 6px;border-radius:4px;background:var(--panel);border:1px solid var(--line);color:var(--ink2);margin-right:4px;white-space:nowrap}
+
+  .bars{margin:18px 0 6px;border:1px solid var(--line);border-radius:12px;padding:20px 22px;background:#fff}
+  .bar-row{display:grid;grid-template-columns:200px 1fr 78px;align-items:center;gap:12px;margin:9px 0;font-size:13px}
+  .bar-track{background:#f1f3f7;border-radius:4px;height:16px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#7ea2ff,#1f5eff)}
+  .bar-fill.free{background:linear-gradient(90deg,#8fe0bd,#0f7b4f)}
+  .bar-val{font-family:var(--mono);font-size:12.5px;color:var(--ink2);text-align:right}
+
+  .note{border-radius:10px;padding:14px 18px;margin:16px 0;font-size:13.5px;line-height:1.7}
+  .note.warn{background:var(--warn-bg);border:1px solid #fbdba8;color:#7c3f04}
+  .note.ok{background:var(--ok-bg);border:1px solid #bfe9d5;color:#0b5c3b}
+  .note.bad{background:var(--bad-bg);border:1px solid #fbcfcb;color:#8f1f18}
+  .note b{font-weight:700}
+
+  ol,ul{padding-left:22px;margin:10px 0}
+  li{margin:6px 0}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+  .panel h4{margin:0 0 8px;font-size:14px}
+  .panel ul{padding-left:18px;margin:0}
+  .panel li{font-size:13.5px;color:var(--ink2)}
+
+  pre{background:#0f1115;color:#e6e9ef;padding:16px 18px;border-radius:10px;overflow:auto;font-size:12.5px;line-height:1.65;font-family:var(--mono)}
+  .src{font-size:12.5px;color:var(--ink3);margin-top:8px}
+  .src li{margin:4px 0;word-break:break-all}
+  footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink3)}
+  @media (max-width:820px){
+    .wrap{padding:32px 18px 64px}
+    h1{font-size:26px}
+    .verdict,.cols{grid-template-columns:1fr}
+    .bar-row{grid-template-columns:120px 1fr 68px;font-size:12px}
+    table{font-size:12.5px}
+    th,td{padding:8px 8px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">API Landscape Review · 中国内地</div>
+  <h1>国内图片生成 API 调研</h1>
+  <p class="sub">面向「上传人像 → 风格化 / 写真」这类小程序场景，横评字节、阿里、腾讯、智谱、硅基流动、百度六家的在售生图接口：能力、单价、接入方式与合规门槛。所有价格为 2026 年 10 月公开口径，以各厂商控制台为准。</p>
+  <div class="meta">
+    <span>调研时间：2026-10-18</span>
+    <span>价格单位：人民币 / 张</span>
+    <span>选取口径：境内主体可直接实名开通、支持商用</span>
+  </div>
+</header>
+
+<h2>一、先给结论</h2>
+<p>如果今天就要为 <code>ai-photo-miniapp</code> 选一家主供应商，我的判断是：<b>主用火山方舟 Seedream，备用阿里百炼 Qwen-Image</b>，腾讯混元作为第三家做容灾。理由不是"谁最强"，而是三件事同时成立：图生图/参考图能力够用、单张价格在 0.12–0.25 元区间、接入是标准 HTTP 同步接口。</p>
+
+<div class="verdict">
+  <div class="vcard">
+    <div class="tag">主选</div>
+    <h4>火山方舟 · Seedream 5.0 Flash</h4>
+    <p>0.12 元/张，1K/2K，最多 10 张参考图，同步接口，审核未通过不计费。人像风格化批量出货的最优性价比。</p>
+    <div class="price">doubao-seedream-5-0-flash-260915</div>
+  </div>
+  <div class="vcard">
+    <div class="tag">质量位</div>
+    <h4>火山 Seedream 5.0 Pro / 阿里 Qwen-Image 3.0</h4>
+    <p>Pro 0.30–0.60 元，画质与指令遵循顶格；Qwen-Image 3.0 0.18 元，中文与"保留原字改图"是传统强项。</p>
+    <div class="price">0.18 ~ 0.60 元/张</div>
+  </div>
+  <div class="vcard">
+    <div class="tag">省钱 / 原型</div>
+    <h4>硅基流动 · Z-Image-Turbo、Kolors</h4>
+    <p>Turbo 0.1 元/张、Kolors 免费，同一个 Key 就能横跳多家模型。适合做提示词打磨和压测，不适合当唯一生产源。</p>
+    <div class="price">¥0 ~ 0.10 元/张</div>
+  </div>
+</div>
+
+<div class="note ok">
+  <b>一句话选型：</b>先用硅基流动的免费/低价模型把提示词和风格模板跑顺，再把生产流量切到 Seedream 5.0 Flash（0.12 元）；当用户点"高清重绘"时升到 Seedream 5.0 Pro 或 Qwen-Image 3.0 Pro。这个分层能把单均成本压到 0.5 元上下，而客单价完全可以做到 9.9 元。
+</div>
+
+<h2>二、单张成本横排</h2>
+<p>同样 1K~2K 输出，各家标价差 10 倍以上。下面这张图只比"生成一张图要花多少钱"，不掺质量分——质量差异见后面章节。</p>
+
+<div class="bars">
+  <div class="bar-row"><span>Kolors（硅基流动）</span><span class="bar-track"><span class="bar-fill free" style="width:2%"></span></span><span class="bar-val">免费</span></div>
+  <div class="bar-row"><span>CogView-4（智谱）</span><span class="bar-track"><span class="bar-fill" style="width:12%"></span></span><span class="bar-val">0.06</span></div>
+  <div class="bar-row"><span>混元生图 极速版（腾讯）</span><span class="bar-track"><span class="bar-fill" style="width:19%"></span></span><span class="bar-val">0.099 起</span></div>
+  <div class="bar-row"><span>GLM-Image（智谱）</span><span class="bar-track"><span class="bar-fill" style="width:20%"></span></span><span class="bar-val">0.10</span></div>
+  <div class="bar-row"><span>Z-Image-Turbo（硅基流动）</span><span class="bar-track"><span class="bar-fill" style="width:20%"></span></span><span class="bar-val">0.10</span></div>
+  <div class="bar-row"><span>Seedream 5.0 Flash（火山）</span><span class="bar-track"><span class="bar-fill" style="width:24%"></span></span><span class="bar-val">0.12</span></div>
+  <div class="bar-row"><span>Hy Image 3.5 preview（腾讯）</span><span class="bar-track"><span class="bar-fill" style="width:30%"></span></span><span class="bar-val">0.15</span></div>
+  <div class="bar-row"><span>Qwen-Image 3.0（阿里）</span><span class="bar-track"><span class="bar-fill" style="width:36%"></span></span><span class="bar-val">0.18</span></div>
+  <div class="bar-row"><span>Seedream 4.0（火山）</span><span class="bar-track"><span class="bar-fill" style="width:40%"></span></span><span class="bar-val">0.20</span></div>
+  <div class="bar-row"><span>通义万相 wan2.7-image（阿里）</span><span class="bar-track"><span class="bar-fill" style="width:40%"></span></span><span class="bar-val">0.20</span></div>
+  <div class="bar-row"><span>混元生图 3.0（腾讯）</span><span class="bar-track"><span class="bar-fill" style="width:40%"></span></span><span class="bar-val">≈0.20</span></div>
+  <div class="bar-row"><span>Seedream 5.0 Lite（火山）</span><span class="bar-track"><span class="bar-fill" style="width:44%"></span></span><span class="bar-val">0.22</span></div>
+  <div class="bar-row"><span>Seedream 4.5（火山）</span><span class="bar-track"><span class="bar-fill" style="width:50%"></span></span><span class="bar-val">0.25</span></div>
+  <div class="bar-row"><span>Seedream 5.0 Pro（≤1.5K，火山）</span><span class="bar-track"><span class="bar-fill" style="width:60%"></span></span><span class="bar-val">0.30</span></div>
+  <div class="bar-row"><span>Qwen-Image 3.0 Pro 2K（阿里）</span><span class="bar-track"><span class="bar-fill" style="width:100%"></span></span><span class="bar-val">0.50</span></div>
+  <div class="bar-row"><span>Scaling：Seedream 5.0 Pro &gt;1.5K</span><span class="bar-track"><span class="bar-fill" style="width:100%;background:linear-gradient(90deg,#ffb4a2,#d97757)"></span></span><span class="bar-val">0.60</span></div>
+  <div style="font-size:12px;color:#8a919c;margin-top:14px;padding-top:12px;border-top:1px solid #eee">柱长按 0.60 元归一化。仅列可直接开通的境内官方接口，不含海外平台与转售。</div>
+</div>
+
+<h2>三、六家逐一核对</h2>
+
+<h3>1. 字节 · 火山方舟（Seedream 系列）— 当前综合最优</h3>
+<table>
+  <thead><tr><th>模型</th><th>单价</th><th>分辨率</th><th>关键能力</th><th>备注</th></tr></thead>
+  <tbody>
+    <tr><td>doubao-seedream-5-0-flash</td><td class="num best">0.12</td><td>1K / 1.5K / 2K</td><td>文生图、单/多图生图、交互编辑、图层拆分、最多 10 张参考图</td><td>9 月新发，速度优先档</td></tr>
+    <tr><td>doubao-seedream-5-0-lite</td><td class="num">0.22</td><td>2K / 3K / 4K</td><td>支持组图、流式输出、联网搜索</td><td>要 4K 时选它</td></tr>
+    <tr><td>doubao-seedream-5-0-pro</td><td class="num">≤1.5K 0.30<br>&gt;1.5K 0.60</td><td>1K / 1.5K / 2K</td><td>画质顶格，点选/框选/箭头局部重绘，双提示词模式</td><td>第 2 张起的参考图 0.02/张</td></tr>
+    <tr><td>doubao-seedream-4-5</td><td class="num">0.25</td><td>2K / 4K</td><td>上一代主力，链路稳定</td><td>兜底用</td></tr>
+    <tr><td>doubao-seedream-4-0</td><td class="num">0.20</td><td>1K / 2K / 4K</td><td>老模型，生态资料最多</td><td>不建议新项目</td></tr>
+  </tbody>
+</table>
+<p><b>计费细节：</b>输入图免费，只按输出张数计费；因审核等原因未成功输出的图片<b>不计费</b>——这条对 UGC 生图产品很关键，等于把违规过滤的成本从你身上拿走了。限流 500 张/分钟，对小程序量级完全够。</p>
+<p><b>接入：</b>同步接口 <code>POST https://ark.cn-beijing.volces.com/api/v3/images/generations</code>，Bearer 鉴权，OpenAI images 风格，返回图片 URL。支持流式输出（lite/4.5/4.0）。</p>
+
+<h3>2. 阿里 · 百炼（Qwen-Image / 通义万相）— 中文与"改字"最强</h3>
+<table>
+  <thead><tr><th>模型</th><th>单价</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td>qwen-image-3.0</td><td class="num">0.18</td><td>1K/2K 同价，中文排版与长指令（1000+ token）是强项</td></tr>
+    <tr><td>qwen-image-3.0-pro</td><td class="num">1K 0.25 / 2K 0.50</td><td>高质量档</td></tr>
+    <tr><td>qwen-image-edit-plus / edit-max</td><td class="num">0.20 / 0.50</td><td>指令编辑，可在保留原字体前提下增删图中文字</td></tr>
+    <tr><td>wan2.7-image / wan2.7-image-pro</td><td class="num">0.20 / 0.50</td><td>万相 2.7，0–9 张参考图，4096²</td></tr>
+    <tr><td>qwen-image-2.0 / 2.0-pro</td><td class="num">0.20 / 0.50</td><td>仍在售，旧项目兼容</td></tr>
+  </tbody>
+</table>
+<p>新用户开通实名后自动发 <b>100 张图像生成额度</b>（90 天），足够把整条链路跑通。注意万相系列走的是异步任务 + 轮询，产物 URL 约 24 小时过期，<b>必须转存到自己的对象存储</b>。</p>
+
+<h3>3. 腾讯 · 混元生图 &amp; AI 写真 — 唯一有"写真专用接口"的</h3>
+<table>
+  <thead><tr><th>能力</th><th>价格</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td>Hy Image 3.5 preview</td><td class="num best">0.15（2K）</td><td>2026-09 发布，最多 5 张参考图、多轮编辑，盲测接近 Seedream 5.0 pro</td></tr>
+    <tr><td>混元生图 3.0</td><td class="num">≈0.20</td><td>资源包 1000 张 / 200 元，Instruct 版支持指令编辑</td></tr>
+    <tr><td>混元生图 极速版</td><td class="num">0.099 起</td><td>出底图够用</td></tr>
+    <tr><td>AI 写真（免训练模式）</td><td class="num">按资源包</td><td>传 1 张图跳过训练直接出写真，最贴合本项目形态</td></tr>
+    <tr><td>AI 写真（快速训练 / 常规训练）</td><td class="num">训练并发 500 元/并发/天</td><td>常规需 20–25 张图训练专属模型，有效期 1 年</td></tr>
+    <tr><td>图像风格化（图生图）</td><td class="num">按资源包</td><td>style transfer 专用接口</td></tr>
+  </tbody>
+</table>
+<div class="note warn">
+  <b>容易被忽略的隐性成本：</b>腾讯生图接口<b>默认并发只有 1</b>，要提并发得买叠加包，500 元/并发/天 或 10000 元/并发/月。做小程序高峰排队时，这笔钱可能比图片本身贵得多。谈商务时一定要把并发包一起算进单价。
+</div>
+
+<h3>4. 智谱 · GLM-Image / CogView-4 — 便宜，但主打文生图</h3>
+<p>GLM-Image <b>0.1 元/次</b>，原生 1024–2048 任意比例，中文文字渲染是其核心卖点（厂商口径的中文长文本准确率很高），支持指令编辑；CogView-4 <b>0.06 元/次</b>，以文生图为主，人像一致性和参考图能力弱，更适合配图而非写真。适合"图里要有大量中文"的海报/信息图，不适合本项目主线。</p>
+
+<h3>5. 硅基流动 · 一个 Key 横跳多家 — 最适合做原型与压测</h3>
+<ul>
+  <li><b>Kwai-Kolors/Kolors</b> — 免费，文生图，配图级质量</li>
+  <li><b>Tongyi-MAI/Z-Image-Turbo</b> — 0.1 元/张，几秒出图，Z-Image 全量版 0.3 元/张</li>
+  <li><b>Qwen/Qwen-Image-Edit-2509</b> — 0.3 元/张，多图编辑、风格迁移、换背景、虚拟试穿</li>
+  <li>新用户赠 16 元体验金，OpenAI 兼容 <code>/v1/images/generations</code></li>
+</ul>
+<p>它的价值不在便宜，而在<b>接口统一</b>：同一份代码换 <code>model</code> 字段就能对比五六家模型的效果，做提示词 A/B 时非常省事。缺点是转售层，SLA、限流、模型上下架都不由你控制，不建议作为唯一生产源。</p>
+
+<h3>6. 百度 · 文心一格 — 不建议新项目使用</h3>
+<p>API 按"点"计费，基础尺寸 v1 每张 2 点、v2 每张 3 点，高级尺寸 4–6 点，20 万点大包折合约 0.14 元/点，折算下来单张 0.28–0.84 元，价格高于同类且迭代节奏慢；胜在国风/水墨题材与版权登记体系（每张带商用证书），政务、文旅类项目仍有价值。新用户约 100 次免费绘图额度。对"人像风格化"这个需求，它的参考图与人脸保持能力不是强项。</p>
+
+<h2>四、按场景选型</h2>
+<div class="cols">
+  <div class="panel">
+    <h4>人像风格化 / 写真（本项目）</h4>
+    <ul>
+      <li><b>首选：</b>Seedream 5.0 Flash（0.12，10 张参考图，图生图）</li>
+      <li><b>质量位：</b>Seedream 5.0 Pro / Qwen-Image 3.0 Pro</li>
+      <li><b>垂直位：</b>腾讯 AI 写真免训练模式（人脸保持最稳，但并发贵）</li>
+      <li><b>避开：</b>CogView-4、文心一格（一致性与参考图弱）</li>
+    </ul>
+  </div>
+  <div class="panel">
+    <h4>中文海报 / 信息图（图里要写字）</h4>
+    <ul>
+      <li><b>首选：</b>GLM-Image（0.1）、Qwen-Image 3.0（0.18）</li>
+      <li>Qwen-Image-Edit 能在<b>保留原字体</b>的前提下改图内文字，做多语言物料很好用</li>
+      <li>Seedream 5.0 系列的中文小字也已"不乱码"，但复杂信息图仍会出错</li>
+    </ul>
+  </div>
+  <div class="panel">
+    <h4>电商主图 / 商品换背景</h4>
+    <ul>
+      <li><b>首选：</b>Seedream 5.0 Flash 多图融合（商品图 + 场景图）</li>
+      <li>备选 Qwen-Image-Edit-2509（0.3，硅基流动）、腾讯"商品背景生成"专用接口</li>
+      <li>要矢量/品牌规范：Recraft 系（海外，不适用境内合规）</li>
+    </ul>
+  </div>
+  <div class="panel">
+    <h4>批量配图 / 内部工具</h4>
+    <ul>
+      <li><b>首选：</b>Kolors（免费）、Z-Image-Turbo（0.1）</li>
+      <li>几千张级别用智谱 CogView-4（0.06）走批量接口还能再打折</li>
+      <li>量大到百万级再考虑自建 Z-Image / Qwen-Image 开源权重</li>
+    </ul>
+  </div>
+</div>
+
+<h2>五、工程接入对比</h2>
+<table>
+  <thead><tr><th>厂商</th><th>调用模式</th><th>协议/端点</th><th>参考图</th><th>产物时效</th><th>踩坑点</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>火山方舟</td><td>同步（lite 支持流式）</td>
+      <td><code>/api/v3/images/generations</code>，OpenAI 风格</td>
+      <td>≤10 张</td><td>URL 需尽快转存</td>
+      <td>审核失败不计费；组图按实际张数计费</td>
+    </tr>
+    <tr>
+      <td>阿里百炼</td><td>万相：异步 task 轮询<br>Qwen-Image：messages 多模态协议</td>
+      <td><code>dashscope.aliyuncs.com</code></td>
+      <td>0–9 张</td><td class="num">≈24h</td>
+      <td>两套协议不通用；URL 24h 过期必须落 OSS</td>
+    </tr>
+    <tr>
+      <td>腾讯云</td><td>全异步 JobId 轮询</td>
+      <td>签名 TC3-HMAC-SHA256</td>
+      <td>≤5 张</td><td>需转存</td>
+      <td>默认并发 1；签名踩坑多，建议用官方 SDK</td>
+    </tr>
+    <tr>
+      <td>智谱</td><td>同步</td>
+      <td>OpenAI 兼容</td>
+      <td>编辑模型支持</td><td>需转存</td>
+      <td>长宽须在 512–2048 且为 32 的整数倍</td>
+    </tr>
+    <tr>
+      <td>硅基流动</td><td>同步</td>
+      <td><code>/v1/images/generations</code></td>
+      <td>按模型不同</td><td>需转存</td>
+      <td>转售层，限流与上架策略会变</td>
+    </tr>
+    <tr>
+      <td>百度</td><td>同步，按点计费</td>
+      <td>AK/SK 换 access_token</td>
+      <td>参考图作画</td><td>需转存</td>
+      <td>需企业实名才能调 API；token 需自行缓存续期</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <b>三条通用工程结论：</b>
+  <br>① <b>永远不要在小程序端直连模型 API</b>——密钥会泄漏，域名也过不了审核。必须经云函数/自建后端中转，这个项目已有的"创建任务 → 轮询"抽象正好合适。
+  <br>② <b>产物 URL 一定会过期</b>（万相 24h、其他多为临时地址）。拿到图立刻转存到 COS/OSS 并绑 CDN，再返回自己的永久地址，否则用户历史记录里全是裂图。
+  <br>③ <b>输入图也要转存并压缩</b>。参考图按长边 1280 压到 1MB 以内，既省钱又快；原图另存一份供"高清重绘"用。
+</div>
+
+<h2>六、成本测算（按本项目形态）</h2>
+<p>假设：每个订单生成 4 张，用户从上传到成功出图算一单。</p>
+<table>
+  <thead><tr><th>方案</th><th>单张</th><th>单均成本</th><th>日 1000 单 / 月成本</th><th>毛利（定价 9.9 元/单）</th></tr></thead>
+  <tbody>
+    <tr><td>Seedream 5.0 Flash</td><td class="num">0.12</td><td class="num best">0.48 元</td><td class="num">≈ 1.44 万元</td><td class="num">≈ 28 万元</td></tr>
+    <tr><td>Hy Image 3.5 preview（2K）</td><td class="num">0.15</td><td class="num">0.60 元</td><td class="num">≈ 1.80 万元</td><td class="num">≈ 27.9 万元</td></tr>
+    <tr><td>Qwen-Image 3.0</td><td class="num">0.18</td><td class="num">0.72 元</td><td class="num">≈ 2.16 万元</td><td class="num">≈ 27.5 万元</td></tr>
+    <tr><td>Seedream 5.0 Pro（≤1.5K）</td><td class="num">0.30</td><td class="num">1.20 元</td><td class="num">≈ 3.60 万元</td><td class="num">≈ 26.1 万元</td></tr>
+    <tr><td>Seedream 5.0 Pro（2K）</td><td class="num">0.60</td><td class="num">2.40 元</td><td class="num">≈ 7.20 万元</td><td class="num">≈ 22.5 万元</td></tr>
+  </tbody>
+</table>
+<p class="muted" style="font-size:13px">未计对象存储/CDN（约 0.1 元/GB·月 + 流量）、内容审核（约 1–2 元/千次）、失败的重复生成。真实成本通常在模型费基础上再加 15%–30%。</p>
+
+<div class="note warn">
+  <b>别按"单张便宜"做决策。</b>生图产品的真实成本大头是<b>重试率</b>：人像风格化一次成功率做到 70% 就已经不错，失败或用户不满意就会重生成。把"提示词模板 + 参考图预处理 + 失败重试上限"做扎实，比把单价从 0.15 砍到 0.12 省得多。
+</div>
+
+<h2>七、合规：这是比价格更硬的门槛</h2>
+<p>小程序做 AI 生图，不是"接个 API 就能上线"。微信把 AI 审核拆成"先类目、后代码"两道关，类目没过代码包 100% 驳回。</p>
+<ol>
+  <li><b>服务类目：</b>必须申请「深度合成 → AI 绘画」（涉及换脸还要 AI 换脸子类目）。<b>仅向企业/组织主体开放，个人主体做不了</b>。材料齐全 1–2 个工作日，最长 7 个工作日。</li>
+  <li><b>资质二选一：</b>
+    <ul>
+      <li>自研：主体自己的《互联网信息服务算法备案》（生成合成类），周期 2–4 个月；</li>
+      <li>用第三方技术：技术方的算法备案截图（须为"生成合成类"）+ 双方盖章合作协议（写明 AppID、算法名称、备案编号、使用场景）+ 在用证明。</li>
+    </ul>
+  </li>
+  <li><b>走微信云开发最省事：</b>云开发 AI 模块可直接生成《深度合成算法合作协议》与备案截图（主体需一致、环境有效期 ≥3 个月），这也是这个项目当前技术栈的天然优势——<code>cloudfunctions/</code> 已经在用云开发了。</li>
+  <li><b>AI 标识是头号驳回原因：</b>所有生成内容需显著标注"AI 生成"，《人工智能生成合成内容标识办法》（2025-09-01 施行）要求显式标识 + 隐式标识（文件元数据）。做法：结果图右下角烧角标 + 页面常驻提示 + 下载文件写入元数据。</li>
+  <li><b>内容审核要双向：</b>用户上传的人像先过一遍（涉黄涉政涉暴），生成结果再过一遍再返回。国内云厂商的图片内容安全接口约 1–2 元/千次，别省这笔钱。</li>
+  <li><b>人脸是敏感个人信息：</b>需要单独同意、明示用途与保存期限、提供删除入口。若做"训练专属写真模型"，还要说明模型有效期与销毁机制（腾讯 AI 写真模型默认 1 年有效）。<b>严禁生成他人肖像</b>，需要活体/实名校验的场合不能省。</li>
+</ol>
+
+<div class="note bad">
+  <b>顺序建议：</b>先用个人账号 + 硅基流动跑通产品验证 → 注册企业主体 → 申请深度合成类目（用云开发的合作协议+备案材料）→ 接火山方舟做生产。别在类目没过之前就买大额资源包。
+</div>
+
+<h2>八、落到本项目的接入建议</h2>
+<p>现有 <code>services/generation.js</code> 已经把"上传 → 创建任务 → 轮询 → 拿到图片 URL"抽象好了，接哪家都不用改前端。建议只在后端加一层 provider 适配：</p>
+
+<pre>// cloudfunctions/quickstartFunctions/providers/index.js
+const providers = {
+  seedream: require('./seedream'),   // 火山方舟，主
+  qwen:     require('./qwen'),       // 百炼，备
+  silicon:  require('./silicon')     // 硅基流动，原型/降级
+}
+
+// 统一契约，前端无感切换
+// createTask({ imageUrl, prompt, ratio, count }) -> { providerJobId }
+// queryTask(providerJobId) -> { status: 'processing'|'done'|'failed', images:[], progress }
+// 失败自动 fallback 到下一家，并落一条审计日志
+
+const CHAIN = ['seedream', 'qwen', 'silicon']  // 按成本/质量排序</pre>
+
+<ul>
+  <li><b>模型分层：</b>普通档 <code>doubao-seedream-5-0-flash-260915</code>（0.12）；"高清重绘"档 <code>doubao-seedream-5-0-pro-260628</code>（0.30/0.60）。用一个 <code>quality</code> 字段切换，不必两套代码。</li>
+  <li><b>提示词模板放服务端：</b>风格（电影感/胶片/国风/水彩/证件照）各存一条固定前缀，用户只填 200 字以内的补充描述。模板迭代不需要发版小程序。</li>
+  <li><b>结果转存：</b>拿到第三方 URL 后立刻上传云存储，写库只存自己的 fileID；第三方 URL 只做临时中转，绝不返回给前端。</li>
+  <li><b>幂等与限流：</b>同一用户 60 秒内只允许 1 个进行中任务；单任务最多重试 2 次，避免"用户狂点 + 模型重试"双倍烧钱。</li>
+  <li><b>成本埋点：</b>每次调用记录 provider / model / 张数 / 是否失败 / 耗时，一周就能算出各家的真实单均成本与成功率——这比任何横评文章都准。</li>
+</ul>
+
+<h2>九、一句话记住各家</h2>
+<table>
+  <thead><tr><th>厂商</th><th>标签</th><th>适合</th><th>别用来</th></tr></thead>
+  <tbody>
+    <tr><td>火山方舟</td><td><span class="tagline">性价比</span><span class="tagline">参考图强</span></td><td>人像风格化、电商、批量生产</td><td>—</td></tr>
+    <tr><td>阿里百炼</td><td><span class="tagline">中文最强</span><span class="tagline">改字</span></td><td>中文海报、信息图、需要保留文字的重绘</td><td>追求最低价</td></tr>
+    <tr><td>腾讯混元</td><td><span class="tagline">写真专用</span><span class="tagline">微信生态</span></td><td>专业写真、换装、与企微/小程序生态联动</td><td>高并发低成本场景（并发要另买）</td></tr>
+    <tr><td>智谱</td><td><span class="tagline">便宜</span><span class="tagline">中文文字</span></td><td>配图、文字型海报、批量底图</td><td>人脸一致性要求高的场景</td></tr>
+    <tr><td>硅基流动</td><td><span class="tagline">聚合</span><span class="tagline">免费额度</span></td><td>原型验证、模型效果 A/B、临时降级</td><td>作为唯一生产源</td></tr>
+    <tr><td>百度</td><td><span class="tagline">国风</span><span class="tagline">版权证书</span></td><td>政务/文旅、需要商用版权凭证</td><td>新的人像类产品</td></tr>
+  </tbody>
+</table>
+
+<h2>参考来源</h2>
+<ul class="src">
+  <li>火山方舟《模型价格》《图片生成教程》《Doubao Seedream 5.0 pro / flash 教程》— console.volcengine.com/ark · volcengine.cn/docs/82379</li>
+  <li>阿里云百炼《模型训练与部署计费》《wan2.7-image》— help.aliyun.com/zh/model-studio · alibabacloud.com/help/tc/model-studio/wan2-7-image</li>
+  <li>腾讯云《混元生图 计费概述》《快速入门（AI 写真）》— cloud.tencent.com/document/product/1668</li>
+  <li>智谱开放平台价格页（GLM-Image 0.1 元/次、CogView-4 0.06 元/次）</li>
+  <li>硅基流动《上线阿里 Z-Image》（0.3 / 0.1 元每张）、模型广场价格页</li>
+  <li>第三方横评《图像生成横评：文字渲染、角色一致性与成本》（2026-09 检索值）</li>
+  <li>微信开放社区 / 云开发《深度合成类目与算法备案在用证明》— docs.cloudbase.net/ai/release/algorithm-filing</li>
+  <li>《人工智能生成合成内容标识办法》（2025-09-01 施行）</li>
+</ul>
+
+<div class="note warn" style="margin-top:28px">
+  <b>免责与时效：</b>生图模型迭代以"月"为单位，价格与模型 ID 变动频繁。本文所有单价为 2026-10-18 检索到的公开标价，<b>下单前请以厂商控制台的实时报价为准</b>；模型 ID 带日期后缀，接入时不要硬编码猜测。
+</div>
+
+<footer>
+  调研文档 · 存放于 <code>docs/国内生图API调研-2026-10.html</code> · 面向 guangyuxiangguang / ai-photo 项目
+</footer>
+
+</div>
+</body>
+</html>

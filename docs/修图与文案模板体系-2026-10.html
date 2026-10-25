@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>修图与文案双模板 — 变白/变美 & 旅行·心情·爱情文案库</title>
+<style>
+  :root{
+    --ink:#14161A; --ink2:#3D424B; --ink3:#6B7280; --line:#E6E4DF;
+    --bg:#FBFAF7; --card:#FFFFFF; --brand:#FF2E4D; --deep:#0E1B33;
+    --amber:#B26B00; --green:#1F7A4D; --blue:#1B5FBF;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+    font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1000px;margin:0 auto;padding:56px 28px 96px;}
+  header.top{border-bottom:2px solid var(--ink);padding-bottom:28px;margin-bottom:44px;}
+  .kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--brand);font-weight:700;margin-bottom:14px;}
+  h1{font-size:32px;line-height:1.28;margin:0 0 16px;letter-spacing:-.4px;font-weight:800;}
+  h1 em{font-style:normal;color:var(--brand);}
+  .meta{font-size:13px;color:var(--ink3);display:flex;gap:22px;flex-wrap:wrap;}
+  h2{font-size:22px;margin:66px 0 20px;letter-spacing:-.2px;font-weight:800;display:flex;align-items:baseline;gap:12px;}
+  h2 .num{font-size:12px;font-weight:700;color:#fff;background:var(--deep);padding:3px 8px;border-radius:4px;letter-spacing:.08em;transform:translateY(-3px);}
+  h3{font-size:16px;margin:32px 0 12px;font-weight:700;}
+  p{margin:0 0 16px;color:var(--ink2);}
+  .lead{font-size:16.5px;color:var(--ink);line-height:1.8;}
+  strong{color:var(--ink);font-weight:700;}
+  code{font-family:ui-monospace,"SF Mono",Consolas,monospace;font-size:12.5px;background:#F1EFE9;padding:1px 5px;border-radius:3px;color:#8A2B12;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:22px 24px;margin:18px 0;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  @media(max-width:760px){.grid2,.grid3{grid-template-columns:1fr;}}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px;}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{font-size:12px;letter-spacing:.04em;color:var(--ink3);font-weight:700;background:#F7F5F0;border-bottom:1px solid #DDD9D0;}
+  tbody tr:hover{background:#FDFCF9;}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
+  .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:26px 0;}
+  @media(max-width:760px){.kpi{grid-template-columns:1fr 1fr;}}
+  .kpi div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 16px 14px;}
+  .kpi .v{font-size:25px;font-weight:800;line-height:1.2;letter-spacing:-1px;}
+  .kpi .l{font-size:12px;color:var(--ink3);margin-top:6px;line-height:1.5;}
+  .badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:.03em;vertical-align:1px;}
+  .b-red{background:#FFE8EC;color:#C4122F;}
+  .b-blue{background:#E7F0FE;color:#1B5FBF;}
+  .b-amber{background:#FFF3DE;color:#9A5B00;}
+  .b-green{background:#E4F5EC;color:#146B43;}
+  .b-gray{background:#EFEDE8;color:#5B5F66;}
+  blockquote{margin:20px 0;padding:16px 20px;background:#FFF8F0;border-left:3px solid var(--brand);border-radius:0 8px 8px 0;font-size:14.5px;color:#5A3A12;}
+  blockquote p{margin:0;color:inherit;}
+  blockquote.dark{background:#F4F6F9;border-left-color:var(--deep);color:#26303F;}
+  pre{background:#12151C;color:#D8DEE9;padding:18px 20px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.7;font-family:ui-monospace,"SF Mono",Consolas,monospace;}
+  pre .c{color:#6B7A90;} pre .k{color:#FF8FA3;} pre .s{color:#9BE3A8;}
+  .fail{color:var(--brand);font-weight:700;}
+  .pass{color:var(--green);font-weight:700;}
+  .sheet{width:100%;border-radius:10px;border:1px solid var(--line);display:block;margin:18px 0 8px;}
+  .cap{font-size:12px;color:var(--ink3);margin:0 0 22px;}
+  ul,ol{margin:0 0 16px;padding-left:22px;color:var(--ink2);}
+  li{margin-bottom:7px;}
+  .cards4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:20px 0;}
+  @media(max-width:760px){.cards4{grid-template-columns:1fr 1fr;}}
+  .cv{position:relative;width:100%;aspect-ratio:3/4;border-radius:8px;overflow:hidden;border:1px solid rgba(0,0,0,.1);}
+  .cv .ph{position:absolute;inset:0;}
+  .cv .tx{position:absolute;font-weight:900;line-height:1.12;letter-spacing:-.02em;}
+  .cv .sub{position:absolute;font-weight:500;line-height:1.3;}
+  .ccap{font-size:12px;color:var(--ink3);margin-top:8px;line-height:1.5;}
+  .ccap b{display:block;color:var(--ink);font-size:13px;}
+  .copy-list{font-size:13.5px;line-height:1.75;}
+  .copy-list div{padding:7px 0;border-bottom:1px dashed var(--line);}
+  .copy-list div:last-child{border:0;}
+  .copy-list span{color:var(--ink3);font-size:12.5px;}
+  footer{margin-top:80px;padding-top:24px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink3);}
+  .flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:20px 0;font-size:13px;}
+  .flow b{background:var(--deep);color:#fff;padding:7px 13px;border-radius:6px;font-weight:600;}
+  .flow i{color:var(--ink3);font-style:normal;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="kicker">Research · Retouch Presets &amp; Copy Library</div>
+  <h1>修图与文案，两条完全不同的模板线<br><em>变白 / 变美</em>　与　<em>旅行 · 心情 · 爱情</em>文案库</h1>
+  <div class="meta">
+    <span>2026-10-25</span>
+    <span>面向：AI 照相馆（小程序 + 生图后端）</span>
+    <span>配套：beauty-presets.v0.4.json / copy-library.v0.1.json</span>
+  </div>
+</header>
+
+<p class="lead">
+  这两件事必须分开做。<strong>修图是色彩工程</strong>，可以用确定性算法做到零失真、百毫秒、可量化验收；
+  <strong>文案是内容运营</strong>，价值在于"选"而不是"生成"。把它们塞进同一套模板体系是错的，
+  但可以用同一条用户路径串起来：修好图 → 选一句话 → 自动套版式 → 审图。
+</p>
+
+<div class="kpi">
+  <div><div class="v">+13.4<span style="font-size:14px">%</span></div><div class="l">冷白皮档实测肤色区提亮，同时 0% 高光溢出</div></div>
+  <div><div class="v">19.7<span style="font-size:14px">%</span></div><div class="l">不用肤色蒙版时被烧成纯白的像素占比，全是白衣服</div></div>
+  <div><div class="v">48</div><div class="l">三主题 × 四语气 × 四条的文案库，0 超标 0 重复</div></div>
+  <div><div class="v">0.3<span style="font-size:14px">s</span></div><div class="l">用户选文案的决策成本，生成要等 3–8 秒</div></div>
+</div>
+
+<h2><span class="num">01</span>先说结论</h2>
+
+<div class="card">
+  <ol style="margin:0">
+    <li><b>变白不能交给生图模型。</b>重绘后脸型、痣、双眼皮宽度都在变，用户第一眼"不像我"就流失；而且每次出片肤色不一致，连前后对比都做不了。</li>
+    <li><b>变白的真实机制是降黄，不是提亮。</b>实测冷白皮档：肤色亮度 +13.4%，色温（R−B）+15.8 个单位下降。视觉上"白"主要来自 R−B 被压掉。</li>
+    <li><b>全局提亮一定烧掉浅色衣物。</b>实测 19.72% 的像素被推成纯白，面积正好等于白衬衫。必须上肤色蒙版，否则主推档一用就废。</li>
+    <li><b>文案让用户直接选，不要生成。</b>库是精选过的、可运营的、与版式配色绑定的；生成是慢的、不稳定的、还要过内容合规。</li>
+    <li><b>两条线共用一条路径</b>：修图定"图"，文案定"话"，版式模板定"怎么摆"，审图定"能不能发"。</li>
+  </ol>
+</div>
+
+<h2><span class="num">02</span>修图：三级分工，AI 只做最后那一档</h2>
+
+<p>把"变白变美"拆成三件事，越往前越确定、越往后越有风险：</p>
+
+<table>
+  <thead><tr><th style="width:120px">层级</th><th>做什么</th><th style="width:150px">实现</th><th style="width:130px">风险</th></tr></thead>
+  <tbody>
+    <tr><td><b>色彩</b>　默认开</td><td>变白、通透、降黄、氛围调</td><td>sharp 本地，百毫秒</td><td class="pass">零失真</td></tr>
+    <tr><td><b>质感</b>　默认开</td><td>轻磨皮、补锐、颗粒</td><td>median / blur / sharpen</td><td class="pass">低</td></tr>
+    <tr><td><b>AI 精修</b>　默认关</td><td>五官微调、发丝、光影重塑</td><td>图生图 edits</td><td class="fail">身份漂移</td></tr>
+  </tbody>
+</table>
+
+<blockquote>
+  <p><b>AI 档必须配闸门：</b>输出前跑 <code>facesim ≥ 0.85</code>，低于阈值直接判失败、回退到色彩档结果。用户宁可少一点效果，也不能收到一张"不像自己"的照片。</p>
+</blockquote>
+
+<h2><span class="num">03</span>三次失败，和最后跑通的方案</h2>
+
+<p>这部分是本次最有价值的东西——不是"设计了几套参数"，而是参数被实测证伪了三次，最后才定下来。</p>
+
+<h3>失败一：蓝通道增益 <span class="badge b-red">v0.1</span></h3>
+<p>做法是"提蓝通道 = 降黄"，看起来对。但蓝增益同时在提亮，和 brightness 叠加后，浅色衣物成片爆掉：</p>
+<p><span class="fail">B2 冷白皮把 19.75% 的像素推到纯白。</span>这不是参数没调好，是模型错了——色温和亮度耦合在一起，没法独立调。</p>
+
+<h3>失败二：gamma 提亮 <span class="badge b-red">v0.2</span></h3>
+<p>改法是"色温用亮度中性的三通道矩阵，提亮用 gamma 保护高光"。理论完美，实测：</p>
+
+<table style="max-width:560px">
+  <thead><tr><th>传入 gamma</th><th class="num">肤色区亮度</th><th class="num">变化</th></tr></thead>
+  <tbody>
+    <tr><td>2.2</td><td class="num">171.3</td><td class="num">−0.6%</td></tr>
+    <tr><td>2.0</td><td class="num">171.3</td><td class="num">−0.6%</td></tr>
+    <tr><td>1.8</td><td class="num">171.3</td><td class="num">−0.6%</td></tr>
+    <tr><td>1.6</td><td class="num">171.3</td><td class="num">−0.6%</td></tr>
+    <tr><td>1.4</td><td class="num">171.3</td><td class="num">−0.6%</td></tr>
+  </tbody>
+</table>
+
+<p><strong>输出像素完全一致。</strong>原因：<code>sharp.gamma()</code> 对已解码的 sRGB JPEG 不生效，只对 raw / 未标定输入有意义。当时六个预设看起来有亮度差异，其实全部来自 tone 和 contrast，冷白皮只有 +2.8%，根本撑不起"显白最明显"的标签。</p>
+
+<h3>跑通：brightness 标定 + 肤色蒙版 <span class="badge b-green">v0.4</span></h3>
+<p>换成 <code>modulate({ brightness })</code>，它的行为是线性的、可标定的：</p>
+
+<table style="max-width:620px">
+  <thead><tr><th>brightness</th><th class="num">肤色区提亮</th><th class="num">高光溢出</th></tr></thead>
+  <tbody>
+    <tr><td>1.04</td><td class="num">+4.6%</td><td class="num">0%</td></tr>
+    <tr><td>1.06</td><td class="num">+6.9%</td><td class="num">0%</td></tr>
+    <tr><td>1.08</td><td class="num">+9.2%</td><td class="num">0%</td></tr>
+    <tr><td>1.10</td><td class="num">+10.9%</td><td class="num">0.23%</td></tr>
+    <tr><td>1.12</td><td class="num">+13.2%</td><td class="num">0.48%</td></tr>
+  </tbody>
+</table>
+
+<p class="cap">规律：每 +0.01 ≈ 肤色区亮度 +2.3%。这条曲线让参数从"试出来的"变成"算出来的"。</p>
+
+<p>但 brightest 抬到 1.095 时，白衣服又爆了。于是加<b>肤色蒙版</b>：全局先算出目标图，再用蒙版只把肤色区贴回去。两种模式的实测对比：</p>
+
+<table>
+  <thead><tr><th style="width:170px">预设</th><th class="num">全局 Δ肤色</th><th class="num">全局溢出</th><th class="num">蒙版 Δ肤色</th><th class="num">蒙版溢出</th></tr></thead>
+  <tbody>
+    <tr><td>B0 自然光</td><td class="num">+2.8%</td><td class="num">0%</td><td class="num">+2.7%</td><td class="num">0%</td></tr>
+    <tr><td>B1 通透感</td><td class="num">+8.4%</td><td class="num">0.3%</td><td class="num">+8.2%</td><td class="num">0%</td></tr>
+    <tr><td><b>B2 冷白皮</b></td><td class="num">+13.5%</td><td class="num fail">19.72%</td><td class="num"><b>+13.4%</b></td><td class="num pass">0%</td></tr>
+    <tr><td><b>B3 奶油肌</b></td><td class="num">+12.5%</td><td class="num fail">19.68%</td><td class="num"><b>+12.4%</b></td><td class="num pass">0%</td></tr>
+    <tr><td>B4 胶片感</td><td class="num">+2.8%</td><td class="num">0%</td><td class="num">+2.8%</td><td class="num">0%</td></tr>
+    <tr><td>B5 日落暖</td><td class="num">+6.1%</td><td class="num">0%</td><td class="num">+6.0%</td><td class="num">0%</td></tr>
+  </tbody>
+</table>
+
+<p><strong>效果几乎没损失（13.5% → 13.4%），溢出直接归零。</strong>18 组参数的超标数从 6 组降到 0 组。</p>
+
+<img class="sheet" src="beauty-presets-preview.jpg" alt="六个预设的 standard 档效果对比，上排 B0-B2，下排 B3-B5">
+<p class="cap">上排 B0 自然光 / B1 通透感 / B2 冷白皮　下排 B3 奶油肌 / B4 胶片感 / B5 日落暖。肤色区（上椭圆）逐档变冷变亮，白衣服（下椭圆）在蒙版模式下始终保住原色。</p>
+
+<blockquote class="dark">
+  <p><b>实现上有个坑必须写下来：</b>蒙版必须写成 <b>RGBA</b>。<code>blend: 'dest-in'</code> 读的是 alpha 通道，单通道灰度 PNG 的 alpha 恒为 1，合成出来等于没遮罩——我第一版就是这么错的，数据上表现为"蒙版模式和全局模式结果一模一样"。</p>
+</blockquote>
+
+<p>还有个产品级细节：<b>只修脸会让"脸白了身子还黄"</b>，画面割裂。所以蒙版的 alpha 不是 0/255，而是<b>肤色区 255、非肤色区 76（30% 弱补偿）</b>，羽化 4px。加了这层弱补偿后溢出仍是 0%。</p>
+
+<h2><span class="num">04</span>六个预设：用户看到的是标签，不是参数</h2>
+
+<div class="card">
+<table style="margin:0">
+  <thead><tr><th style="width:130px">预设</th><th>给人看的一句话</th><th style="width:120px">适合</th><th class="num">Δ肤色</th><th class="num">Δ色温</th><th class="num">强度</th></tr></thead>
+  <tbody>
+    <tr><td><b>B0 自然光</b></td><td>几乎看不出修过</td><td>日常 / 证件照</td><td class="num">+2.7%</td><td class="num">−2.1</td><td class="num">1.015</td></tr>
+    <tr><td><b>B1 通透感</b></td><td>不白，但干净</td><td>室内 / 阴天</td><td class="num">+8.2%</td><td class="num">−6.0</td><td class="num">1.045</td></tr>
+    <tr><td><b>B2 冷白皮</b> <span class="badge b-red">主推</span></td><td>显白最明显</td><td>自拍 / 黄皮</td><td class="num"><b>+13.4%</b></td><td class="num"><b>−15.8</b></td><td class="num">1.095</td></tr>
+    <tr><td><b>B3 奶油肌</b></td><td>柔、软、有光泽</td><td>人像 / 母婴</td><td class="num">+12.4%</td><td class="num">−11.1</td><td class="num">1.080</td></tr>
+    <tr><td><b>B4 胶片感</b></td><td>不显白，但显贵</td><td>街拍 / 旅拍</td><td class="num">+2.8%</td><td class="num">−9.0</td><td class="num">0.980</td></tr>
+    <tr><td><b>B5 日落暖</b></td><td>反向操作，加暖</td><td>旅拍 / 傍晚</td><td class="num">+6.0%</td><td class="num">+23.6</td><td class="num">1.020</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>三档强度（light / standard / strong）只调 <code>brightness</code> 与色温，不碰其他参数——这样"再亮一点"是可预期的一小步，不会突然换风格。</p>
+
+<div class="card" style="border-left:3px solid var(--amber);background:#FFFCF5">
+  <p style="margin:0"><b>交互红线（写进 JSON 的 neverDo）：</b>不给用户看 brightness / tone / saturation 这类参数名；不做「美白强度 0–100」滑块；不在未选预设时默认套最重档。滑块会让人误以为要懂参数，是这类功能最大的流失点。</p>
+</div>
+
+<h2><span class="num">05</span>文案：用户直接选，不生成</h2>
+
+<p>你要的"把旅行、心情、爱情的语句整理成模板，用户直接选"，这个方向是对的。五个理由：</p>
+
+<div class="grid2">
+  <div class="card" style="margin:0">
+    <h3 style="margin-top:0">为什么选 &gt; 生成</h3>
+    <ul style="margin-bottom:0">
+      <li><b>速度</b>：选是 0 秒，生成要等 3–8 秒，还要重试</li>
+      <li><b>质量下限</b>：库里的每一句都被筛过，生成必出烂句</li>
+      <li><b>风格一致</b>：库有 theme / tone 结构，天然能匹配版式与配色</li>
+      <li><b>可运营</b>：加一条 = 全量用户多一个选择，不用等模型迭代</li>
+      <li><b>合规</b>：不碰 AI 生成文本的内容风险</li>
+    </ul>
+  </div>
+  <div class="card" style="margin:0">
+    <h3 style="margin-top:0">结构：主题 × 语气</h3>
+    <p style="margin-bottom:8px;font-size:13.5px">一级 <b>主题</b> 决定配色，二级 <b>语气</b> 决定版式。12 种组合，覆盖绝大多数分享场景。</p>
+    <table style="margin:0;font-size:12.5px">
+      <tr><th>主题</th><th>配色</th></tr>
+      <tr><td>旅行</td><td>P5 莫兰迪</td></tr>
+      <tr><td>心情</td><td>P4 深蓝</td></tr>
+      <tr><td>爱情</td><td>P3 奶油</td></tr>
+    </table>
+    <p style="margin:10px 0 0;font-size:12.5px;color:var(--ink3)">语气：清冷（T6 场景）/ 治愈（T2 上字下图）/ 叙事（T2）/ 松弛（T1 大字报）</p>
+  </div>
+</div>
+
+<h3>库长什么样（48 条，每条两句）</h3>
+
+<div class="cards4">
+  <div>
+    <div class="cv">
+      <div class="ph" style="background:linear-gradient(160deg,#C9BFAE,#8C9B90)"></div>
+      <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(0,0,0,.66) 92%)"></div>
+      <div class="tx" style="left:8%;top:70%;width:84%;color:#fff;font-size:13px;text-shadow:0 1px 4px rgba(0,0,0,.5)">风把话<br>都说完了</div>
+      <div class="sub" style="left:8%;top:85%;width:84%;color:rgba(255,255,255,.86);font-size:7px">在海边站了半小时，什么都没想</div>
+    </div>
+    <div class="ccap"><b>旅行 · 清冷</b>tr-cl-01</div>
+  </div>
+  <div>
+    <div class="cv" style="background:#F8F4EC">
+      <div class="tx" style="left:8%;top:8%;width:84%;color:#2B2622;font-size:13px">凌晨三点<br>的便利店</div>
+      <div class="sub" style="left:8%;top:34%;width:84%;color:#7A6E60;font-size:7px">关东煮比谁都懂我</div>
+      <div class="ph" style="left:0;top:40%;width:100%;height:60%;background:linear-gradient(140deg,#B8A992,#7E8F86)"></div>
+    </div>
+    <div class="ccap"><b>心情 · 叙事</b>mo-st-01</div>
+  </div>
+  <div>
+    <div class="cv" style="background:#F8F4EC">
+      <div class="tx" style="left:8%;top:9%;width:84%;color:#2B2622;font-size:12px">会有人<br>来接你</div>
+      <div class="sub" style="left:8%;top:33%;width:84%;color:#7A6E60;font-size:7px">不催你，也不走</div>
+      <div class="ph" style="left:0;top:40%;width:100%;height:60%;background:linear-gradient(140deg,#D6C3AE,#96A38C)"></div>
+    </div>
+    <div class="ccap"><b>爱情 · 治愈</b>lo-he-01</div>
+  </div>
+  <div>
+    <div class="cv" style="background:#FFD400">
+      <div class="tx" style="left:8%;top:33%;width:84%;color:#1A1A1A;font-size:18px">来都<br>来了</div>
+      <div class="sub" style="left:8%;top:62%;width:84%;color:#3D3A32;font-size:7px">那就再坐一会儿</div>
+      <div style="position:absolute;left:6%;top:52%;width:40%;height:2px;background:#FF2E4D"></div>
+    </div>
+    <div class="ccap"><b>旅行 · 松弛</b>tr-ch-01</div>
+  </div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <h3 style="margin-top:0">旅行 · 清冷</h3>
+    <div class="copy-list">
+      <div>风把话都说完了 <span>／ 在海边站了半小时，什么都没想</span></div>
+      <div>路比答案长 <span>／ 后来就不问了，一直往前开</span></div>
+      <div>山不说话 <span>／ 但它比谁都清楚我为什么来</span></div>
+      <div>过站就下车 <span>／ 没有目的地的那趟，最好看</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">心情 · 松弛</h3>
+    <div class="copy-list">
+      <div>算了也行 <span>／ 不是所有事都要赢</span></div>
+      <div>今天不社交 <span>／ 手机反扣，睡觉</span></div>
+      <div>摆烂一小会儿 <span>／ 明天再当个好人</span></div>
+      <div>少想一点 <span>／ 脑子空着比较舒服</span></div>
+    </div>
+  </div>
+</div>
+
+<h3>两条硬约束，写进保存校验</h3>
+<table style="max-width:760px">
+  <thead><tr><th style="width:110px">字段</th><th>约束</th><th>为什么</th></tr></thead>
+  <tbody>
+    <tr><td><code>main</code></td><td>4–9 字，<b>超 9 字保存直接报错</b></td><td>超过 9 字在 3:4 封面必然折三行，视觉重心散掉；不允许用折行兜底</td></tr>
+    <tr><td><code>sub</code></td><td>≤ 16 字</td><td>副句进 subtitle 槽，2 行以内</td></tr>
+  </tbody>
+</table>
+
+<p class="cap">已校验：48 条全部达标，同主题内 main 字符相似度 &gt; 0.5 的近义句 0 条。</p>
+
+<h3>扩展机制（后续加内容不用改代码）</h3>
+<div class="card">
+  <ul style="margin:0">
+    <li>新增只填 <code>theme / tone / main / sub</code>，配色和版式由 12 组 <code>outfitMatrix</code> 自动决定，不用逐条配</li>
+    <li>下线用 <code>status=offline</code> 软删除，已有作品引用仍能正常渲染</li>
+    <li>某个语气在线不足 4 条时，前端隐藏该 chip，不展示空列表</li>
+    <li>生成式作为"再来一句"的长尾补充，但主路径永远是选</li>
+  </ul>
+</div>
+
+<h2><span class="num">06</span>串起来：一条路径，四件事</h2>
+
+<div class="flow">
+  <b>选照片</b><i>→</i><b>选修图预设</b><i>→</i><b>选一句文案</b><i>→</i><b>自动套版式</b><i>→</i><b>审图打分</b><i>→</i><b>发布</b>
+</div>
+
+<p>关键点：<b>用户全程不做设计决策，只做三次点选。</b>版式和配色由"文案的主题 + 语气"自动带出来，这是文案库必须带 theme / tone 字段的原因——它不只是分类，是排版指令。</p>
+
+<pre><span class="c">// 一次选择，链路自动串起来</span>
+<span class="k">const</span> item = copyLibrary.pick(theme=<span class="s">'travel'</span>, tone=<span class="s">'clear'</span>);
+<span class="k">const</span> outfit = copyLibrary.outfitMatrix[<span class="s">`${theme}.${tone}`</span>];
+<span class="c">// → { templateId: 'T6-scene-overlay', paletteId: 'P5-morandi' }</span>
+<span class="k">const</span> photo = beauty.apply(presetId=<span class="s">'B2-cool-white'</span>, level=<span class="s">'standard'</span>);
+canvas.render({ photo, template: outfit.templateId, palette: outfit.paletteId, slots: { title: item.main, subtitle: item.sub } });</pre>
+
+<h2><span class="num">07</span>审图怎么接这两条线</h2>
+
+<p>上一版 16 条规则管的是"分享图长得好不好看"。加了修图和文案库后，要补两组：</p>
+
+<table>
+  <thead><tr><th style="width:74px">规则</th><th style="width:120px">组</th><th>判定</th><th style="width:190px">不过时说什么</th></tr></thead>
+  <tbody>
+    <tr><td><b>R1</b></td><td>修图自然度</td><td>修图前后肤色区 <b>ΔL ≤ +18%</b>，且 Δ(R−B) 在 −25~0 之间</td><td>修过头了，皮肤会显假</td></tr>
+    <tr><td><b>R2</b></td><td>修图自然度</td><td>高光溢出 ≤ 2%，且白区纹理方差不低于原图 60%</td><td>白衣服已经糊成一块，换轻一档</td></tr>
+    <tr><td><b>R3</b></td><td>修图自然度</td><td>背景与肤色色温差 ≤ 8 个单位（防"脸白身子黄"）</td><td>脸和脖子不是一个色，把背景补偿加上</td></tr>
+    <tr><td><b>R4</b></td><td>修图自然度</td><td>AI 精修档 facesim ≥ 0.85</td><td>这张不太像你本人，建议退回色彩档</td></tr>
+    <tr><td><b>W3</b></td><td>文案库</td><td>所用文案在当前 theme/tone 下 status=online，且未超过 maxChars</td><td>（内部校验，不面向用户）</td></tr>
+    <tr><td><b>W4</b></td><td>文案库</td><td>文案主句与账号近 5 篇的主句相似度 ≤ 0.7</td><td>这句你最近用过了，换一句</td></tr>
+  </tbody>
+</table>
+
+<p><b>R3 是这次实测直接催生的规则。</b>只修脸不修背景，肤色和背景的 R−B 差会拉开，中景/半身照尤其明显——这条规则不设的话，用户自己看不出问题但会觉得"怪"。</p>
+
+<h2><span class="num">08</span>排期与三个待决策</h2>
+
+<table>
+  <thead><tr><th style="width:90px">阶段</th><th>做什么</th><th style="width:220px">验收</th></tr></thead>
+  <tbody>
+    <tr><td><b>P0</b><br><span class="badge b-gray">3 天</span></td><td>B1/B2 两个预设上线（色彩 + 蒙版），文案库先上"旅行 + 心情"32 条</td><td>50 张真实自拍盲测，B2 被选中率 &gt; 40%，"不像我"投诉 &lt; 5%</td></tr>
+    <tr><td><b>P1</b><br><span class="badge b-gray">2 周</span></td><td>六预设齐备；文案扩到 48 条 + 运营后台；套版式打通</td><td>用户平均点选次数 ≤ 3，从选图到出图 &lt; 15 秒</td></tr>
+    <tr><td><b>P2</b><br><span class="badge b-gray">+3 周</span></td><td>R1–R4 审图上线；按发布后数据反哺预设排序</td><td>修图类投诉下降 50%，B2 与 B1 的 CTR 差异可解释</td></tr>
+  </tbody>
+</table>
+
+<div class="card" style="background:#F7F5F0;border:0;border-left:3px solid var(--deep)">
+  <p style="margin:0;font-size:13.5px">
+    <b>三个需要你拍板的：</b><br>
+    1. <b>修图默认停在哪个预设？</b>建议 B1 通透感（最安全），B2 冷白皮做成"推荐"角标引导。默认 B2 会让"不像我"的风险前置。<br>
+    2. <b>文案要不要允许用户改？</b>建议允许改字，但改完仍走 maxChars 校验，否则模板会被撑破。不允许改的话复用率会掉。<br>
+    3. <b>AI 精修档开不开？</b>建议先不开。它是唯一的身份漂移来源，等 facesim 闸门在真实样本上验证过再放。
+  </p>
+</div>
+
+<footer>
+  实测环境：sharp 0.34.4 / Node 22.22.2，测试图为内置 1080×1440 合成人像（偏暗黄肤色 + 中灰背景 + 浅色衣物），18 组参数全量跑通。<br>
+  数据可用 <code>node tools/beauty-preset-preview.js &lt;你的照片&gt;</code> 复现，建议正式上线前用 30 张真实自拍重跑一遍再定档。<br>
+  配套文件：<code>docs/beauty-presets.v0.4.json</code>（6 预设 / 18 档参数 / 蒙版规则 / 实测数据）、<code>docs/copy-library.v0.1.json</code>（48 条 / 3 主题 / 4 语气 / 12 组 outfit）、<code>tools/beauty-preset-preview.js</code>（验证脚本）。
+</footer>
+
+</div>
+</body>
+</html>

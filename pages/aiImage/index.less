@@ -795,3 +795,102 @@
     background-color: var(--c-fill);
   }
 }
+
+/* ---------------- ② 维度组 ----------------
+   从原来的 2×2 固定套餐改成每组一行横滑。
+   横滑而不是网格：影调方向 8 个、画面问题 7 个，网格会占掉整屏，
+   而且用户一次只想看一个维度，铺开反而是干扰。 */
+
+.dims {
+  margin-top: 6rpx;
+}
+
+.dim {
+  padding: 16rpx 0 14rpx;
+  border-bottom: 1rpx solid var(--c-line);
+
+  &:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+}
+
+.dim__head {
+  display: flex;
+  align-items: baseline;
+  gap: 10rpx;
+  margin-bottom: 12rpx;
+}
+
+.dim__name {
+  flex-shrink: 0;
+  font-size: 26rpx;
+  font-weight: 500;
+  color: var(--c-text-1);
+}
+
+/* 当前选中值贴在右边，省掉 chips 里的选中态文字 */
+.dim__value {
+  flex: 1;
+  min-width: 0;
+  margin-left: auto;
+  font-size: 24rpx;
+  color: var(--c-primary);
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dim__multi {
+  flex-shrink: 0;
+  margin-left: auto;
+  font-size: 22rpx;
+  color: var(--c-text-3);
+}
+
+.dim__scroll {
+  width: 100%;
+  white-space: nowrap;
+}
+
+.dim__chips {
+  display: inline-flex;
+  gap: 12rpx;
+  padding-right: 12rpx;
+}
+
+.dchip {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  height: 60rpx;
+  padding: 0 24rpx;
+  border-radius: 30rpx;
+  border: 2rpx solid transparent;
+  background-color: #fff;
+  color: var(--c-text-2);
+  font-size: 25rpx;
+  box-sizing: border-box;
+
+  &--on {
+    color: var(--c-primary);
+    border-color: var(--c-primary);
+    background-color: var(--c-primary-weak);
+    font-weight: 500;
+  }
+}
+
+.dchip__name {
+  line-height: 1;
+}
+
+/* 选中项的说明，横滑里放不下 desc 就拎到组下面 */
+.dim__desc {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  line-height: 1.45;
+  color: var(--c-text-3);
+}

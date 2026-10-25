@@ -1,0 +1,60 @@
+{
+  "total": 2179,
+  "raw": 2253,
+  "merged": 74,
+  "droppedEmpty": 0,
+  "byLib": {
+    "A": 1393,
+    "B": 786
+  },
+  "byRatio": {
+    "3:2": 1276,
+    "2:3": 887,
+    "1:1": 16
+  },
+  "byGroup": {
+    "bulk/02_woman": 182,
+    "bulk/01_portrait": 156,
+    "bulk/05_family": 138,
+    "bulk/03_man": 133,
+    "bulk/04_child": 132,
+    "bulk/06_couple": 109,
+    "bulk/07_fashion": 98,
+    "街头瞬间": 85,
+    "人像写真": 84,
+    "bulk/11_culture": 77,
+    "旅行旅拍": 70,
+    "纪实人文": 70,
+    "自然风光": 67,
+    "bulk/12_lifestyle": 66,
+    "bulk/10_elderly": 62,
+    "情绪氛围": 62,
+    "复古港风": 62,
+    "古风国风": 61,
+    "日系胶片": 60,
+    "城市建筑": 59,
+    "bulk/08_street": 54,
+    "航拍视角": 54,
+    "bulk/09_bw": 52,
+    "黑白": 52,
+    "02_studio-commercial": 11,
+    "10_traditional-cultural": 11,
+    "05_fashion-editorial": 10,
+    "06_environmental": 10,
+    "07_street-documentary": 10,
+    "08_silhouette-backlight": 10,
+    "12_children-family": 10,
+    "13_couple-wedding": 10,
+    "03_black-white": 9,
+    "04_dark-moody": 9,
+    "11_humanist-age": 9,
+    "14_male-portrait": 9,
+    "01_natural-light": 8,
+    "09_film-vintage": 8
+  },
+  "chars": {
+    "min": 110,
+    "max": 205,
+    "avg": 169.1
+  }
+}

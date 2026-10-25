@@ -1,0 +1,5 @@
+{
+  "api_key": "在这里填 Agnes API Key（cpk- 开头）",
+  "endpoint": "https://apihub.agnes-ai.com/v1/images/generations",
+  "model": "agnes-image-2.5-flash"
+}
