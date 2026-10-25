@@ -1,0 +1,9 @@
+{
+  "name": "nexusImageWorker",
+  "version": "1.0.0",
+  "description": "Nexus 执行侧：由 nexusImage 在服务端触发，跑完把结果写回 ai_image_tasks",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "4.0.2"
+  }
+}

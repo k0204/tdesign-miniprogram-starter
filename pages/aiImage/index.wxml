@@ -1,65 +1,246 @@
-<t-navbar title="AI 图生图" left-arrow />
-<view class="ai-page">
-  <!-- 垫图 -->
-  <view class="card">
-    <view class="card__title">垫图<text class="card__required">必填 · 最多 1 张</text></view>
-    <view class="picker" bindtap="chooseImage">
-      <image wx:if="{{sourcePath}}" class="picker__img" src="{{sourcePath}}" mode="aspectFill" />
-      <view wx:else class="picker__empty">
-        <t-icon name="add" size="56rpx" color="#00000066" />
-        <text class="picker__empty-text">选择图片</text>
-      </view>
-      <view wx:if="{{uploading}}" class="picker__mask">上传中...</view>
-    </view>
-    <view wx:if="{{sourcePath}}" class="card__link" bindtap="removeImage">移除垫图</view>
-  </view>
+<t-navbar title="AI 修图" left-arrow />
 
-  <!-- 提示词 -->
-  <view class="card">
-    <view class="card__title">提示词</view>
-    <t-textarea
-      t-class="prompt-class"
-      value="{{prompt}}"
-      bind:change="onPromptChange"
-      placeholder="描述你想要的效果，例如：改成水彩风格，暖色调"
-      maxlength="{{500}}"
-      disableDefaultPadding="{{true}}"
-      indicator
-    />
-    <view class="presets">
-      <view class="presets__item" wx:for="{{presets}}" wx:key="*this" data-text="{{item}}" bindtap="usePreset">
-        <t-tag variant="light">{{item}}</t-tag>
+<view class="page" style="{{pageStyle}}">
+  <!-- ⓪ 引擎切换：混元单图快、Agnes 可加参考图但慢、Nexus 走 OpenAI 兼容网关，
+       能力差异由 providers.js 定义。三个引擎后胶囊只摆名字，
+       说明文案降为下一行（否则三个胶囊放不下一行） -->
+  <view class="engine">
+    <view class="engine__seg">
+      <view
+        wx:for="{{engines}}"
+        wx:key="id"
+        class="engine__item {{engineId === item.id ? 'engine__item--on' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="chooseEngine"
+      >
+        <text class="engine__name">{{item.name}}</text>
       </view>
     </view>
+    <text class="engine__hint">{{engine.desc}} · {{engine.tip}}</text>
   </view>
 
-  <!-- 生成按钮 -->
-  <view class="card">
-    <t-button
-      theme="primary"
-      size="large"
-      icon="lightbulb"
-      loading="{{generating}}"
-      disabled="{{generating}}"
-      bindtap="generate"
-      content="{{generating ? '生成中...' : '生成图片'}}"
-    />
-    <view class="card__tip">生成耗时约 20~60 秒，生成结果会自动保存到云存储</view>
-  </view>
+  <!-- ① 预览区：原图 / 对比 / 结果 三态共用一块，图按比例完整显示 -->
+  <view class="stage">
+    <view class="stage__head">
+      <view wx:if="{{resultSrc}}" class="stage__tabs">
+        <view
+          class="stage__tab {{stageView === 'src' ? 'stage__tab--on' : ''}}"
+          data-view="src"
+          bindtap="switchView"
+        >
+          原图
+        </view>
+        <view
+          class="stage__tab {{stageView === 'both' ? 'stage__tab--on' : ''}}"
+          data-view="both"
+          bindtap="switchView"
+        >
+          对比
+        </view>
+        <view
+          class="stage__tab {{stageView === 'out' ? 'stage__tab--on' : ''}}"
+          data-view="out"
+          bindtap="switchView"
+        >
+          结果
+        </view>
+      </view>
+      <text wx:else class="stage__title">原图</text>
 
-  <!-- 结果 -->
-  <view wx:if="{{resultSrc}}" class="card">
-    <view class="card__title">生成结果</view>
-    <image class="result__img" src="{{resultSrc}}" mode="widthFix" bindtap="preview" />
-    <view wx:if="{{revisedPrompt}}" class="result__revised">优化后提示词：{{revisedPrompt}}</view>
-    <view class="ops">
-      <t-button theme="light" size="medium" content="预览" bindtap="preview" />
-      <t-button theme="light" size="medium" content="保存相册" bindtap="saveToAlbum" />
-      <t-button theme="light" size="medium" content="复制 fileID" bindtap="copyFileID" />
+      <view class="stage__actions">
+        <text wx:if="{{sourcePath && engine.maxImages === 1}}" class="stage__link" bindtap="chooseImage">更换</text>
+        <text wx:if="{{sourcePath && engine.maxImages > 1 && canAddImage}}" class="stage__link" bindtap="chooseImage">添加</text>
+        <text wx:if="{{sourcePath}}" class="stage__meta">
+          <text wx:if="{{engine.maxImages > 1}}">{{imageCount}}/{{engine.maxImages}} · </text>{{outputLabel}}
+        </text>
+      </view>
     </view>
-    <view class="card__link" bindtap="resetResult">清空结果，重新生成</view>
+
+    <view class="stage__box {{sourcePath ? '' : 'stage__box--empty'}}">
+      <!-- 并排对比：两张同时看，各自等比缩小、完整展示 -->
+      <view wx:if="{{stageView === 'both' && resultSrc && sourcePath}}" class="pair">
+        <view class="pair__col" data-view="src" bindtap="tapStage">
+          <text class="pair__tag">原图</text>
+          <view class="pair__card">
+            <image class="pair__img" src="{{sourcePath}}" mode="aspectFit" />
+          </view>
+        </view>
+        <view class="pair__gap"></view>
+        <view class="pair__col" data-view="out" bindtap="tapStage">
+          <text class="pair__tag pair__tag--out">结果</text>
+          <view class="pair__card">
+            <image class="pair__img" src="{{resultSrc}}" mode="aspectFit" />
+          </view>
+        </view>
+      </view>
+
+      <image
+        wx:elif="{{stageView === 'out' && resultSrc}}"
+        class="stage__img"
+        src="{{resultSrc}}"
+        mode="aspectFit"
+        data-view="out"
+        bindtap="tapStage"
+      />
+      <image
+        wx:elif="{{sourcePath}}"
+        class="stage__img"
+        src="{{sourcePath}}"
+        mode="aspectFit"
+        data-view="src"
+        bindtap="tapStage"
+      />
+
+      <view wx:else class="stage__empty" bindtap="chooseImage">
+        <t-icon name="add" size="64rpx" color="#00000026" />
+        <text class="stage__empty-title">{{engine.maxImages > 1 ? '先选一张主图' : '从相册选择一张照片'}}</text>
+        <text class="stage__empty-tip">{{engine.emptyTip}}</text>
+      </view>
+
+      <view wx:if="{{uploading}}" class="stage__mask">上传中…</view>
+      <view wx:if="{{generating}}" class="stage__mask">{{engine.waitText}}…</view>
+    </view>
+
+    <!-- 多图素材槽：混元只有 1 张，这里不渲染；Agnes 最多 4 张，第 1 张是主图 -->
+    <view wx:if="{{engine.maxImages > 1 && imageCount > 0}}" class="slots">
+      <view
+        wx:for="{{images}}"
+        wx:key="fileID"
+        class="slot"
+        data-index="{{index}}"
+        bindtap="previewSlot"
+      >
+        <image class="slot__img" src="{{item.path}}" mode="aspectFill" />
+        <text class="slot__tag {{item.isMain ? 'slot__tag--main' : ''}}">{{item.label}}</text>
+        <view class="slot__del" data-index="{{index}}" catchtap="removeImageAt">×</view>
+      </view>
+      <view wx:if="{{canAddImage}}" class="slot slot--add" bindtap="chooseImage">
+        <t-icon name="add" size="40rpx" color="#00000040" />
+        <text class="slot__add-tip">加参考</text>
+      </view>
+    </view>
+
+    <!-- 出图后的操作，只在有结果时出现 -->
+    <view wx:if="{{resultSrc}}" class="stage__ops">
+      <view class="ops__btn" bindtap="saveToAlbum">保存相册</view>
+      <view class="ops__btn" bindtap="useAsSource">继续修改</view>
+      <view class="ops__btn ops__btn--ghost" bindtap="previewCurrent">大图</view>
+    </view>
   </view>
 
-  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <!-- ② 两步选择：先选 AI 功能，再选一种成片效果 -->
+  <view class="tech">
+    <view class="step-head">
+      <text class="step-no">1</text>
+      <text class="step-title">选择 AI 功能</text>
+    </view>
+    <scroll-view class="seg-scroll" scroll-x enable-flex>
+      <view class="seg">
+        <view
+          wx:for="{{caps}}"
+          wx:key="id"
+          class="seg__item {{activeCapId === item.id ? 'seg__item--on' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="chooseCap"
+        >
+          <t-icon
+            name="{{item.icon}}"
+            size="36rpx"
+            color="{{activeCapId === item.id ? '#0052d9' : '#00000080'}}"
+          />
+          <view class="seg__label">
+            <text class="seg__name">{{item.name}}</text>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+
+    <view wx:if="{{activeCap}}" class="tech__body">
+      <view class="tech__head">
+        <view class="step-head step-head--effect">
+          <text class="step-no">2</text>
+          <text class="step-title">选择效果</text>
+        </view>
+        <text class="tech__hint">{{activeCap.desc}}</text>
+      </view>
+      <view class="chips">
+        <view
+          wx:for="{{optionsView}}"
+          wx:key="id"
+          class="chip {{item.selected ? 'chip--on' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="toggleOption"
+        >
+          <text class="chip__name">{{item.label}}</text>
+          <text class="chip__desc">{{item.desc}}</text>
+          <t-icon wx:if="{{item.selected}}" class="chip__check" name="check" size="28rpx" color="#0052d9" />
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ③ 指令：默认只占一行，点开看拆解 -->
+  <view class="clip" bindtap="openPrompt">
+    <text class="clip__label">这次怎么改</text>
+    <text class="clip__digits">{{promptPreview ? promptPreview.length + ' 字' : '待生成'}}</text>
+    <text wx:if="{{promptPreview}}" class="clip__more">查看 ›</text>
+  </view>
 </view>
+
+<!-- ④ 底部操作栏 -->
+<view class="dock">
+  <view wx:if="{{error}}" class="dock__error">
+    <t-icon class="dock__error-icon" name="error-circle" size="28rpx" color="#d54941" />
+    <text class="dock__error-text">{{error}}</text>
+    <view
+      wx:if="{{errorRetryable && !generating && !uploading}}"
+      class="dock__error-retry"
+      bindtap="retryGenerate"
+    >
+      重试
+    </view>
+  </view>
+  <view class="dock__row">
+    <input
+      class="dock__input"
+      value="{{extra}}"
+      placeholder="补充要求，可不填"
+      placeholder-class="dock__ph"
+      maxlength="{{60}}"
+      confirm-type="done"
+      bindinput="onExtraInput"
+    />
+    <view class="dock__go {{imageCount && picked.length && !generating && !uploading ? '' : 'dock__go--off'}}">
+      <t-button
+        theme="primary"
+        size="medium"
+        icon="lightbulb"
+        loading="{{generating}}"
+        disabled="{{generating || uploading || !imageCount || !picked.length}}"
+        bindtap="generate"
+        t-class="dock__btn"
+      >
+        一键处理
+      </t-button>
+    </view>
+  </view>
+</view>
+
+<!-- ⑤ 指令拆解弹层 -->
+<view wx:if="{{promptOpen}}" class="mask" bindtap="closePrompt">
+  <view class="sheet" catchtap="noop">
+    <view class="sheet__head">
+      <text class="sheet__title">这次怎么改</text>
+      <text class="sheet__copy" bindtap="copyPrompt">复制</text>
+    </view>
+    <scroll-view class="sheet__body" scroll-y>
+      <view wx:for="{{promptParts}}" wx:key="key" class="part">
+        <text class="part__key">{{item.key}}</text>
+        <text class="part__text">{{item.text}}</text>
+      </view>
+    </scroll-view>
+    <view class="sheet__foot">AI按照片内容完成整图处理，人物和画面内容保持不变</view>
+  </view>
+</view>
+
 <t-toast id="t-toast" />

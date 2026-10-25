@@ -1,6 +1,7 @@
 @import '/variable.less';
 
 .home-card {
+  position: relative;
   display: inline-flex;
   flex-direction: column;
   width: 340rpx;
@@ -11,6 +12,31 @@
   &__image {
     width: 340rpx;
     height: 340rpx;
+  }
+
+  // 点赞爱心：左上角，56rpx 的圆形点击区比图标本身大一圈，连点不至于点空
+  &__like {
+    position: absolute;
+    top: 16rpx;
+    left: 16rpx;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56rpx;
+    height: 56rpx;
+    border-radius: 50%;
+    // 半透明黑底：图片再花哨也能看清白色空心心
+    background-color: rgba(0, 0, 0, 0.32);
+    transition:
+      transform 0.12s ease,
+      background-color 0.12s ease;
+
+    &--on {
+      // 点亮的瞬间给一点点回弹，连点时能看出状态
+      transform: scale(1.06);
+      background-color: rgba(0, 0, 0, 0.42);
+    }
   }
 
   &__info {

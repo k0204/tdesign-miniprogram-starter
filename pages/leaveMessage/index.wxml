@@ -1,0 +1,115 @@
+<t-navbar title="留言板" left-arrow />
+
+<!-- 有新留言但用户正翻在下面时，先出这条浮条，点了才滚回顶部合并。
+     只统计别人发的，自己发的不算「新留言」 -->
+<view wx:if="{{newCount}}" class="board__new" style="{{newTipStyle}}" bindtap="flushNew">
+  {{newTipText}}，点击查看
+</view>
+
+<!-- 未解锁时不渲染任何内容：输密码是默认规则，界面上不需要提示 -->
+<view wx:if="{{unlocked}}" class="{{boardClass}}">
+  <!-- 首屏加载：只占位，不闪空态（空态一闪而过会让人以为没数据） -->
+  <view wx:if="{{loading}}" class="board__state">
+    <t-loading theme="circular" size="36rpx" />
+    <view class="board__state-sub">正在加载留言…</view>
+  </view>
+
+  <!-- 加载失败：给出重试入口，而不是一句冷冰冰的报错 -->
+  <view wx:elif="{{error}}" class="board__state">
+    <t-icon name="close-circle" size="56rpx" color="#00000033" />
+    <view class="board__state-text">{{error}}</view>
+    <view class="board__retry" bindtap="retryLoad">重新加载</view>
+  </view>
+
+  <!-- 空态 -->
+  <view wx:elif="{{!messages.length}}" class="board__state">
+    <t-icon name="chat" size="64rpx" color="#00000026" />
+    <view class="board__state-text">还没有人留言</view>
+    <view class="board__state-sub">写下第一句，让这里热闹起来</view>
+  </view>
+
+  <block wx:else>
+    <view class="board__list">
+      <view
+        wx:for="{{messages}}"
+        wx:key="id"
+        class="msg"
+        data-id="{{item.id}}"
+        bindlongpress="onMessageLongPress"
+      >
+        <view class="msg__avatar" bindtap="editNickname">{{item.nicknameChar}}</view>
+        <view class="msg__main">
+          <view class="msg__head">
+            <text class="msg__name">{{item.nickname}}</text>
+            <text wx:if="{{item.mine}}" class="msg__me">我</text>
+            <text class="msg__time">{{item.timeText}}</text>
+          </view>
+
+          <text wx:if="{{item.content}}" class="msg__text" user-select>{{item.content}}</text>
+
+          <view wx:if="{{item.images.length}}" class="msg__images {{item.single ? 'msg__images--single' : ''}}">
+            <view
+              wx:for="{{item.images}}"
+              wx:for-item="img"
+              wx:for-index="imgIndex"
+              wx:key="*this"
+              class="msg__image"
+              data-id="{{item.id}}"
+              data-index="{{imgIndex}}"
+              bindtap="previewMessageImage"
+            >
+              <image class="msg__image-inner" src="{{img}}" mode="aspectFill" lazy-load />
+            </view>
+          </view>
+
+          <text wx:if="{{item.mine}}" class="msg__hint">长按可删除</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="board__foot">
+      <text wx:if="{{loadingMore}}">正在加载…</text>
+      <text wx:elif="{{hasMore}}">上滑加载更多</text>
+      <text wx:else>没有更多了</text>
+    </view>
+  </block>
+</view>
+
+<!-- 输入区：fixed 贴底，键盘弹起时用 bottom 抬起（adjust-position 关掉，否则页面会跳） -->
+<view class="composer" style="{{composerStyle}}">
+  <view wx:if="{{images.length}}" class="composer__previews">
+    <view wx:for="{{images}}" wx:key="path" class="composer__preview">
+      <image class="composer__preview-img" src="{{item.path}}" mode="aspectFill" data-index="{{index}}" bindtap="previewDraft" />
+      <view class="composer__remove" data-index="{{index}}" catchtap="removeImage">×</view>
+    </view>
+    <text class="composer__tip">最多 {{maxImages}} 张</text>
+  </view>
+
+  <view class="composer__row">
+    <view class="composer__pick" bindtap="chooseImage">
+      <t-icon name="image-add" size="46rpx" color="#00000099" />
+    </view>
+    <textarea
+      class="composer__input"
+      value="{{draft}}"
+      placeholder="说点什么…"
+      placeholder-class="composer__placeholder"
+      maxlength="{{maxContent}}"
+      auto-height
+      fixed
+      show-confirm-bar="{{false}}"
+      cursor-spacing="24"
+      adjust-position="{{false}}"
+      bindinput="onInput"
+      bindkeyboardheightchange="onKeyboardHeight"
+    />
+    <view class="composer__send {{canSend ? 'composer__send--on' : ''}}" bindtap="send">
+      {{sendText}}
+    </view>
+  </view>
+
+  <view class="composer__meta">
+    <text class="composer__who" bindtap="editNickname">{{nickname}}</text>
+    <text class="composer__count">{{draft.length}}/{{maxContent}}</text>
+  </view>
+</view>

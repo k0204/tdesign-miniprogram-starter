@@ -1,0 +1,9 @@
+{
+  "name": "leaveMessage",
+  "version": "1.0.0",
+  "description": "留言板云函数：留言列表 / 发送（文字+图片）/ 删除自己的留言",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "4.0.2"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "agnesImage",
+  "version": "1.0.0",
+  "description": "Agnes Image 2.5 Flash 生图云函数：文生图 / 图生图 / 多图合成，结果转存云存储",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "4.0.2"
+  }
+}

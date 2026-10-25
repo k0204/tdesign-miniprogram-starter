@@ -1,5 +1,5 @@
 {
-  "pages": ["pages/home/index", "pages/message/index", "pages/my/index"],
+  "pages": ["pages/home/index", "pages/my/index"],
   "usingComponents": {
     "t-toast": "tdesign-miniprogram/toast/toast"
   },
@@ -12,11 +12,6 @@
     {
       "root": "pages/my/info-edit",
       "name": "edit",
-      "pages": ["index"]
-    },
-    {
-      "root": "pages/chat",
-      "name": "chat",
       "pages": ["index"]
     },
     {
@@ -48,6 +43,11 @@
       "root": "pages/aiImage",
       "name": "aiImage",
       "pages": ["index"]
+    },
+    {
+      "root": "pages/leaveMessage",
+      "name": "leaveMessage",
+      "pages": ["index"]
     }
   ],
   "window": {
@@ -56,16 +56,18 @@
     "navigationBarTitleText": "Weixin",
     "navigationBarTextStyle": "black"
   },
+  "networkTimeout": {
+    "request": 180000,
+    "connectSocket": 60000,
+    "uploadFile": 180000,
+    "downloadFile": 180000
+  },
   "tabBar": {
     "custom": true,
     "list": [
       {
         "pagePath": "pages/home/index",
         "text": "首页"
-      },
-      {
-        "pagePath": "pages/message/index",
-        "text": "消息"
       },
       {
         "pagePath": "pages/my/index",

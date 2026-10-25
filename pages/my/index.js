@@ -36,7 +36,7 @@ Page({
     ],
 
     settingList: [
-      { name: 'AI 图生图', icon: 'lightbulb', type: 'aiImage', url: '/pages/aiImage/index' },
+      { name: 'AI 修图', icon: 'lightbulb', type: 'aiImage', url: '/pages/aiImage/index' },
       { name: '联系客服', icon: 'service', type: 'service' },
       { name: '设置', icon: 'setting', type: 'setting', url: '/pages/setting/index' },
     ],

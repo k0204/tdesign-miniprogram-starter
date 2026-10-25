@@ -1,0 +1,9 @@
+{
+  "name": "nexusImage",
+  "version": "1.0.0",
+  "description": "Nexus（OpenAI 兼容网关）生图云函数（派发侧）：写任务表并触发 nexusImageWorker，秒回 taskId",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "4.0.2"
+  }
+}

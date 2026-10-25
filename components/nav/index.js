@@ -28,18 +28,8 @@ Component({
         isSidebar: false,
       },
       {
-        title: 'AI 图生图',
+        title: 'AI 修图',
         url: 'pages/aiImage/index',
-        isSidebar: false,
-      },
-      {
-        title: '消息列表页',
-        url: 'pages/message/index',
-        isSidebar: true,
-      },
-      {
-        title: '对话页',
-        url: 'pages/chat/index',
         isSidebar: false,
       },
       {

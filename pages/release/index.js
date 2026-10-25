@@ -7,12 +7,13 @@ Page({
   data: {
     originFiles: [
       {
-        url: '/static/image1.png',
+        // 演示图跟着子包走，省主包体积
+        url: '/pages/release/image1.png',
         name: 'uploaded1.png',
         type: 'image',
       },
       {
-        url: '/static/image2.png',
+        url: '/pages/release/image2.png',
         name: 'uploaded2.png',
         type: 'image',
       },

@@ -1,5 +1,9 @@
 <view class="home-card">
   <t-image t-class="home-card__image" src="{{url}}" mode="aspectFill" />
+  <!-- 点赞爱心压在图片左上角：底色一层半透明黑，白心/红心都能看清 -->
+  <view class="{{likeClass}}" catchtap="onLike">
+    <t-icon name="{{heartIcon}}" size="32rpx" color="{{heartColor}}" />
+  </view>
   <view class="home-card__info">
     <text>{{desc}}</text>
     <view class="home-card__tag-group">

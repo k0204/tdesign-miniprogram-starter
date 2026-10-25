@@ -1,134 +1,696 @@
-/* pages/aiImage/index.wxss */
-.ai-page {
-  min-height: 100vh;
+/* pages/aiImage/index.wxss —— 预览优先：图大、指令折叠 */
+.page {
+  --c-primary: #0052d9;
+  --c-primary-weak: #e8f0fd;
+  --c-text-1: rgba(0, 0, 0, 0.9);
+  --c-text-2: rgba(0, 0, 0, 0.6);
+  --c-text-3: rgba(0, 0, 0, 0.38);
+  --c-line: rgba(0, 0, 0, 0.06);
+  --c-fill: #f3f3f3;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   box-sizing: border-box;
-  padding: 24rpx 24rpx 64rpx;
+  padding: 16rpx 24rpx calc(120rpx + env(safe-area-inset-bottom));
   background-color: #f3f3f3;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
 
-  .card {
-    margin-bottom: 24rpx;
-    padding: 32rpx;
-    border-radius: 24rpx;
+/* ---------------- ⓪ 引擎切换 ---------------- */
+
+/* 三个引擎后改为两行：胶囊占满一行（三等分），说明文案降为右对齐的一行。
+   原来的「胶囊 + 右侧 tip」并排在 3 个引擎下会挤掉第三个，改列向后与文案长度无关 */
+.engine {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  margin-bottom: 12rpx;
+  padding: 0 8rpx;
+}
+
+.engine__seg {
+  display: flex;
+  padding: 4rpx;
+  border-radius: 999rpx;
+  background-color: #fff;
+}
+
+.engine__item {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 10rpx 0;
+  border-radius: 999rpx;
+
+  &--on {
+    background-color: var(--c-primary-weak);
+  }
+
+  &--on .engine__name {
+    color: var(--c-primary);
+    font-weight: 600;
+  }
+}
+
+.engine__name {
+  font-size: 24rpx;
+  color: var(--c-text-2);
+}
+
+.engine__hint {
+  margin-top: 6rpx;
+  text-align: right;
+  font-size: 20rpx;
+  color: var(--c-text-3);
+}
+
+/* ---------------- ① 预览区 ---------------- */
+
+.stage {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 360rpx;
+  padding: 16rpx 20rpx 20rpx;
+  border-radius: 20rpx;
+  background-color: #fff;
+}
+
+.stage__head {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14rpx;
+}
+
+.stage__title {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: var(--c-text-1);
+}
+
+.stage__tabs {
+  display: flex;
+  padding: 4rpx;
+  border-radius: 999rpx;
+  background-color: var(--c-fill);
+}
+
+.stage__tab {
+  padding: 6rpx 22rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  color: var(--c-text-2);
+
+  &--on {
+    color: var(--c-primary);
+    font-weight: 500;
     background-color: #fff;
-    box-sizing: border-box;
-
-    &__title {
-      display: flex;
-      align-items: center;
-      font-size: 30rpx;
-      font-weight: 600;
-      color: #000000e6;
-    }
-
-    &__required {
-      margin-left: 16rpx;
-      font-size: 24rpx;
-      font-weight: 400;
-      color: #00000066;
-    }
-
-    &__tip {
-      margin-top: 16rpx;
-      font-size: 24rpx;
-      color: #00000066;
-    }
-
-    &__link {
-      margin-top: 16rpx;
-      font-size: 26rpx;
-      color: #0052d9;
-    }
   }
+}
 
-  /* 垫图选择 */
-  .picker {
-    position: relative;
-    width: 280rpx;
-    height: 280rpx;
-    margin-top: 24rpx;
-    border: 2rpx dashed #e7e7e7;
-    border-radius: 16rpx;
-    background-color: #f7f8fa;
-    overflow: hidden;
+.stage__actions {
+  display: flex;
+  align-items: center;
+}
 
-    &__img {
-      width: 100%;
-      height: 100%;
-    }
+.stage__link {
+  margin-right: 14rpx;
+  font-size: 22rpx;
+  color: var(--c-primary);
+}
 
-    &__empty {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 100%;
-    }
+.stage__meta {
+  font-size: 22rpx;
+  color: var(--c-text-3);
+}
 
-    &__empty-text {
-      margin-top: 12rpx;
-      font-size: 24rpx;
-      color: #00000066;
-    }
+.stage__box {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16rpx;
+  background-color: #f7f8fa;
+  overflow: hidden;
+}
 
-    &__mask {
-      position: absolute;
-      top: 0;
-      left: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 100%;
-      font-size: 26rpx;
-      color: #fff;
-      background-color: rgba(0, 0, 0, 0.45);
-    }
+.stage__img {
+  width: 100%;
+  height: 100%;
+}
+
+/* 空态：虚线框让它看起来像「可以点进来的选图位」 */
+.stage__box--empty {
+  border: 1rpx dashed rgba(0, 0, 0, 0.1);
+  background-color: #fafbfc;
+}
+
+/* 并排对比：两列各带列头 + 图片容器，图在容器内等比完整显示 */
+.pair {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  padding: 12rpx 10rpx 10rpx;
+  box-sizing: border-box;
+}
+
+.pair__col {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pair__gap {
+  flex-shrink: 0;
+  width: 20rpx;
+}
+
+.pair__tag {
+  flex-shrink: 0;
+  padding-bottom: 8rpx;
+  font-size: 20rpx;
+  text-align: center;
+  color: var(--c-text-3);
+
+  &--out {
+    color: var(--c-primary);
   }
+}
 
-  .prompt-class {
-    margin-top: 24rpx;
-    padding: 0;
-  }
+/* 图片容器：aspectFit 的留白落在容器内，看起来是正常的画框而不是空档 */
+.pair__card {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  border-radius: 12rpx;
+  border: 1rpx solid rgba(0, 0, 0, 0.05);
+  background-color: #fff;
+  overflow: hidden;
+}
 
-  /* 预设提示词 */
-  .presets {
+.pair__img {
+  width: 100%;
+  height: 100%;
+}
+
+.stage__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.stage__empty-title {
+  margin-top: 14rpx;
+  font-size: 26rpx;
+  color: var(--c-text-2);
+}
+
+.stage__empty-tip {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: var(--c-text-3);
+}
+
+.stage__mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 24rpx;
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.42);
+}
+
+.stage__ops {
+  display: flex;
+  flex-shrink: 0;
+  padding-top: 14rpx;
+}
+
+/* 多图素材槽：一排缩略图，横向可滑；第 1 张带「主图」角标 */
+.slots {
+  display: flex;
+  flex-shrink: 0;
+  padding-top: 14rpx;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.slot {
+  position: relative;
+  flex-shrink: 0;
+  width: 104rpx;
+  height: 104rpx;
+  margin-right: 12rpx;
+  border-radius: 12rpx;
+  background-color: var(--c-fill);
+  overflow: hidden;
+
+  &--add {
     display: flex;
-    flex-wrap: wrap;
-    margin-top: 20rpx;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1rpx dashed rgba(0, 0, 0, 0.16);
+    background-color: #fafbfc;
+  }
+}
 
-    &__item {
-      margin: 0 16rpx 16rpx 0;
-    }
+.slot__img {
+  width: 100%;
+  height: 100%;
+}
+
+.slot__tag {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  padding: 2rpx 8rpx;
+  border-radius: 0 8rpx 0 0;
+  font-size: 18rpx;
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.45);
+
+  &--main {
+    background-color: rgba(0, 82, 217, 0.82);
+  }
+}
+
+.slot__del {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 34rpx;
+  height: 34rpx;
+  border-radius: 0 0 0 12rpx;
+  font-size: 24rpx;
+  line-height: 30rpx;
+  text-align: center;
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.42);
+}
+
+.slot__add-tip {
+  margin-top: 2rpx;
+  font-size: 18rpx;
+  color: var(--c-text-3);
+}
+
+/* ---------------- ② 两步效果选择 ---------------- */
+
+.tech {
+  flex-shrink: 0;
+  margin-top: 16rpx;
+  padding: 18rpx 0 20rpx;
+  border-radius: 20rpx;
+  background-color: #fff;
+  overflow: hidden;
+}
+
+.step-head {
+  display: flex;
+  align-items: center;
+  padding: 0 24rpx;
+}
+
+.step-head--effect {
+  padding: 0;
+}
+
+.step-no {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32rpx;
+  height: 32rpx;
+  margin-right: 10rpx;
+  border-radius: 50%;
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #fff;
+  background-color: var(--c-primary);
+}
+
+.step-title {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--c-text-1);
+}
+
+.seg-scroll {
+  width: 100%;
+  margin-top: 14rpx;
+  white-space: nowrap;
+}
+
+.seg {
+  display: inline-flex;
+  padding: 0 24rpx 4rpx;
+}
+
+.seg__item {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 132rpx;
+  height: 92rpx;
+  margin-right: 10rpx;
+  padding: 0;
+  border-radius: 12rpx;
+
+  &--on {
+    background-color: var(--c-primary-weak);
   }
 
-  /* 结果 */
-  .result__img {
-    width: 100%;
-    margin-top: 24rpx;
-    border-radius: 16rpx;
-    background-color: #f3f3f3;
+  &--on .seg__name {
+    color: var(--c-primary);
+    font-weight: 500;
+  }
+}
+
+.seg__label {
+  display: flex;
+  align-items: center;
+  margin-top: 6rpx;
+}
+
+.seg__name {
+  font-size: 22rpx;
+  color: var(--c-text-2);
+}
+
+.tech__body {
+  padding: 0 24rpx;
+}
+
+.tech__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid var(--c-line);
+}
+
+.tech__hint {
+  font-size: 22rpx;
+  color: var(--c-text-3);
+}
+
+.chips {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+
+.chip {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  height: 92rpx;
+  padding: 0 48rpx 0 18rpx;
+  border-radius: 12rpx;
+  border: 2rpx solid transparent;
+  color: var(--c-text-2);
+  background-color: var(--c-fill);
+  box-sizing: border-box;
+
+  &--on {
+    color: var(--c-primary);
+    border-color: var(--c-primary);
+    background-color: var(--c-primary-weak);
+    font-weight: 500;
+  }
+}
+
+.chip__name {
+  font-size: 24rpx;
+  font-weight: 500;
+  line-height: 32rpx;
+  color: var(--c-text-1);
+}
+
+.chip--on .chip__name {
+  color: var(--c-primary);
+}
+
+.chip__desc {
+  margin-top: 4rpx;
+  font-size: 19rpx;
+  line-height: 26rpx;
+  color: var(--c-text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chip__check {
+  position: absolute;
+  top: 30rpx;
+  right: 14rpx;
+}
+
+/* ---------------- ③ 指令折叠条 ---------------- */
+
+.clip {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  margin-top: 16rpx;
+  padding: 0 20rpx;
+  height: 64rpx;
+  border-radius: 16rpx;
+  background-color: #fff;
+}
+
+.clip__label {
+  font-size: 24rpx;
+  color: var(--c-text-1);
+}
+
+.clip__digits {
+  flex: 1;
+  margin-left: 12rpx;
+  font-size: 22rpx;
+  color: var(--c-text-3);
+}
+
+.clip__more {
+  font-size: 22rpx;
+  color: var(--c-primary);
+}
+
+/* ---------------- ④ 底部操作栏 ---------------- */
+
+.dock {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  padding: 12rpx 24rpx calc(12rpx + env(safe-area-inset-bottom));
+  border-top: 1rpx solid var(--c-line);
+  background-color: rgba(255, 255, 255, 0.96);
+  box-sizing: border-box;
+}
+
+.dock__error {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+  padding: 14rpx 18rpx;
+  border-radius: 14rpx;
+  background-color: #fff1f0;
+}
+
+.dock__error-icon {
+  flex-shrink: 0;
+  margin-right: 10rpx;
+}
+
+.dock__error-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 22rpx;
+  line-height: 32rpx;
+  color: #d54941;
+}
+
+/*
+ * 可重试的错误（队列忙、网络抖动）给一个直接重来的入口。
+ * 必须是 view 不是 text：text 是内联元素，padding 撑不开宽度，
+ * 会被压成小方块再被圆角切成一个红球。
+ */
+.dock__error-retry {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  height: 44rpx;
+  min-width: 96rpx;
+  margin-left: 16rpx;
+  padding: 0 22rpx;
+  box-sizing: border-box;
+  border-radius: 22rpx;
+  border: 1rpx solid rgba(213, 73, 65, 0.28);
+  font-size: 22rpx;
+  color: #d54941;
+  background-color: #fff;
+}
+
+.dock__row {
+  display: flex;
+  align-items: center;
+}
+
+.dock__input {
+  flex: 1;
+  min-width: 0;
+  height: 76rpx;
+  padding: 0 24rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  color: var(--c-text-1);
+  background-color: var(--c-fill);
+}
+
+.dock__ph {
+  color: var(--c-text-3);
+}
+
+.dock__go {
+  flex-shrink: 0;
+  width: 200rpx;
+  height: 76rpx;
+  margin-left: 16rpx;
+  transition: opacity 150ms ease;
+
+  &--off {
+    opacity: 0.45;
+  }
+}
+
+.dock__btn {
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------------- ⑤ 指令弹层 ---------------- */
+
+.mask {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-end;
+  background-color: rgba(0, 0, 0, 0.45);
+}
+
+.sheet {
+  width: 100%;
+  padding: 28rpx 28rpx calc(28rpx + env(safe-area-inset-bottom));
+  border-radius: 24rpx 24rpx 0 0;
+  background-color: #fff;
+  box-sizing: border-box;
+}
+
+.sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sheet__title {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: var(--c-text-1);
+}
+
+.sheet__copy {
+  font-size: 26rpx;
+  color: var(--c-primary);
+}
+
+.sheet__body {
+  max-height: 46vh;
+  margin-top: 12rpx;
+}
+
+.sheet__foot {
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid var(--c-line);
+  font-size: 20rpx;
+  color: var(--c-text-3);
+}
+
+.part {
+  display: flex;
+  align-items: flex-start;
+  padding: 14rpx 0;
+  border-bottom: 1rpx solid var(--c-line);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.part__key {
+  flex-shrink: 0;
+  width: 64rpx;
+  padding-top: 4rpx;
+  font-size: 20rpx;
+  color: var(--c-text-3);
+}
+
+.part__text {
+  flex: 1;
+  min-width: 0;
+  font-size: 24rpx;
+  line-height: 38rpx;
+  color: var(--c-text-2);
+}
+
+/* ---------------- 操作按钮 ---------------- */
+
+.ops__btn {
+  flex: 1;
+  padding: 16rpx 0;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  text-align: center;
+  color: var(--c-primary);
+  background-color: var(--c-primary-weak);
+
+  & + & {
+    margin-left: 16rpx;
   }
 
-  .result__revised {
-    margin-top: 16rpx;
-    font-size: 24rpx;
-    line-height: 36rpx;
-    color: #00000066;
-  }
-
-  .ops {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    margin-top: 24rpx;
-  }
-
-  .error {
-    padding: 24rpx 32rpx;
-    border-radius: 16rpx;
-    font-size: 26rpx;
-    color: #d54941;
-    background-color: #fff1f0;
+  &--ghost {
+    color: var(--c-text-2);
+    background-color: var(--c-fill);
   }
 }

@@ -1,11 +1,9 @@
 {
   "navigationStyle": "custom",
-  "navigationBarTitleText": "AI 图生图",
+  "navigationBarTitleText": "AI 修图",
   "usingComponents": {
     "t-navbar": "tdesign-miniprogram/navbar/navbar",
     "t-icon": "tdesign-miniprogram/icon/icon",
-    "t-textarea": "tdesign-miniprogram/textarea/textarea",
-    "t-tag": "tdesign-miniprogram/tag/tag",
     "t-button": "tdesign-miniprogram/button/button",
     "t-toast": "tdesign-miniprogram/toast/toast"
   }

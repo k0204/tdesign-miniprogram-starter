@@ -21,6 +21,9 @@
               desc="{{item.desc}}"
               url="{{item.url}}"
               tags="{{item.tags}}"
+              liked="{{item.liked}}"
+              data-url="{{item.url}}"
+              bind:like="onCardLike"
             />
           </view>
         </t-pull-down-refresh>
@@ -33,6 +36,9 @@
             desc="{{item.desc}}"
             url="{{item.url}}"
             tags="{{item.tags}}"
+            liked="{{item.liked}}"
+            data-url="{{item.url}}"
+            bind:like="onCardLike"
           />
         </view>
       </t-tab-panel>
@@ -42,7 +48,7 @@
 
 <view class="home-fab">
   <view class="home-fab__row">
-    <t-button theme="light" size="large" icon="lightbulb" shape="round" bindtap="goAiImage">AI 生图</t-button>
+    <t-button theme="light" size="large" icon="lightbulb" shape="round" bindtap="goAiImage">AI 修图</t-button>
   </view>
   <view class="home-fab__row">
     <t-button theme="primary" size="large" icon="add" shape="round" bindtap="goRelease">发布</t-button>

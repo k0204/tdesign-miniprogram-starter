@@ -1,10 +1,32 @@
 {
   "description": "项目配置文件，详见文档：https://developers.weixin.qq.com/miniprogram/dev/devtools/projectconfig.html",
   "packOptions": {
-    "ignore": [],
+    "ignore": [
+      {
+        "type": "folder",
+        "value": "output"
+      },
+      {
+        "type": "folder",
+        "value": ".workbuddy"
+      },
+      {
+        "type": "file",
+        "value": "package-lock.json"
+      },
+      {
+        "type": "suffix",
+        "value": ".md"
+      },
+      {
+        "type": "suffix",
+        "value": ".d.ts"
+      }
+    ],
     "include": []
   },
   "setting": {
+    "cloudfunctionRoot": "cloudfunctions/",
     "bundle": false,
     "userConfirmedBundleSwitch": false,
     "urlCheck": true,
@@ -107,6 +129,13 @@
         {
           "name": "aiImage",
           "pathName": "pages/aiImage/index",
+          "query": "",
+          "launchMode": "default",
+          "scene": null
+        },
+        {
+          "name": "leaveMessage",
+          "pathName": "pages/leaveMessage/index",
           "query": "",
           "launchMode": "default",
           "scene": null

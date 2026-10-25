@@ -1,0 +1,309 @@
+@import '/variable.less';
+
+@avatar-size: 72rpx;
+@send-height: 64rpx;
+
+.board {
+  // 不设 min-height：导航栏在文档流里，写 100vh 会让空列表也能滚一屏
+  padding: 24rpx 24rpx 220rpx;
+  background-color: @bg-color;
+  box-sizing: border-box;
+
+  // 选了图之后输入区多一行缩略图，列表底部多留白，避免最后一条被盖住
+  &--picking {
+    padding-bottom: 360rpx;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 20rpx;
+  }
+
+  &__state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20rpx;
+    padding: 200rpx 0;
+    font-size: @font-size-small;
+    color: @gy3;
+  }
+
+  &__state-text {
+    font-size: @font-size-default;
+    color: @gy2;
+  }
+
+  &__state-sub {
+    font-size: @font-size-mini;
+    color: @gy3;
+  }
+
+  &__retry {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 64rpx;
+    padding: 0 36rpx;
+    border: 1rpx solid @brand7-normal;
+    border-radius: 999rpx;
+    box-sizing: border-box;
+    font-size: @font-size-small;
+    color: @brand7-normal;
+  }
+
+  &__foot {
+    padding: 24rpx 0 8rpx;
+    text-align: center;
+    font-size: @font-size-mini;
+    color: @gy3;
+  }
+
+  // 「有新留言」浮条：贴在输入区上方。放底部而不是顶部，
+  // 是因为用户往下翻时视线在底部，而且顶部会压住第一条的昵称
+  &__new {
+    position: fixed;
+    bottom: 104px;
+    left: 50%;
+    z-index: 20;
+    max-width: 82%;
+    padding: 12rpx 28rpx;
+    border-radius: 999rpx;
+    background-color: @brand7-normal;
+    font-size: 24rpx;
+    line-height: 1.4;
+    color: #fff;
+    box-sizing: border-box;
+    transform: translateX(-50%);
+    box-shadow: 0 6rpx 20rpx rgba(0, 82, 217, 0.28);
+    // 昵称可能很长，超了省略，别把浮条撑成一整行
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}
+
+.msg {
+  display: flex;
+  gap: 20rpx;
+  padding: 24rpx;
+  border-radius: 20rpx;
+  background-color: @bg-color-white;
+
+  &__avatar {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: @avatar-size;
+    height: @avatar-size;
+    border-radius: 50%;
+    background-color: #e8f0ff;
+    font-size: 28rpx;
+    color: @brand7-normal;
+  }
+
+  &__main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 12rpx;
+  }
+
+  &__name {
+    max-width: 320rpx;
+    overflow: hidden;
+    font-size: 28rpx;
+    font-weight: 500;
+    color: @gy1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__me {
+    flex: 0 0 auto;
+    padding: 0 8rpx;
+    border-radius: 6rpx;
+    background-color: @brand7-normal;
+    font-size: 20rpx;
+    line-height: 28rpx;
+    color: #fff;
+  }
+
+  &__time {
+    flex: 0 0 auto;
+    margin-left: auto;
+    font-size: 22rpx;
+    color: @gy3;
+  }
+
+  &__text {
+    display: block;
+    margin-top: 12rpx;
+    font-size: 28rpx;
+    line-height: 1.7;
+    color: @gy1;
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+
+  &__images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12rpx;
+    margin-top: 16rpx;
+  }
+
+  &__image {
+    width: 190rpx;
+    height: 190rpx;
+    overflow: hidden;
+    border-radius: 12rpx;
+    background-color: @bg-color;
+  }
+
+  // 单图给大一点，别让一张图缩成小方块
+  &__images--single &__image {
+    width: 400rpx;
+    height: 300rpx;
+  }
+
+  &__image-inner {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  &__hint {
+    display: block;
+    margin-top: 12rpx;
+    font-size: 22rpx;
+    color: @gy3;
+  }
+}
+
+.composer {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  padding: 16rpx 24rpx calc(16rpx + env(safe-area-inset-bottom));
+  border-top: 1rpx solid #f0f0f0;
+  background-color: @bg-color-white;
+  box-sizing: border-box;
+  transition: bottom 0.15s ease;
+
+  &__previews {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+    margin-bottom: 16rpx;
+  }
+
+  &__preview {
+    position: relative;
+    width: 112rpx;
+    height: 112rpx;
+    border-radius: 12rpx;
+    overflow: hidden;
+    background-color: @bg-color;
+  }
+
+  &__preview-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  &__remove {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36rpx;
+    height: 36rpx;
+    border-radius: 0 0 0 12rpx;
+    background-color: #00000080;
+    font-size: 24rpx;
+    line-height: 1;
+    color: #fff;
+  }
+
+  &__tip {
+    font-size: 22rpx;
+    color: @gy3;
+  }
+
+  &__row {
+    display: flex;
+    align-items: flex-end;
+    gap: 16rpx;
+  }
+
+  &__pick {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: @send-height;
+    height: @send-height;
+  }
+
+  &__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-height: 200rpx;
+    padding: 14rpx 24rpx;
+    border-radius: 32rpx;
+    background-color: @bg-color;
+    font-size: 28rpx;
+    line-height: 36rpx;
+    color: @gy1;
+    box-sizing: border-box;
+  }
+
+  &__placeholder {
+    color: @gy3;
+    font-size: 28rpx;
+  }
+
+  // 胶囊按钮用 view：<text> 是内联元素，加 padding 撑不开宽度
+  &__send {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: @send-height;
+    padding: 0 28rpx;
+    border-radius: 999rpx;
+    background-color: @gray3;
+    font-size: 26rpx;
+    color: #fff;
+    box-sizing: border-box;
+
+    &--on {
+      background-color: @brand7-normal;
+    }
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12rpx;
+    font-size: 22rpx;
+    color: @gy3;
+  }
+
+  &__who {
+    color: @gy2;
+  }
+}
