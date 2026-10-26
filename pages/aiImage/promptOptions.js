@@ -1,81 +1,58 @@
 /**
- * 修图的拼装模板与保留约束。
+ * 提示词拼装（纯逻辑，不含任何提示词正文）
  *
- * 历史：这里原来放着 20 个固定套餐（5 类 × 4 个选项），用户只能整选一个。
- * 现已改由 dimensions.js 的多维度选择生成「改动描述」，套餐文本不再使用。
- * 留下的只有：能力元信息（名称/图标/保留边界）+ 拼装顺序 + 三段固定文案。
+ * 正文（固定文案 + 每个因素的短语 + 锁定文案）全部来自
+ * `config/prompts/aiImage.factors.js`，线上可由云存储热更新，见 promptConfig.js。
+ * 这个文件只负责「按固定顺序拼起来」。
+ *
+ * 拼装顺序不是随便定的，来自 docs 对 803 条成片的归纳：
+ *   取景（景别→机位→景深）→ 影调（光位→光质→后期）
+ *   → 用户的自由描述 → 参考图说明 → 锁定约束 → 质量底线
+ *
+ * 前 20 个字决定构图，所以景别与机位必须最先说。
+ * 锁定约束必须放在最后（质量底线之前）：中间夹了长句后，早写的限制会被冲淡，
+ * 末尾等于每次重新强调一遍——这也是「人物/场景被换掉」最主要的事故来源。
+ *
+ * 拼装用「，」而不是「。」：语料里 2253 条提示词本身就是逗号串的清单体，
+ * 每个短语内部（如「暖色调，偏橙黄，自然饱和」）也自带逗号，连起来才是模型熟悉的形态。
  */
-
-/** 整图 AI 修图能力。每个选项是一套完整成片方案，不要求用户理解摄影参数。 */
-export const ANCHOR_PHOTO =
-  '基于输入照片进行专业AI摄影后期，先识别人物、主体、场景与现有光线，再执行所选的一键处理';
-
-export const KEEP_PHOTO =
-  '严格保持原图人物身份、五官、表情、姿态、服装、物体、文字、背景、构图、裁切范围和空间位置不变';
-export const KEEP_PORTRAIT =
-  '严格保持人物身份、五官比例、脸型、表情、发型、身材、姿态、服装与个人皮肤特征不变，不做网红脸';
-export const KEEP_SCENE =
-  '严格保持原有主体、景物结构、建筑透视、文字、构图、裁切范围和全部场景内容不变';
-
-export const CONSTRAINT_TAIL =
-  '结果必须是同一张照片的自然后期版本；不扩图、不裁切、不移动、增加、删除或替换任何内容，不改变天气与时段，不虚构被遮挡细节，无文字变化、重影、畸变、塑料皮肤或多余肢体';
+import { getCopy, getFactors, getOrder } from './promptConfig';
 
 /**
- * 能力列表。只保留元信息，具体怎么改由维度决定（见 dimensions.js 的 CAPABILITY_GROUPS）。
- * keepHint 是这一功能的边界：人像类不许动脸，场景类不许动结构，通用类只要求整体不变。
+ * 把选择拼成「摄影要素」一段。
+ *
+ * 「不指定」项的 phrase 为空，等于不出现，把决定权留给模型。
+ * 空段是合法状态：用户一个因素都不选时，这里就返回空字符串。
  */
-export const EDIT_TYPES = [
-  {
-    id: 'enhance',
-    name: '智能增强',
-    icon: 'adjustment',
-    desc: 'AI自动判断照片问题',
-    keepHint: KEEP_PHOTO,
-  },
-  {
-    id: 'portrait',
-    name: '人像成片',
-    icon: 'user',
-    desc: '以人物状态和质感为重点',
-    keepHint: KEEP_PORTRAIT,
-  },
-  {
-    id: 'relight',
-    name: '光影重塑',
-    icon: 'brightness',
-    desc: '重新平衡人物与环境光线',
-    keepHint: KEEP_PHOTO,
-  },
-  {
-    id: 'style',
-    name: '风格转换',
-    icon: 'palette',
-    desc: '一键统一整张照片的质感',
-    keepHint: KEEP_PHOTO,
-  },
-  {
-    id: 'scene',
-    name: '场景出片',
-    icon: 'image',
-    desc: 'AI按拍摄内容针对性优化',
-    keepHint: KEEP_SCENE,
-  },
-];
+export function buildElements(selection = {}, order, factors) {
+  const seq = order || getOrder();
+  const dims = factors || getFactors();
+  const parts = [];
+
+  seq.forEach((key) => {
+    const id = selection[key];
+    if (!id) return;
+    const factor = dims[key];
+    if (!factor || !Array.isArray(factor.options)) return;
+    const option = factor.options.find((item) => item.id === id);
+    if (option && option.phrase) parts.push(option.phrase);
+  });
+
+  return parts.filter(Boolean).join('，');
+}
 
 /**
- * 拼装顺序：主体锚 → 改动项 → 用户补充 → 多图参考说明 → 保持不变 → 约束行。
- * 主体锚必须最前（前 40 字权重最高）；约束行必须最后，否则容易被后半段的
- * 「参考图说明」冲淡。
+ * 拼装整段提示词。
+ *
+ * 顺序：生成意图 → 摄影要素 → 用户补充 → 参考图说明 → 锁定约束 → 质量底线
+ * 约束必须在最后：中间夹了长句后，早写的限制会被冲淡，末尾等于每次重新强调一遍。
  */
-export function buildPrompt({
-  anchor = ANCHOR_PHOTO,
-  item,
-  keepHint = KEEP_PHOTO,
-  extra = '',
-  reference = '',
-} = {}) {
+export function buildPrompt({ elements, locks = '', extra = '', reference = '', copy } = {}) {
+  const c = copy || getCopy() || {};
   const userText = String(extra || '').trim();
-  return [anchor, item && item.prompt, userText, reference, keepHint, CONSTRAINT_TAIL]
+  const lockText = String(locks || '').trim();
+
+  return [c.lead, elements, userText, reference, lockText, c.tail]
     .map((part) => String(part || '').trim())
     .filter(Boolean)
     .join('。');

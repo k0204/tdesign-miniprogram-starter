@@ -1,0 +1,797 @@
+{
+  "schema": "aiImage.factors",
+  "version": 16,
+  "updatedAt": "2026-10-26T11:32:51.000Z",
+  "note": "AI 修图的生成因素库（景别/机位/景深/光位/光质/后期）+ 可编辑锁（人物/场景/服装/姿势）。v16：新增自然匀肤，区分明暗不匀与局部肤色偏差并保留真实纹理。",
+  "copy": {
+    "lead": "为这张照片生成一版真实自然的成片",
+    "tail": "成片必须符合真实摄影逻辑，光线方向与阴影一致，亮部保留层次不过曝，皮肤保留真实纹理不塑料，画面干净，无文字、水印、边框、重影、畸变或多余肢体"
+  },
+  "locks": {
+    "title": "锁定不换",
+    "hint": "锁住的项会写进提示词最后；默认锁人物与场景，防止 AI 整张重画",
+    "items": [
+      {
+        "id": "person",
+        "name": "人物",
+        "desc": "身份 · 五官 · 发型 · 体型",
+        "phrase": "严格保持原图人物的身份、五官比例、脸型、体型、发型与个人特征不变，不做网红脸、不做医美脸，不改变人物的年龄与性别",
+        "defaultOn": true
+      },
+      {
+        "id": "scene",
+        "name": "场景",
+        "desc": "背景 · 地点 · 环境",
+        "phrase": "严格保持原图的背景、地点、环境结构与空间关系不变，不替换场景，不增加或删除环境中的主要物体",
+        "defaultOn": true
+      },
+      {
+        "id": "outfit",
+        "name": "服装造型",
+        "desc": "服装 · 配饰 · 造型",
+        "phrase": "严格保持原图人物的服装、配饰与整体造型不变，不更换衣物、不添加配饰",
+        "defaultOn": false
+      },
+      {
+        "id": "pose",
+        "name": "姿势表情",
+        "desc": "姿势 · 表情 · 视线",
+        "phrase": "严格保持原图人物的姿势、动作、表情与视线方向不变，不改变肢体状态和面部表情",
+        "defaultOn": false
+      }
+    ]
+  },
+  "categories": [
+    {
+      "id": "framing",
+      "name": "取景",
+      "icon": "image",
+      "desc": "景别 · 机位 · 景深",
+      "dims": [
+        "shot",
+        "angle",
+        "dof"
+      ]
+    },
+    {
+      "id": "tone",
+      "name": "影调",
+      "icon": "palette",
+      "desc": "光位 · 光质 · 后期",
+      "dims": [
+        "lightDir",
+        "lightQuality",
+        "grade"
+      ]
+    }
+  ],
+  "dims": {
+    "shot": {
+      "name": "景别",
+      "hint": "主体在画面里占多大、留多少环境。越远环境越多，越近表情越重要",
+      "options": [
+        {
+          "id": "auto",
+          "label": "不指定",
+          "phrase": "",
+          "share": 0
+        },
+        {
+          "id": "extreme_wide",
+          "label": "大远景",
+          "phrase": "大远景，人物在画面里很小，环境才是主体",
+          "group": "大景",
+          "share": 0
+        },
+        {
+          "id": "wide",
+          "label": "远景",
+          "phrase": "远景，人物全身与环境同框，环境占画面大部分",
+          "group": "大景",
+          "share": 15.8
+        },
+        {
+          "id": "env",
+          "label": "环境人像",
+          "phrase": "环境人像构图，人物约占画面三分之一，环境交代充分",
+          "group": "大景",
+          "share": 20
+        },
+        {
+          "id": "full",
+          "label": "全景",
+          "phrase": "全景，人物全身完整入画，头顶与脚下都留出余量",
+          "group": "中景",
+          "share": 49.3
+        },
+        {
+          "id": "seven_eighth",
+          "label": "七分身",
+          "phrase": "七分身构图，取到膝盖以上",
+          "group": "中景",
+          "share": 4
+        },
+        {
+          "id": "medium",
+          "label": "中景",
+          "phrase": "中景，取到腰部以上，手部动作入画",
+          "group": "中景",
+          "share": 24.9
+        },
+        {
+          "id": "medium_close",
+          "label": "近景",
+          "phrase": "近景，取到胸口以上，肩线与表情是重点",
+          "group": "近景",
+          "share": 0.8
+        },
+        {
+          "id": "closeup",
+          "label": "特写",
+          "phrase": "特写，面部占画面主要部分",
+          "group": "近景",
+          "share": 9.2
+        },
+        {
+          "id": "big_closeup",
+          "label": "大特写",
+          "phrase": "大特写，只保留五官细节，画面被脸部填满",
+          "group": "近景",
+          "share": 0
+        },
+        {
+          "id": "detail",
+          "label": "局部特写",
+          "phrase": "局部特写，只取手部或身体某一处细节",
+          "group": "近景",
+          "share": 0
+        }
+      ]
+    },
+    "angle": {
+      "name": "机位",
+      "hint": "相机放在哪、朝哪个方向。高度决定气质，方位决定能看到多少脸",
+      "options": [
+        {
+          "id": "auto",
+          "label": "不指定",
+          "phrase": "",
+          "share": 0
+        },
+        {
+          "id": "eye_level",
+          "label": "平视",
+          "phrase": "平视机位，镜头与眼睛同高，最接近日常观看",
+          "group": "高低",
+          "share": 90.9
+        },
+        {
+          "id": "slight_high",
+          "label": "微俯",
+          "phrase": "略高机位，镜头稍高于眼睛向下拍",
+          "group": "高低",
+          "share": 0
+        },
+        {
+          "id": "high",
+          "label": "俯拍",
+          "phrase": "俯拍机位，从较高处向下拍，人物显得小巧",
+          "group": "高低",
+          "share": 3.1
+        },
+        {
+          "id": "top_down",
+          "label": "顶俯",
+          "phrase": "顶视机位，几乎垂直向下俯拍",
+          "group": "高低",
+          "share": 0
+        },
+        {
+          "id": "low",
+          "label": "仰拍",
+          "phrase": "低机位仰拍，镜头低于胸口，人物显得挺拔",
+          "group": "高低",
+          "share": 0.4
+        },
+        {
+          "id": "ground",
+          "label": "贴地",
+          "phrase": "贴地机位，镜头贴近地面向上拍",
+          "group": "高低",
+          "share": 0
+        },
+        {
+          "id": "aerial",
+          "label": "航拍",
+          "phrase": "航拍视角，从空中俯瞰",
+          "group": "高低",
+          "share": 0
+        },
+        {
+          "id": "front",
+          "label": "正面",
+          "phrase": "正面机位，人物正对镜头",
+          "group": "方位",
+          "share": 0
+        },
+        {
+          "id": "three_quarter",
+          "label": "四分之三侧",
+          "phrase": "四分之三侧机位，能看到侧脸轮廓",
+          "group": "方位",
+          "share": 0
+        },
+        {
+          "id": "side",
+          "label": "正侧面",
+          "phrase": "正侧面机位，侧脸轮廓完整，画面有剪影感",
+          "group": "方位",
+          "share": 0
+        },
+        {
+          "id": "back",
+          "label": "背面",
+          "phrase": "背面机位，人物背对镜头",
+          "group": "方位",
+          "share": 0
+        },
+        {
+          "id": "over_shoulder",
+          "label": "过肩",
+          "phrase": "过肩机位，肩膀入画作为前景遮挡",
+          "group": "方位",
+          "share": 0
+        },
+        {
+          "id": "phone",
+          "label": "手机视角",
+          "phrase": "手机随手拍的视角，视角略广，略带日常感",
+          "group": "随手拍",
+          "share": 5.5
+        },
+        {
+          "id": "selfie",
+          "label": "自拍",
+          "phrase": "自拍视角，手臂距离的近距广角",
+          "group": "随手拍",
+          "share": 0.1
+        },
+        {
+          "id": "mirror_selfie",
+          "label": "镜面自拍",
+          "phrase": "对着镜子的自拍视角",
+          "group": "随手拍",
+          "share": 0
+        }
+      ]
+    },
+    "dof": {
+      "name": "景深",
+      "hint": "控制背景要清楚还是虚化。想突出人物选虚化，想保留环境选背景清晰",
+      "options": [
+        {
+          "id": "auto",
+          "label": "不指定",
+          "phrase": "",
+          "share": 0
+        },
+        {
+          "id": "razor",
+          "label": "强虚化",
+          "phrase": "极浅景深，背景完全化开只剩色块，只有眼睛清晰",
+          "group": "虚实",
+          "share": 0
+        },
+        {
+          "id": "shallow",
+          "label": "背景虚化",
+          "phrase": "浅景深，背景按远近自然渐进虚化，人物面部与发丝边缘保持清晰，轮廓过渡柔和，不出现白边、断层或抠图感",
+          "group": "虚实",
+          "share": 1.9
+        },
+        {
+          "id": "bokeh",
+          "label": "光斑虚化",
+          "phrase": "浅景深，人物面部与发丝清晰，远处点状光源化成柔和圆形散景，散景大小随距离变化，不把普通背景物体变成光斑",
+          "group": "虚实",
+          "share": 0
+        },
+        {
+          "id": "medium",
+          "label": "轻微虚化",
+          "phrase": "中等景深，背景可辨认但被弱化",
+          "group": "虚实",
+          "share": 1.2
+        },
+        {
+          "id": "deep",
+          "label": "背景清晰",
+          "phrase": "大景深，人物与环境都清晰",
+          "group": "虚实",
+          "share": 96.9
+        },
+        {
+          "id": "hyper",
+          "label": "前后全清晰",
+          "phrase": "全景深，从前景到远景都清晰锐利",
+          "group": "虚实",
+          "share": 0
+        },
+        {
+          "id": "front_blur",
+          "label": "前景虚化",
+          "phrase": "近处前景轻柔虚化作遮挡，虚化边缘渐变自然，不遮挡眼睛和面部轮廓，人物脸部清晰",
+          "group": "特殊",
+          "share": 0
+        },
+        {
+          "id": "tilt_shift",
+          "label": "微缩移轴",
+          "phrase": "移轴效果，画面上下虚化中间清晰",
+          "group": "特殊",
+          "share": 0
+        },
+        {
+          "id": "motion_blur",
+          "label": "动态拖影",
+          "phrase": "背景出现方向一致的动态拖影，人物脸部与身体轮廓清晰，不出现重影",
+          "group": "特殊",
+          "share": 0
+        }
+      ]
+    },
+    "lightDir": {
+      "name": "光位",
+      "hint": "主光从哪个方向来。一般选顺光、侧光或逆光；需要精确方向时再展开全部",
+      "options": [
+        {
+          "id": "auto",
+          "label": "不指定",
+          "phrase": "",
+          "share": 0
+        },
+        {
+          "id": "front",
+          "label": "顺光",
+          "phrase": "顺光，光从镜头方向照过来，阴影很少，皮肤干净",
+          "group": "顺光",
+          "share": 21.2
+        },
+        {
+          "id": "front_left",
+          "label": "左前侧光",
+          "phrase": "左前侧光，明暗过渡自然，脸部有轻微立体感",
+          "group": "侧光",
+          "share": 0
+        },
+        {
+          "id": "front_right",
+          "label": "右前侧光",
+          "phrase": "右前侧光，明暗过渡自然，脸部有轻微立体感",
+          "group": "侧光",
+          "share": 0
+        },
+        {
+          "id": "left",
+          "label": "左侧光",
+          "phrase": "左侧光，脸的一侧受光明亮，另一侧落在暗部",
+          "group": "侧光",
+          "share": 23
+        },
+        {
+          "id": "right",
+          "label": "右侧光",
+          "phrase": "右侧光，脸的一侧受光明亮，另一侧落在暗部",
+          "group": "侧光",
+          "share": 22.1
+        },
+        {
+          "id": "side",
+          "label": "正侧光",
+          "phrase": "正侧光，明暗几乎对半分，鼻影落在脸颊上",
+          "group": "侧光",
+          "share": 0
+        },
+        {
+          "id": "back_left",
+          "label": "左后逆光",
+          "phrase": "左后侧逆光，人物左边保留发丝轮廓光，脸部中间调优先局部补亮，力度适中，避免全图提曝光，肤色不过白，亮部不过曝",
+          "group": "逆光",
+          "share": 0
+        },
+        {
+          "id": "back_right",
+          "label": "右后逆光",
+          "phrase": "右后侧逆光，人物右边保留发丝轮廓光，脸部中间调优先局部补亮，力度适中，避免全图提曝光，肤色不过白，亮部不过曝",
+          "group": "逆光",
+          "share": 0
+        },
+        {
+          "id": "back",
+          "label": "逆光",
+          "phrase": "逆光从人物背后照来，头发与肩线透亮，脸部中间调优先局部补亮，力度适中，避免全图提曝光，肤色不过白，背景亮部保留层次",
+          "group": "逆光",
+          "share": 13
+        },
+        {
+          "id": "silhouette",
+          "label": "剪影",
+          "phrase": "强逆光，人物压成剪影，只留轮廓",
+          "group": "逆光",
+          "share": 0
+        },
+        {
+          "id": "top",
+          "label": "顶光",
+          "phrase": "顶光，光从正上方来，眼窝与下巴下方有阴影",
+          "group": "上下",
+          "share": 15.3
+        },
+        {
+          "id": "top_side",
+          "label": "顶侧光",
+          "phrase": "顶侧光，额头与颧骨受光，下颌有阴影",
+          "group": "上下",
+          "share": 0
+        },
+        {
+          "id": "bottom",
+          "label": "底光",
+          "phrase": "底光，光从下往上打，阴影方向与常态相反",
+          "group": "上下",
+          "share": 5.3
+        },
+        {
+          "id": "window",
+          "label": "窗侧光",
+          "phrase": "窗光从侧面照进来，光有明确方向",
+          "group": "无向",
+          "share": 0
+        },
+        {
+          "id": "diffuse",
+          "label": "无向漫射",
+          "phrase": "没有明确的主光方向，光从四面八方均匀包裹",
+          "group": "无向",
+          "share": 0
+        }
+      ]
+    },
+    "lightQuality": {
+      "name": "光质",
+      "hint": "决定光线柔不柔、画面亮不亮。常用柔光，想要强烈明暗再选硬光或低调光",
+      "options": [
+        {
+          "id": "auto",
+          "label": "不指定",
+          "phrase": "",
+          "share": 0
+        },
+        {
+          "id": "very_soft",
+          "label": "极柔漫射",
+          "phrase": "极柔的漫射光，几乎没有硬阴影",
+          "group": "软硬",
+          "share": 0
+        },
+        {
+          "id": "soft",
+          "label": "柔光",
+          "phrase": "柔光，阴影边缘柔和，皮肤质感细腻",
+          "group": "软硬",
+          "share": 81.7
+        },
+        {
+          "id": "semi_hard",
+          "label": "半硬光",
+          "phrase": "半硬光，阴影有方向但边缘略柔",
+          "group": "软硬",
+          "share": 0
+        },
+        {
+          "id": "hard",
+          "label": "硬光",
+          "phrase": "硬光，阴影边缘锐利，明暗对比强",
+          "group": "软硬",
+          "share": 18
+        },
+        {
+          "id": "high_key",
+          "label": "高调光",
+          "phrase": "高调光，整体明亮，阴影浅而少",
+          "group": "明暗",
+          "share": 0
+        },
+        {
+          "id": "low_key",
+          "label": "低调光",
+          "phrase": "低调光，大面积暗部里只留少量亮部",
+          "group": "明暗",
+          "share": 0
+        },
+        {
+          "id": "spotlight",
+          "label": "聚光",
+          "phrase": "一束聚光打在人物身上，四周压暗",
+          "group": "明暗",
+          "share": 0
+        },
+        {
+          "id": "golden",
+          "label": "黄金时刻",
+          "phrase": "黄金时刻的斜射阳光，暖而柔和",
+          "group": "光源",
+          "share": 0
+        },
+        {
+          "id": "blue",
+          "label": "蓝调时刻",
+          "phrase": "蓝调时刻的天光，冷而均匀",
+          "group": "光源",
+          "share": 0
+        },
+        {
+          "id": "overcast",
+          "label": "阴天散射",
+          "phrase": "阴天散射光，均匀而平静，没有明显光斑",
+          "group": "光源",
+          "share": 0
+        },
+        {
+          "id": "flare",
+          "label": "逆光眩光",
+          "phrase": "逆光眩光只在明亮光源周围形成柔和光晕，轻微雾化，眼睛与人物轮廓仍清楚",
+          "group": "光源",
+          "share": 0
+        },
+        {
+          "id": "volumetric",
+          "label": "穿雾光束",
+          "phrase": "光线穿过薄雾形成清晰可见的光束，空气有层次，人物仍保持清楚",
+          "group": "光源",
+          "share": 0
+        },
+        {
+          "id": "neon",
+          "label": "霓虹混合光",
+          "phrase": "霓虹混合光，冷暖交叠，明暗复杂",
+          "group": "光源",
+          "share": 0.3
+        },
+        {
+          "id": "candle",
+          "label": "烛光",
+          "phrase": "烛光或火光，暖色小光源，光比很大",
+          "group": "光源",
+          "share": 0
+        },
+        {
+          "id": "screen",
+          "label": "屏幕光",
+          "phrase": "屏幕的冷色光打在脸上，环境较暗",
+          "group": "光源",
+          "share": 0
+        },
+        {
+          "id": "flash",
+          "label": "直闪",
+          "phrase": "直闪照亮人物并保留夜景环境，面部高光不过曝，明暗反差利落",
+          "group": "光源",
+          "share": 0
+        }
+      ]
+    },
+    "grade": {
+      "name": "后期",
+      "hint": "选择成片最终像什么风格。先选自然、胶片或电影方向，特殊效果可展开全部",
+      "options": [
+        {
+          "id": "auto",
+          "label": "不指定",
+          "phrase": "",
+          "share": 0
+        },
+        {
+          "id": "natural",
+          "label": "原片感",
+          "phrase": "原片直出感，只做轻微调色",
+          "group": "写实",
+          "share": 0
+        },
+        {
+          "id": "clean",
+          "label": "自然通透",
+          "phrase": "自然通透，面部明暗柔和均匀，肤色保留自然血色与本身色调，亮部有层次，细节清楚不过度锐化",
+          "group": "写实",
+          "share": 24.5
+        },
+        {
+          "id": "skin_balance",
+          "label": "自然匀肤",
+          "phrase": "仅轻柔修正肤色明暗不匀与局部红黄偏差，肤色过渡自然统一，保留毛孔、绒毛与真实皮肤纹理，不磨成蜡像，不改变五官与本人特征",
+          "group": "人像",
+          "share": 0
+        },
+        {
+          "id": "clean_glow",
+          "label": "清透发光",
+          "phrase": "清透发光质感，中高光曲线轻提、极亮处柔和滚降，亮部通透但保留细节与颜色，不抬高全图曝光、不铺全图雾感，肤色保留血色与真实纹理",
+          "group": "光感",
+          "share": 0
+        },
+        {
+          "id": "commercial",
+          "label": "商业精修",
+          "phrase": "商业精修质感，轻修肤色不抹掉毛孔纹理，肤色自然有血色，高光细腻有光泽，光影立体",
+          "group": "写实",
+          "share": 0
+        },
+        {
+          "id": "film_warm",
+          "label": "暖调胶片",
+          "phrase": "暖调胶片质感，高光柔和滚降，暗部微微抬起，肤色保留血色，加入细腻颗粒",
+          "group": "胶片",
+          "share": 43.8
+        },
+        {
+          "id": "film_cool",
+          "label": "冷调胶片",
+          "phrase": "冷调胶片质感，暗部偏青绿",
+          "group": "胶片",
+          "share": 0
+        },
+        {
+          "id": "film_fade",
+          "label": "褪色胶片",
+          "phrase": "褪色胶片感，抬高黑位形成哑光质感，对比偏低",
+          "group": "胶片",
+          "share": 0
+        },
+        {
+          "id": "grain",
+          "label": "粗颗粒",
+          "phrase": "粗颗粒质感，反差适中",
+          "group": "胶片",
+          "share": 0
+        },
+        {
+          "id": "mono_silver",
+          "label": "黑白银盐",
+          "phrase": "黑白高对比，银盐颗粒质感",
+          "group": "胶片",
+          "share": 11.2
+        },
+        {
+          "id": "mono_gray",
+          "label": "柔和黑白",
+          "phrase": "黑白影调，灰阶层次丰富，对比不过头",
+          "group": "胶片",
+          "share": 0
+        },
+        {
+          "id": "hk_retro",
+          "label": "复古港风",
+          "phrase": "复古港风调色，暖黄褪色感",
+          "group": "风格",
+          "share": 2.5
+        },
+        {
+          "id": "jp_clean",
+          "label": "日系清爽",
+          "phrase": "日系清爽调色，整体明亮、低反差，白色干净不过曝，绿色清新克制，加入细腻胶片颗粒",
+          "group": "风格",
+          "share": 0
+        },
+        {
+          "id": "cinematic",
+          "label": "青橙电影",
+          "phrase": "青橙分离色调，高光偏暖橙、暗部偏青蓝，人物肤色保持自然暖度、不被染青，暗部压深但保留纹理",
+          "group": "风格",
+          "share": 0
+        },
+        {
+          "id": "cinema_cool",
+          "label": "冷青悬疑",
+          "phrase": "冷青电影调色，整体低饱和，暗部深青，高光克制，肤色保留自然暖度",
+          "group": "风格",
+          "share": 0
+        },
+        {
+          "id": "cinema_warm",
+          "label": "暖褐年代",
+          "phrase": "暖褐电影调色，高光偏旧金、暗部微偏蓝青，整体低饱和并带细腻颗粒，暗部保留层次、极亮细节柔和滚降，人物肤色与环境色分开控制",
+          "group": "风格",
+          "share": 0
+        },
+        {
+          "id": "bleach_bypass",
+          "label": "银漂高反差",
+          "phrase": "银漂效果，明显降低饱和度，黑位厚重、亮部坚实，形成粗粝高反差质感",
+          "group": "风格",
+          "share": 0
+        },
+        {
+          "id": "editorial",
+          "label": "高级灰",
+          "phrase": "高级灰调，低饱和高细节，柔和反差，肤色自然不灰脏",
+          "group": "风格",
+          "share": 0
+        },
+        {
+          "id": "cool_clean",
+          "label": "冷调清透",
+          "phrase": "冷调清透，肤色干净，细节锐利，整体冷静克制",
+          "group": "风格",
+          "share": 4.9
+        },
+        {
+          "id": "dark",
+          "label": "暗调压缩",
+          "phrase": "暗调压缩，阴影厚重，高光收住",
+          "group": "风格",
+          "share": 18
+        },
+        {
+          "id": "high_contrast",
+          "label": "高反差",
+          "phrase": "高反差，深黑对亮白，层次分明",
+          "group": "风格",
+          "share": 0
+        },
+        {
+          "id": "soft_focus",
+          "label": "柔光光晕",
+          "phrase": "柔光镜效果，亮部轻微溢出形成柔和光晕，优先落在发丝轮廓和高光边缘，限制扩散范围与强度，不给整图加灰雾，眼睛与脸部轮廓清楚，皮肤保留细腻纹理",
+          "group": "风格",
+          "share": 0
+        },
+        {
+          "id": "vivid",
+          "label": "浓郁饱和",
+          "phrase": "浓郁饱和，色彩鲜明有力",
+          "group": "风格",
+          "share": 0
+        },
+        {
+          "id": "muted",
+          "label": "低饱和胶片",
+          "phrase": "低饱和胶片质感，柔和低对比，颗粒细腻，色彩克制",
+          "group": "风格",
+          "share": 0
+        },
+        {
+          "id": "polaroid",
+          "label": "拍立得",
+          "phrase": "拍立得偏色质感，对比偏低，色彩轻微失真",
+          "group": "风格",
+          "share": 0
+        },
+        {
+          "id": "cyber",
+          "label": "赛博霓虹",
+          "phrase": "赛博霓虹调色，高饱和冷暖撞色",
+          "group": "风格",
+          "share": 0
+        }
+      ]
+    }
+  },
+  "order": [
+    "shot",
+    "angle",
+    "dof",
+    "lightDir",
+    "lightQuality",
+    "grade"
+  ],
+  "defaults": {
+    "shot": "auto",
+    "angle": "auto",
+    "dof": "auto",
+    "lightDir": "auto",
+    "lightQuality": "auto",
+    "grade": "auto"
+  },
+  "contentHash": "58d7ee67c87740fd",
+  "builtAt": "2026-10-26T11:37:12.990Z"
+}

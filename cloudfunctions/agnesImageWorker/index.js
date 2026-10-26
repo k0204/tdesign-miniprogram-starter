@@ -313,6 +313,30 @@ exports.main = async (event = {}) => {
   const deadline = startedAt + TOTAL_BUDGET_MS;
   const taskId = String(event.taskId || '');
 
+  /**
+   * 只读诊断：报出本进程实际用的接口地址与密钥指纹。
+   *
+   * 为什么需要：环境变量是每个函数独立的，而 Agnes 的国内站（api.agnes-ai.cn）
+   * 与国际站（apihub.agnes-ai.com）各自计费与限流——打到没买 plan 的那一边，
+   * 会拿到「image queue is full」而不是 401，从表象根本看不出打错了站。
+   * key 只回前缀 + 长度，不落库、不打日志全量。
+   */
+  if (event.action === 'config') {
+    return {
+      ok: true,
+      host: API_HOST,
+      path: API_PATH,
+      hostFromEnv: Boolean(process.env.AGNES_API_HOST),
+      model: MODEL,
+      hasKey: Boolean(API_KEY),
+      keyPrefix: API_KEY ? `${API_KEY.slice(0, 8)}…(${API_KEY.length})` : '',
+      budgetMs: TOTAL_BUDGET_MS,
+      requestTimeoutMs: REQUEST_TIMEOUT_MS,
+      retryBackoff: RETRY_BACKOFF,
+      env: process.env.TCB_ENV || '',
+    };
+  }
+
   if (!taskId) return { ok: false, error: '缺少 taskId' };
 
   await patchTask(taskId, { status: 'running' });

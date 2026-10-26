@@ -1,0 +1,6 @@
+{
+  "project": "G:\\AISpine\\konggu\\client",
+  "action": "evaluate",
+  "fnSource": "function() { const out = {}; const done = (r) => r; return (async () => { try { const a = await wx.cloud.callFunction({ name: 'imageToImage', data: { prompt: 'x'.repeat(8500) } }); out.imageToImage_long = a.result; } catch (e) { out.imageToImage_long = { error: String(e && (e.errMsg || e.message)) }; } try { const b = await wx.cloud.callFunction({ name: 'agnesImage', data: { action: 'config' } }); out.agnes_config = b.result; } catch (e) { out.agnes_config = { error: String(e && (e.errMsg || e.message)) }; } return out; })(); }",
+  "args": []
+}

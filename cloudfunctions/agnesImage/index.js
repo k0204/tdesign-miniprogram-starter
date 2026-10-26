@@ -104,6 +104,36 @@ async function noteDispatchError(taskId) {
   }
 }
 
+/**
+ * 只读诊断：把「派发侧 + worker 侧」的接口地址与密钥指纹一起报出来。
+ *
+ * 为什么两边都要报：云函数的环境变量是**每个函数独立配置**的，
+ * 而 Agnes 国内站（api.agnes-ai.cn）与国际站（apihub.agnes-ai.com）各自计费与限流。
+ * 一边配 .com、一边配 .cn，或者 key 配成没买 plan 的那把，
+ * 表现都是「image queue is full」——不是 401，所以从错误文案根本看不出打错站。
+ *
+ * key 只回前缀 + 长度，不落库、不打日志全量。
+ */
+async function readConfig() {
+  const dispatcher = {
+    hasKey: Boolean(process.env.AGNES_API_KEY),
+    keyPrefix: process.env.AGNES_API_KEY
+      ? `${process.env.AGNES_API_KEY.slice(0, 8)}…(${process.env.AGNES_API_KEY.length})`
+      : '',
+    host: process.env.AGNES_API_HOST || '(未配置，worker 缺省 api.agnes-ai.cn)',
+  };
+
+  let worker = null;
+  try {
+    const res = await cloud.callFunction({ name: WORKER, data: { action: 'config' } });
+    worker = (res && res.result) || null;
+  } catch (err) {
+    worker = { ok: false, error: String((err && err.message) || err) };
+  }
+
+  return { ok: true, dispatcher, worker };
+}
+
 // ---------------- 提交 ----------------
 
 async function submit(event) {
@@ -219,6 +249,7 @@ async function queryStatus(event) {
 exports.main = async (event = {}) => {
   const action = String(event.action || 'submit').trim();
   if (action === 'status') return queryStatus(event);
+  if (action === 'config') return readConfig();
   if (action === 'submit') return submit(event);
   return fail(`不支持的操作：${action}`);
 };

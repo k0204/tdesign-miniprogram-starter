@@ -311,7 +311,191 @@
   color: var(--c-text-3);
 }
 
-/* ---------------- ② 两步效果选择 ---------------- */
+/* ---------------- ② 锁定不换 ---------------- */
+
+/* 锁是独立于 6 个因素的一层意图：因素管「怎么拍」，锁管「拍的东西别动」。
+   2×2 网格而不是横滑：一共 4 个开关，一眼看全比滑着找更快。 */
+.locks {
+  flex-shrink: 0;
+  margin-top: 16rpx;
+  padding: 18rpx 20rpx 20rpx;
+  border-radius: 20rpx;
+  background-color: #fff;
+}
+
+.locks__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.locks__head-left {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  min-width: 0;
+}
+
+.locks__title {
+  flex-shrink: 0;
+  margin-left: 8rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--c-text-1);
+}
+
+/* 已锁摘要：绿色/主色小胶囊，和下面的开关状态互相印证 */
+.locks__summary {
+  flex-shrink: 1;
+  min-width: 0;
+  margin-left: 12rpx;
+  padding: 2rpx 10rpx;
+  border-radius: 999rpx;
+  font-size: 19rpx;
+  line-height: 26rpx;
+  color: var(--c-primary);
+  background-color: var(--c-primary-weak);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.locks__hint-text {
+  font-size: 18rpx;
+  color: var(--c-primary);
+}
+
+.locks__setting {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2rpx;
+  margin-left: 12rpx;
+}
+
+.locks__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10rpx;
+  margin-top: 14rpx;
+}
+
+/* 一块锁 = 左边开关区 + 右边编辑笔。整块可点，笔单独 catchtap */
+.lock {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  height: 88rpx;
+  padding: 0 6rpx 0 12rpx;
+  border-radius: 14rpx;
+  border: 2rpx solid transparent;
+  background-color: var(--c-fill);
+  box-sizing: border-box;
+
+  &--on {
+    border-color: rgba(0, 82, 217, 0.24);
+    background-color: var(--c-primary-weak);
+  }
+}
+
+.lock__main {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  min-width: 0;
+}
+
+.lock__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  margin-left: 8rpx;
+}
+
+.lock__name-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.lock__name {
+  flex-shrink: 1;
+  min-width: 0;
+  font-size: 24rpx;
+  font-weight: 500;
+  color: var(--c-text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lock--on .lock__name {
+  color: var(--c-primary);
+  font-weight: 600;
+}
+
+.lock__mark {
+  flex-shrink: 0;
+  margin-left: 4rpx;
+  padding: 0 6rpx;
+  border-radius: 999rpx;
+  font-size: 16rpx;
+  line-height: 22rpx;
+  color: var(--c-primary);
+  background-color: #fff;
+}
+
+.lock__desc {
+  margin-top: 2rpx;
+  font-size: 18rpx;
+  color: var(--c-text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lock__edit {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+
+  &:active {
+    background-color: rgba(0, 0, 0, 0.06);
+  }
+}
+
+.locks__hint {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 20rpx;
+  line-height: 1.45;
+  color: var(--c-text-3);
+}
+
+/* 冲突提示：锁和已选因素互相打架时说清楚，别让用户事后怪 AI */
+.locks__tip {
+  display: block;
+  margin-top: 10rpx;
+  padding: 10rpx 14rpx;
+  border-radius: 10rpx;
+  font-size: 20rpx;
+  line-height: 1.45;
+  color: var(--c-text-3);
+  background-color: var(--c-fill);
+
+  &--warn {
+    color: #bf4a3f;
+    background-color: #fff1f0;
+  }
+}
+
+/* ---------------- ③ 两步效果选择 ---------------- */
 
 .tech {
   flex-shrink: 0;
@@ -326,6 +510,31 @@
   display: flex;
   align-items: center;
   padding: 0 24rpx;
+}
+
+/* 第一行：标题 + 已选数量/清空。清空是纯文本，不加重按钮感 */
+.tech__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tech__tools {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  padding-right: 24rpx;
+}
+
+.tech__count {
+  font-size: 20rpx;
+  color: var(--c-text-3);
+}
+
+.tech__reset {
+  margin-left: 12rpx;
+  font-size: 20rpx;
+  color: var(--c-primary);
 }
 
 .step-head--effect {
@@ -369,7 +578,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 132rpx;
+  width: 168rpx;
   height: 92rpx;
   margin-right: 10rpx;
   padding: 0;
@@ -394,6 +603,111 @@
 .seg__name {
   font-size: 22rpx;
   color: var(--c-text-2);
+}
+
+/* 分类上的「已选 N 项」角标：文案在 JS 侧算好，空字符串时不渲染 */
+.seg__badge {
+  min-width: 22rpx;
+  margin-left: 4rpx;
+  padding: 0 6rpx;
+  border-radius: 999rpx;
+  background-color: var(--c-primary);
+  color: #fff;
+  font-size: 18rpx;
+  line-height: 24rpx;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.effects {
+  flex-shrink: 0;
+  margin: 14rpx 24rpx 0;
+  padding-bottom: 14rpx;
+  border-bottom: 1rpx solid var(--c-line);
+}
+
+.effects__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10rpx;
+}
+
+.effects__intro {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 12rpx;
+}
+
+.effects__title {
+  flex-shrink: 0;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--c-text-1);
+}
+
+.effects__hint {
+  overflow: hidden;
+  min-width: 0;
+  font-size: 20rpx;
+  color: var(--c-text-3);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.effects__count {
+  flex-shrink: 0;
+  margin-left: 12rpx;
+  font-size: 20rpx;
+  color: var(--c-text-3);
+}
+
+.effects__list {
+  height: 264rpx;
+}
+
+.effect {
+  display: flex;
+  height: 88rpx;
+  min-width: 0;
+  align-items: center;
+  padding: 8rpx 12rpx;
+  border-bottom: 1rpx solid var(--c-line);
+  background-color: transparent;
+  box-sizing: border-box;
+
+  &--on {
+    background-color: var(--c-primary-weak);
+  }
+}
+
+.effect__copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.effect__name {
+  overflow: hidden;
+  font-size: 24rpx;
+  line-height: 1.2;
+  font-weight: 600;
+  color: var(--c-text-1);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.effect__desc {
+  overflow: hidden;
+  margin-top: 3rpx;
+  font-size: 20rpx;
+  line-height: 1.2;
+  color: var(--c-text-3);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .tech__body {
@@ -590,19 +904,84 @@
   align-items: center;
 }
 
-.dock__input {
+/* 输入区改成一行的摘要条：点开才进弹层写长文。
+   原来是个 maxlength=120 的单行 input，写整段提示词根本写不下 */
+.dock__field {
+  display: flex;
   flex: 1;
+  align-items: center;
   min-width: 0;
   height: 76rpx;
   padding: 0 24rpx;
   border-radius: 999rpx;
-  font-size: 24rpx;
-  color: var(--c-text-1);
   background-color: var(--c-fill);
+  box-sizing: border-box;
 }
 
-.dock__ph {
+.dock__field-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 24rpx;
   color: var(--c-text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dock__field--filled .dock__field-text {
+  color: var(--c-text-1);
+}
+
+.dock__field-len {
+  flex-shrink: 0;
+  margin-left: 10rpx;
+  font-size: 20rpx;
+  color: var(--c-primary);
+}
+
+/* 弹层里的长文本编辑区 */
+.input-area {
+  width: 100%;
+  min-height: 200rpx;
+  max-height: 40vh;
+  margin-top: 16rpx;
+  padding: 20rpx 24rpx;
+  border-radius: 12rpx;
+  background-color: var(--c-fill);
+  font-size: 26rpx;
+  line-height: 1.6;
+  color: var(--c-text-1);
+  box-sizing: border-box;
+}
+
+.input-area__ph {
+  color: var(--c-text-3);
+  font-size: 24rpx;
+}
+
+.input-foot {
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+  margin-top: 14rpx;
+}
+
+.input-foot__tip {
+  flex: 1;
+  font-size: 20rpx;
+  line-height: 1.5;
+  color: var(--c-text-3);
+}
+
+.input-foot__count {
+  flex-shrink: 0;
+  font-size: 20rpx;
+  color: var(--c-text-3);
+}
+
+.sheet__copy--primary {
+  color: var(--c-primary);
+  font-weight: 600;
 }
 
 .dock__go {
@@ -633,6 +1012,9 @@
   z-index: 40;
   display: flex;
   align-items: flex-end;
+  /* 「自己写提示词」的弹层会临时加 padding-bottom 让键盘别盖住它，
+     border-box 是为了让这段 padding 不把 fixed 层撑出屏幕 */
+  box-sizing: border-box;
   background-color: rgba(0, 0, 0, 0.45);
 }
 
@@ -684,6 +1066,31 @@
   border-top: 1rpx solid var(--c-line);
   font-size: 20rpx;
   color: var(--c-text-3);
+}
+
+/* 提示词版本：弱化成脚注级别，只用来确认云端配置有没有生效 */
+.sheet__ver {
+  margin-top: 6rpx;
+  font-size: 20rpx;
+  color: rgba(0, 0, 0, 0.26);
+  text-align: right;
+}
+
+/* 拆解弹层顶部的已选标签：先看「选了什么」，再看每段长句 */
+.picked {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  padding: 4rpx 0 12rpx;
+}
+
+.picked__tag {
+  padding: 4rpx 12rpx;
+  border-radius: 999rpx;
+  font-size: 20rpx;
+  line-height: 26rpx;
+  color: var(--c-primary);
+  background-color: var(--c-primary-weak);
 }
 
 .part {
@@ -842,12 +1249,14 @@
   white-space: nowrap;
 }
 
-.dim__multi {
+.dim__more {
   flex-shrink: 0;
-  margin-left: auto;
-  font-size: 22rpx;
-  color: var(--c-text-3);
+  margin-left: 8rpx;
+  font-size: 21rpx;
+  color: var(--c-primary);
 }
+
+
 
 .dim__scroll {
   width: 100%;
@@ -858,6 +1267,29 @@
   display: inline-flex;
   gap: 12rpx;
   padding-right: 12rpx;
+}
+
+/* 取值分组：一维十几个取值平铺会让人横滑着猜顺序，按族切开更好找。
+   组名是一条贴在 chips 左边的小竖标签，不占独立行，横滑时跟着走。 */
+.dgroup {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 12rpx;
+
+  & + & {
+    margin-left: 6rpx;
+  }
+}
+
+.dgroup__name {
+  flex-shrink: 0;
+  padding-left: 8rpx;
+  font-size: 20rpx;
+  line-height: 1;
+  color: var(--c-text-3);
+  letter-spacing: 1rpx;
+  opacity: 0.75;
 }
 
 .dchip {
@@ -886,10 +1318,21 @@
   line-height: 1;
 }
 
-/* 选中项的说明，横滑里放不下 desc 就拎到组下面 */
+/* 选中项的说明：显示的是这句话实际会拼进提示词，不是形容词 */
 .dim__desc {
   display: block;
   margin-top: 10rpx;
+  font-size: 22rpx;
+  line-height: 1.45;
+  color: var(--c-text-3);
+}
+
+/* 零选择的提示：不选是合法状态，不该让用户觉得「还没选完」 */
+.dims__none {
+  margin-top: 16rpx;
+  padding: 12rpx 16rpx;
+  border-radius: 10rpx;
+  background-color: var(--c-fill);
   font-size: 22rpx;
   line-height: 1.45;
   color: var(--c-text-3);

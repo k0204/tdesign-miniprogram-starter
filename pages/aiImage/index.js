@@ -1,17 +1,39 @@
 // pages/aiImage/index.js —— AI 修图（选照片 → 选类型 → 选效果 → 生成）
 import useToastBehavior from '~/behaviors/useToast';
 import {
-  CAPABILITIES,
-  findCapability,
+  buildDimViews,
   buildEditPrompt,
+  buildElements,
+  countPicked,
   defaultSelection,
-  selectionReady,
-  buildDimensionView,
   describeSelection,
+  describePromptSource,
+  findCategory,
+  getCategories,
+  getCopy,
+  getLockConfig,
+  getOrder,
+  getPromptVersion,
+  loadPromptConfig,
   selectionKey,
-  ANCHOR_PHOTO,
-  CONSTRAINT_TAIL,
+  EFFECT_RECOMMENDATIONS,
+  applyEffectRecommendation,
 } from './editPresets';
+import {
+  LOCK_PHRASE_MAX,
+  buildLockText,
+  buildLockViews,
+  describeLocks,
+  detectLockTip,
+  getLockDefaultPhrase,
+  lockKey,
+  normalizeLockState,
+  readLockState,
+  sanitizeLockText,
+  saveLockState,
+  setLockPhrase,
+  toggleLockState,
+} from './locks';
 import {
   ENGINES,
   findEngine,
@@ -62,25 +84,72 @@ Page({
     outputLabel: '1024x1024',
     uploading: false,
 
-    // 能力与维度
-    caps: CAPABILITIES,
-    activeCapId: CAPABILITIES[0].id,
-    activeCap: CAPABILITIES[0],
-    /** 当前功能下可用的维度组，带 selected 标记，供 wxml 直接渲染 */
+    // 因素分类。初始为空，onLoad 里从提示词配置取（配置可能已热更新到云端版本）
+    cats: [],
+    activeCatId: '',
+    activeCat: null,
+    /** 当前分类下的因素维度，带 selected 标记，供 wxml 直接渲染 */
     dimensions: [],
-    /** 选择结果：{ direction: 'film', issue: 'auto', strength: 'medium', texture: ['grain'] } */
+    effectRecommendations: [],
+    selectedEffectId: '',
+    /** 各因素默认只显示常用项，用户可单独展开需要精调的因素。 */
+    expandedDims: {},
+    /**
+     * 全部因素的选择：{ shot:'full', angle:'auto', lightDir:'right', ... }
+     * 跨分类保留，切 tab 不清空——用户改了取景再改影调，取景不该丢。
+     */
     selection: {},
-    /** 已选项的一行摘要，折叠态显示 */
-    selectionSummary: '',
-    ready: false, // 这组选择能不能出图（拼出来有没有内容）
+    /** 当前分类/全部已选的因素数量，文案在 JS 侧拼好 */
+    pickedDigits: '0 项',
+    hasPicked: false,
     promptPreview: '',
     /** 拼装后是否超过当前引擎的字数上限，交给模板标红，不在这里截断 */
     promptTooLong: false,
     /** 折叠条右侧的字数文案，在 JS 侧算好——模板里不拼字符串 */
     promptDigits: '待生成',
-    promptParts: [], // 四段拆解，供界面展示
+    /** 拆解弹层顶部的已选因素标签，让用户先看到「选了哪些」再看长句 */
+    pickedTags: [],
+    /** 拆解弹层的几段 */
+    promptParts: [],
+    /** 所有因素都留着「不指定」——用来提示「这样也能直接生成」 */
+    nonePicked: true,
+    /** 提示词配置的版本与来源（内置 / 本地缓存 / 云端），显示在拆解弹层底部 */
+    promptNote: '',
+
+    // 锁定不换（默认锁人物 + 场景，防止 AI 顺着提示词把人和背景一起重画）
+    locks: [],
+    lockTitle: '锁定不换',
+    lockHeaderIcon: 'lock-on',
+    lockHeaderColor: '#0052d9',
+    lockSummary: '',
+    lockHint: '',
+    /** 锁与已选因素冲突时的橙色提示；空字符串表示不显示 */
+    lockTip: '',
+    lockTipCls: 'locks__tip',
+    /** 锁定文案编辑弹层 */
+    lockEditorOpen: false,
+    lockEditId: '',
+    lockEditName: '',
+    lockDraft: '',
+    lockDraftDigits: '',
+    lockDraftDefault: '',
+    lockDraftEdited: false,
+    lockPhraseMax: LOCK_PHRASE_MAX,
+    /** 锁定默认只显示保护摘要，需要修改时再展开。 */
+    locksExpanded: false,
+    /** 指令拆解弹层底部那句提示，随有没有锁变化 */
+    promptFoot: '',
 
     extra: '',
+    /** 底部摘要条右侧的字数 */
+    extraDigits: '',
+    /** 自己写提示词的弹层 */
+    promptInputOpen: false,
+    /** 弹层里的草稿：输入时不重算提示词，点「完成」才落到 extra */
+    promptDraft: '',
+    draftDigits: '',
+    /** 弹层跟随键盘上移，原生 textarea 的 adjust-position 推不动 fixed 弹层 */
+    inputSheetStyle: '',
     pageStyle: '', // 一屏高度 = 100vh - 导航栏，由 onLoad 算
     stageView: 'src', // 预览区看原图还是结果
     promptOpen: false, // 指令拆解弹层，默认收起
@@ -108,14 +177,96 @@ Page({
     this.alive = true;
     const sys = wx.getSystemInfoSync();
     const navHeight = (sys.statusBarHeight || 20) + 44;
-    const selection = defaultSelection(CAPABILITIES[0].id);
+
+    // 先用「当前生效配置」渲染（内置默认，或上次下载缓存下来的版本），不等网络
+    const selection = defaultSelection();
+    const cats = this.decorateCategories(getCategories(), selection);
+    const catId = (cats[0] && cats[0].id) || '';
+
+    // 锁定偏好存在本地：用户改过的文案、开关状态，比配置更「属于这个人」
+    this.lockState = readLockState();
+
     this.setData({
       pageStyle: `height: calc(100vh - ${navHeight}px)`,
+      cats,
+      effectRecommendations: this.decorateEffectRecommendations(''),
+      activeCatId: catId,
+      activeCat: findCategory(catId),
       selection,
-      dimensions: buildDimensionView(CAPABILITIES[0].id, selection),
-      ready: selectionReady(CAPABILITIES[0].id, selection),
+      dimensions: buildDimViews(catId, selection, {}),
+      promptNote: describePromptSource(),
+      locks: buildLockViews(this.lockState),
+      lockTitle: (getLockConfig() || {}).title || '锁定不换',
+      lockSummary: this.buildLockSummary(),
+      lockHint: (getLockConfig() || {}).hint || '',
     });
     this.refreshPreview();
+
+    // 再异步问云端有没有新版本。热更新只是锦上添花，失败/超时都不打断使用
+    this.syncPromptConfig();
+  },
+
+  /**
+   * 给分类挂上「已选 N 项」角标。
+   * 文案在 JS 侧算好，模板里不做判断（wx:for 内的判断在当前基础库不可靠）。
+   */
+  decorateCategories(cats, selection) {
+    return (cats || []).map((cat) => {
+      const picked = countPicked(cat.id, selection);
+      return {
+        ...cat,
+        badge: picked ? `${picked}` : '',
+      };
+    });
+  },
+
+  decorateEffectRecommendations(selectedId) {
+    return EFFECT_RECOMMENDATIONS.map((item) => ({
+      ...item,
+      selected: item.id === selectedId,
+      cls: item.id === selectedId ? 'effect effect--on' : 'effect',
+    }));
+  },
+
+  /** 「已锁 人物、场景」；一个都没锁时给一句风险提示 */
+  buildLockSummary() {
+    const names = describeLocks(this.lockState);
+    return names ? `已锁 ${names}` : '都没锁';
+  },
+
+  /**
+   * 拉取云端提示词配置。版本变了就重建菜单。
+   *
+   * 刻意不重置 selection：用户可能已经选到一半，云端这时候到了不该把他打回默认。
+   * 旧选择里已经被删掉的维度，buildElements 按 order 遍历时压根不会看它，
+   * 所以配置结构升级也不会拼出脏提示词。
+   */
+  syncPromptConfig() {
+    loadPromptConfig()
+      .then((res) => {
+        if (!this.alive || !res || !res.changed) return;
+        // 配置升级可能新增/删除锁定项：按 id 对齐，用户改过的文案保留
+        this.lockState = normalizeLockState(this.lockState);
+        const cats = getCategories();
+        const exists = cats.some((item) => item.id === this.data.activeCatId);
+        const catId = exists ? this.data.activeCatId : (cats[0] && cats[0].id) || '';
+        this.setData({
+          cats: this.decorateCategories(cats, this.data.selection),
+          activeCatId: catId,
+          activeCat: findCategory(catId),
+          dimensions: buildDimViews(catId, this.data.selection, this.data.expandedDims),
+          promptNote: describePromptSource(),
+          locks: buildLockViews(this.lockState),
+          lockTitle: (getLockConfig() || {}).title || '锁定不换',
+          lockSummary: this.buildLockSummary(),
+          lockHint: (getLockConfig() || {}).hint || '',
+        });
+        this.refreshPreview();
+        console.log('[aiImage] 提示词已更新至', getPromptVersion());
+      })
+      .catch((err) => {
+        console.warn('[aiImage] 提示词配置加载异常', err);
+      });
   },
 
   onUnload() {
@@ -354,104 +505,286 @@ Page({
     wx.previewImage({ current: urls[index], urls });
   },
 
-  /* ---------------- 能力与维度 ---------------- */
+  /* ---------------- 因素分类与取值 ---------------- */
 
-  chooseCap(e) {
+  /** 切分类只换「显示哪组维度」，不动 selection——跨分类的选择要一直保留 */
+  chooseCategory(e) {
     if (this.data.generating) return;
     const { id } = e.currentTarget.dataset;
-    if (!id || id === this.data.activeCapId) return;
-    const cap = findCapability(id);
-    if (!cap) return;
-    // 换功能时给该功能自己的默认选择，而不是清空：
-    // 清空会让用户每次切功能都得重新点一遍，且「一键处理」按钮一直灰着
-    const selection = defaultSelection(id);
+    if (!id || id === this.data.activeCatId) return;
+    const cat = findCategory(id);
+    if (!cat) return;
     this.setData({
-      activeCapId: id,
-      activeCap: cap,
-      selection,
-      dimensions: buildDimensionView(id, selection),
-      ready: selectionReady(id, selection),
+      activeCatId: id,
+      activeCat: cat,
+      dimensions: buildDimViews(id, this.data.selection, this.data.expandedDims),
       error: '',
     });
-    this.refreshPreview();
   },
 
-  /** 点一个维度值。单选维度互斥，多选维度累加（有上限） */
+  /**
+   * 点一个因素取值。单选，点已选中的那个回到「不指定」。
+   *
+   * 允许点回不指定（而不像旧的修图维度那样禁止清空）：因素本来就是「想改什么就选什么」，
+   * 全部留空也算一种合法状态——按原图原样生成，只是重新出图，不改任何要素。
+   */
   chooseDimension(e) {
     if (this.data.generating) return;
     const { key, id } = e.currentTarget.dataset;
     if (!key || !id) return;
-    const capId = this.data.activeCapId;
-    const dim = DIMENSIONS[key];
-    if (!dim) return;
 
     const selection = { ...this.data.selection };
-    if (dim.multi) {
-      const list = Array.isArray(selection[key]) ? selection[key].slice() : [];
-      const at = list.indexOf(id);
-      if (at === -1) {
-        if (dim.maxPick && list.length >= dim.maxPick) {
-          this.showHint(`${dim.name}最多选 ${dim.maxPick} 项`);
-          return;
-        }
-        list.push(id);
-      } else {
-        list.splice(at, 1);
-      }
-      selection[key] = list;
-    } else {
-      // 单选不允许清空：点已选项就回到第一项。
-      // 否则用户连点两下会把维度清掉，指令突然变空、按钮变灰，很难理解。
-      selection[key] = selection[key] === id ? dim.options[0].id : id;
-    }
+    selection[key] = selection[key] === id ? 'auto' : id;
 
+    const catId = this.data.activeCatId;
     this.setData({
       selection,
-      dimensions: buildDimensionView(capId, selection),
-      ready: selectionReady(capId, selection),
+      selectedEffectId: '',
+      effectRecommendations: this.decorateEffectRecommendations(''),
+      dimensions: buildDimViews(catId, selection, this.data.expandedDims),
+      cats: this.decorateCategories(this.data.cats, selection),
       error: '',
     });
     this.refreshPreview();
   },
 
-  /** 底部单行输入（原生 input） */
-  onExtraInput(e) {
-    const extra = (e.detail && e.detail.value) || '';
-    // setData 同步更新 this.data，紧跟 refreshPreview 即可；放进 callback 会晚一帧
-    this.setData({ extra });
+  /** 先套用完整效果配方，再通过下方因素逐项微调。 */
+  chooseEffectRecommendation(e) {
+    if (this.data.generating) return;
+    const { id } = e.currentTarget.dataset;
+    const selection = applyEffectRecommendation(id);
+    if (!selection) return;
+    const catId = this.data.activeCatId;
+    this.setData({
+      selection,
+      selectedEffectId: id,
+      effectRecommendations: this.decorateEffectRecommendations(id),
+      dimensions: buildDimViews(catId, selection, this.data.expandedDims),
+      cats: this.decorateCategories(this.data.cats, selection),
+      error: '',
+    });
+    this.refreshPreview();
+  },
+
+  /** 清空全部因素（回到「不指定」），锁不受影响——它们是两层独立的意图 */
+  resetSelection() {
+    if (this.data.generating) return;
+    const selection = defaultSelection();
+    const catId = this.data.activeCatId;
+    this.setData({
+      selection,
+      selectedEffectId: '',
+      effectRecommendations: this.decorateEffectRecommendations(''),
+      dimensions: buildDimViews(catId, selection, this.data.expandedDims),
+      cats: this.decorateCategories(this.data.cats, selection),
+      error: '',
+    });
+    this.refreshPreview();
+    this.onShowToast('#t-toast', '已清空因素');
+  },
+
+  /** 在常用项和完整列表之间切换，每个因素独立记录展开状态。 */
+  toggleDimensionOptions(e) {
+    if (this.data.generating) return;
+    const { key } = e.currentTarget.dataset;
+    if (!key) return;
+    const expandedDims = {
+      ...this.data.expandedDims,
+      [key]: !this.data.expandedDims[key],
+    };
+    this.setData({
+      expandedDims,
+      dimensions: buildDimViews(this.data.activeCatId, this.data.selection, expandedDims),
+    });
+  },
+
+  /* ---------------- 锁定不换 ---------------- */
+
+  toggleLocksPanel() {
+    this.setData({ locksExpanded: !this.data.locksExpanded });
+  },
+
+  /** 统一的渲染出口：视图、摘要、本地偏好一次算完 */
+  renderLocks(save) {
+    if (save) saveLockState(this.lockState);
+    this.setData({
+      locks: buildLockViews(this.lockState),
+      lockSummary: this.buildLockSummary(),
+    });
+  },
+
+  toggleLock(e) {
+    if (this.data.generating) return;
+    const { id } = e.currentTarget.dataset;
+    if (!id) return;
+    this.lockState = toggleLockState(this.lockState, id);
+    this.renderLocks(true);
+    this.refreshPreview();
+  },
+
+  /**
+   * 编辑一条锁定文案。
+   * 开关和编辑是两个独立动作：锁关掉也能改文案，下次打开就直接用。
+   */
+  openLockEditor(e) {
+    if (this.data.generating) return;
+    const { id } = e.currentTarget.dataset;
+    const item = (this.data.locks || []).find((lock) => lock.id === id);
+    if (!item) return;
+
+    const fallback = item.defaultPhrase || getLockDefaultPhrase(item.id);
+    const draft = item.phrase || fallback;
+    this.setData({
+      lockEditorOpen: true,
+      lockEditId: item.id,
+      lockEditName: item.name,
+      lockDraft: draft,
+      lockDraftDefault: fallback,
+      lockDraftDigits: `${draft.length} 字`,
+      lockDraftEdited: item.edited,
+      // 三个弹层互斥，别叠在一起
+      promptInputOpen: false,
+      promptOpen: false,
+      adviceOpen: false,
+      inputSheetStyle: '',
+    });
+  },
+
+  closeLockEditor() {
+    this.setData({ lockEditorOpen: false, inputSheetStyle: '' });
+  },
+
+  onLockDraftInput(e) {
+    const value = (e.detail && e.detail.value) || '';
+    this.setData({
+      lockDraft: value,
+      lockDraftDigits: `${value.length} 字`,
+      // 用清洗后的值比较：只多敲了句号/空格不算改过
+      lockDraftEdited: sanitizeLockText(value) !== sanitizeLockText(this.data.lockDraftDefault),
+    });
+  },
+
+  resetLockDraft() {
+    const text = this.data.lockDraftDefault || '';
+    this.setData({
+      lockDraft: text,
+      lockDraftDigits: `${text.length} 字`,
+      lockDraftEdited: false,
+    });
+  },
+
+  applyLockDraft() {
+    const text = sanitizeLockText(this.data.lockDraft);
+    if (!text) {
+      this.showHint('锁定文案不能为空，可以点「恢复默认」');
+      return;
+    }
+    this.lockState = setLockPhrase(this.lockState, this.data.lockEditId, text);
+    this.renderLocks(true);
+    this.setData({ lockEditorOpen: false, inputSheetStyle: '' });
+    this.refreshPreview();
+  },
+
+  /* ---------------- 自己写提示词 ---------------- */
+
+  /**
+   * 打开输入弹层。
+   * 输入框不是「补充一句」的附件，它就是自由提示词入口：
+   * 用户完全可以一个因素都不选、在这里写完整描述，然后直接生成。
+   */
+  openPromptInput() {
+    if (this.data.generating) return;
+    const draft = this.data.extra || '';
+    this.setData({
+      promptInputOpen: true,
+      promptDraft: draft,
+      draftDigits: `${draft.length} 字`,
+      // 两个弹层互斥，别叠在一起
+      adviceOpen: false,
+      promptOpen: false,
+      lockEditorOpen: false,
+      inputSheetStyle: '',
+    });
+  },
+
+  closePromptInput() {
+    this.setData({ promptInputOpen: false, inputSheetStyle: '' });
+  },
+
+  /** 草稿只在弹层内部维护，输入过程中不重算提示词（每敲一个字都重拼会很卡） */
+  onDraftInput(e) {
+    const value = (e.detail && e.detail.value) || '';
+    this.setData({ promptDraft: value, draftDigits: `${value.length} 字` });
+  },
+
+  /** 键盘弹起时把弹层顶上去：弹层是 mask 里的 flex 尾项，靠 mask 的 padding-bottom 抬起来 */
+  onInputKeyboard(e) {
+    const height = (e.detail && e.detail.height) || 0;
+    this.setData({ inputSheetStyle: height ? `padding-bottom: ${height}px;` : '' });
+  },
+
+  clearDraft() {
+    this.setData({ promptDraft: '', draftDigits: '0 字' });
+  },
+
+  /** 落盘：只有点完成才写进 extra，取消则原样保留上一次的内容 */
+  applyDraft() {
+    const extra = String(this.data.promptDraft || '').trim();
+    this.setData({
+      extra,
+      promptInputOpen: false,
+      inputSheetStyle: '',
+      error: '',
+    });
     this.refreshPreview();
   },
 
   refreshPreview() {
-    const { selection, activeCapId, activeCap, extra, engineId, imageCount, engine } = this.data;
+    const { selection, extra, engineId, imageCount, engine } = this.data;
     const userText = String(extra || '').trim();
-    const mods = buildMods(selection, activeCapId);
-
-    if (!mods.trim()) {
-      this.setData({
-        promptPreview: '',
-        promptParts: [],
-        promptTooLong: false,
-        promptDigits: '待生成',
-      });
-      return;
-    }
-
+    const elements = buildElements(selection);
     const reference = referenceHint(engineId, imageCount);
-    const prompt = buildEditPrompt({ selection, capability: activeCap, extra: userText, reference });
+    // 锁定文案由 locks.js 统一收口：开关、用户改过的文案、配置默认值都在那里合并
+    const lockText = buildLockText(this.lockState);
+    const prompt = buildEditPrompt({ selection, extra: userText, reference, lockText });
     // 超长只标红，不静默截断——截断会让用户以为自己写的都生效了
     const tooLong = !!prompt && prompt.length > engine.maxPromptLength;
+    // 固定文案可能被云端配置换掉，所以每次实时取，不缓存
+    const copy = getCopy() || {};
+    // 一个都没选是完全合法的状态：不选＝不给指令，只按原图和模型判断出片
+    // 只认当前 order 里的维度：热更新可能删掉过某些维度，selection 里会留着失效的 key，
+    // 直接按 Object.keys 数会把它们算进「已选」，导致零选择时提示不出现
+    const pickedCount = getOrder().filter((key) => selection[key] && selection[key] !== 'auto').length;
+    const selectionText = describeSelection(selection);
+    const lockedNames = describeLocks(this.lockState);
+    const lockTip = detectLockTip(selection, this.lockState);
 
     this.setData({
       promptPreview: prompt,
       promptTooLong: tooLong,
       promptDigits: prompt ? `${prompt.length} 字${tooLong ? ' · 超长' : ''}` : '待生成',
+      pickedDigits: `${pickedCount} 项`,
+      hasPicked: pickedCount > 0,
+      nonePicked: pickedCount === 0,
+      pickedTags: selectionText
+        ? selectionText.split(' · ').map((text, index) => ({ key: `p${index}`, text }))
+        : [],
+      extraDigits: userText ? `${userText.length} 字` : '',
+      lockSummary: lockedNames ? `已锁 ${lockedNames}` : '都没锁',
+      lockHeaderIcon: lockedNames ? 'lock-on' : 'lock-off',
+      lockHeaderColor: lockedNames ? '#0052d9' : 'rgba(0,0,0,0.32)',
+      lockTip,
+      lockTipCls: lockTip ? 'locks__tip locks__tip--warn' : 'locks__tip',
+      promptFoot: lockText
+        ? '锁定的内容写进提示词最后，AI 只改没锁的部分'
+        : '没有锁定人物和场景，AI 可能把整张图重画',
       promptParts: [
-        { key: '基础', text: ANCHOR_PHOTO },
-        { key: '改动', text: [mods, userText].filter(Boolean).join('。') },
+        { key: '意图', text: copy.lead },
+        { key: '要素', text: elements || '一个都没选，不额外加任何指令' },
+        { key: '你写的', text: userText },
         { key: '参考', text: reference },
-        { key: '保留', text: activeCap && activeCap.keepHint },
-        { key: '质量', text: CONSTRAINT_TAIL },
+        { key: '锁定', text: lockText },
+        { key: '质量', text: copy.tail },
       ].filter((item) => item.text),
     });
   },
@@ -508,16 +841,7 @@ Page({
   /* ---------------- 生成 ---------------- */
 
   async generate() {
-    const {
-      engine,
-      images,
-      uploading,
-      generating,
-      activeCap,
-      ready,
-      sourceSize,
-      ratio,
-    } = this.data;
+    const { engine, images, uploading, generating, sourceSize, ratio } = this.data;
     if (generating) return;
 
     if (uploading) {
@@ -534,14 +858,6 @@ Page({
     }
     if (engine.minImages && images.length < engine.minImages) {
       this.showHint(`当前引擎至少要 ${engine.minImages} 张图片`);
-      return;
-    }
-    if (!activeCap) {
-      this.showHint('请先选择要使用的功能');
-      return;
-    }
-    if (!ready) {
-      this.showHint(`「${activeCap.name}」还没选够条件，请至少选一项`);
       return;
     }
 
@@ -781,20 +1097,21 @@ Page({
    */
   openAdvice() {
     if (this.data.generating || this.data.uploading) return;
-    const { sourceFileID, ready, activeCap } = this.data;
+    const { sourceFileID } = this.data;
 
     if (!sourceFileID) {
       this.showHint('请先选择一张图片');
       return;
     }
-    if (!ready) {
-      const name = activeCap ? activeCap.name : '上面';
-      this.showHint(`先在「${name}」里选好条件，AI 才知道该往哪个方向改`);
-      return;
-    }
 
     // 两个弹层互斥，别叠在一起
-    this.setData({ adviceOpen: true, promptOpen: false });
+    this.setData({
+      adviceOpen: true,
+      promptOpen: false,
+      promptInputOpen: false,
+      lockEditorOpen: false,
+      inputSheetStyle: '',
+    });
     if (!this.data.advice) this.runAdvice(false);
   },
 
@@ -816,15 +1133,17 @@ Page({
    */
   async runAdvice(force) {
     if (this.data.advising) return;
-    const { sourceFileID, activeCap, selection, extra, engine } = this.data;
-    if (!sourceFileID || !activeCap) return;
-    if (!selectionReady(activeCap.id, selection)) return;
+    const { sourceFileID, selection, extra, engine } = this.data;
+    if (!sourceFileID) return;
 
     const demand = String(extra || '').trim();
+    const lockedNames = describeLocks(this.lockState);
     const key = buildAdviceKey({
       fileID: sourceFileID,
-      capId: activeCap.id,
-      optionId: selectionKey(activeCap.id, selection),
+      // 因素菜单没有「功能」概念了，用当前分类当作用域标识，避免缓存混到别的分类上
+      capId: this.data.activeCatId,
+      // 锁变了，AI 建议的边界也变了，不该复用旧候选
+      optionId: `${selectionKey(selection)}|${lockKey(this.lockState)}`,
       demand,
     });
 
@@ -848,9 +1167,9 @@ Page({
         fileID: sourceFileID,
         demand,
         // scope 决定「这份建议服务于哪种处理」，模型据此判断该往哪个方向改
-        scope: `${activeCap.name}：${describeSelection(activeCap.id, selection)}`,
-        // keepHint 只作为边界喂给模型（别建议改脸、改背景），不要求它复述
-        keepHint: activeCap.keepHint,
+        scope: `已选因素：${describeSelection(selection) || '未指定'}；锁定：${lockedNames || '无'}`,
+        // 边界只喂给模型（别建议换脸、换场景），不要求它复述
+        keepHint: buildLockText(this.lockState),
         engineName: engine.name,
       });
       cacheAdvice(key, advice);
@@ -895,7 +1214,13 @@ Page({
 
   openPrompt() {
     if (!this.data.promptPreview) return;
-    this.setData({ promptOpen: true, adviceOpen: false });
+    this.setData({
+      promptOpen: true,
+      adviceOpen: false,
+      promptInputOpen: false,
+      lockEditorOpen: false,
+      inputSheetStyle: '',
+    });
   },
 
   closePrompt() {

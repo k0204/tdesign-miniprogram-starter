@@ -7,23 +7,28 @@
  *
  * 用法：
  *   node .workbuddy/scripts/wechat-call.mjs <toolName> '<json-params>'
+ *   node .workbuddy/scripts/wechat-call.mjs <toolName> @params.json
  *   node .workbuddy/scripts/wechat-call.mjs cloud_fn_list '{"appid":"wx...","env":"cloud1-..."}'
+ *
+ * PowerShell 会把内联 JSON 里的双引号吃掉，参数多的时候用 @文件 最稳。
  *
  * 常用工具名：check_wechatide_status / cloud_env_list / cloud_fn_list / cloud_fn_info
  *            cloud_query_storage / cloud_manage_storage / cloud_db_read_doc / cloud_fn_deploy
  */
+import fs from 'node:fs';
 import { connect } from './wechat-mcp.mjs';
 
 const [tool, paramsRaw] = process.argv.slice(2);
 if (!tool) {
-  console.error('用法: node wechat-call.mjs <toolName> \'<json-params>\'');
+  console.error('用法: node wechat-call.mjs <toolName> \'<json-params>\' 或 @params.json');
   process.exit(1);
 }
 
 let params = {};
 if (paramsRaw) {
   try {
-    params = JSON.parse(paramsRaw);
+    const text = paramsRaw.startsWith('@') ? fs.readFileSync(paramsRaw.slice(1), 'utf8') : paramsRaw;
+    params = JSON.parse(text);
   } catch (err) {
     console.error('参数不是合法 JSON：', err.message);
     process.exit(1);
