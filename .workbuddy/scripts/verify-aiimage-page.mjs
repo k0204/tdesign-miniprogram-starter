@@ -160,6 +160,43 @@ try {
   ok(page.data.selection.grade === 'skin_balance' && page.data.selection.dof === 'deep', '自然匀肤配方没有填入匀肤参数');
   ok(page.data.promptPreview.includes('局部红黄偏差') && page.data.promptPreview.includes('保留毛孔'), '自然匀肤没有覆盖肤色校正与纹理保护');
 
+  // AI 效果推荐要应用对应配方，同时保留用户补充和配方未涉及的参数
+  page.chooseDimension({ currentTarget: { dataset: { key: 'shot', id: 'closeup' } } });
+  page.setData({
+    extra: '保留用户的主体描述',
+    adviceAppliedText: '',
+    adviceMode: 'effect',
+    advice: { candidates: [{ label: '青橙电影', effectId: 'cinematic', text: '依照当前照片压住背景高光并保留脸部层次' }] },
+  });
+  page.pickAdvice({ currentTarget: { dataset: { index: 0 } } });
+  ok(page.data.selectedEffectId === 'cinematic', 'AI 效果推荐没有选中对应配方');
+  ok(page.data.effectRecommendations.find((item) => item.id === 'cinematic').selected, 'AI 推荐后效果列表没有同步选中态');
+  ok(page.data.selection.grade === 'cinematic' && page.data.selection.shot === 'closeup', 'AI 效果推荐未应用配方或覆盖了其他手动参数');
+  ok(page.data.extra.includes('保留用户的主体描述') && page.data.extra.includes('依照当前照片'), 'AI 效果推荐没有保留用户补充或照片微调指令');
+  ok(page.data.promptPreview.includes('依照当前照片'), 'AI 效果指令没有更新到最终提示词');
+
+  // 参数推荐只替换上一条 AI 微调指令，不改变因素选择
+  const beforeParameterAdvice = JSON.stringify(page.data.selection);
+  page.setData({
+    adviceMode: 'parameter',
+    advice: { candidates: [{ label: '高光微调', text: '轻收背景亮部并保留发丝边缘细节' }] },
+  });
+  page.pickAdvice({ currentTarget: { dataset: { index: 0 } } });
+  ok(JSON.stringify(page.data.selection) === beforeParameterAdvice, '参数推荐意外修改了已选因素');
+  ok(page.data.extra.includes('保留用户的主体描述') && page.data.extra.includes('轻收背景亮部'), '参数推荐没有保留用户描述或追加微调提示词');
+  ok(!page.data.extra.includes('依照当前照片'), '再次选择参数推荐时没有替换上一条 AI 指令');
+
+  // 效果模式不能把缺失配方 ID 的候选误当作参数提示词应用
+  const beforeInvalidEffect = page.data.extra;
+  page.setData({
+    adviceMode: 'effect',
+    adviceError: '',
+    advice: { candidates: [{ label: '无配方效果', text: '这条候选没有配方编号' }] },
+  });
+  page.pickAdvice({ currentTarget: { dataset: { index: 0 } } });
+  ok(page.data.extra === beforeInvalidEffect, '缺少配方 ID 的效果候选被追加成普通提示词');
+  ok(Boolean(page.data.adviceError), '缺少配方 ID 时没有提示用户');
+
   // 编辑人物锁：句号要换成逗号，保存后摘要显示「改」
   page.openLockEditor({ currentTarget: { dataset: { id: 'person' } } });
   ok(page.data.lockEditorOpen && page.data.lockEditId === 'person', '锁定文案弹层没有打开');

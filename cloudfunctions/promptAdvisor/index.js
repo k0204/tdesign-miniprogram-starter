@@ -63,6 +63,8 @@ const MODEL_TIMEOUT_MS = 20000;
 const RETRY_TIMEOUT_MS = 15000;
 
 const MAX_DEMAND_LENGTH = 300;
+const MAX_CURRENT_PROMPT_LENGTH = 4000;
+const MAX_EFFECT_OPTIONS = 24;
 const MAX_ANALYSIS_LENGTH = 100;
 const MAX_CANDIDATES = 3;
 /** 候选要写进底部输入框，且总提示词还有 500 字硬限，单条压到 120 */
@@ -71,8 +73,10 @@ const CANDIDATE_MAX_LENGTH = 120;
 const MAX_IMAGE_BYTES = 32 * 1024 * 1024;
 const ALLOWED_SUFFIX = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
 
-/** 三条候选按改动强度递增，label 直接展示给用户 */
-const CANDIDATE_LABELS = ['稳妥', '对症', '明显'];
+const FALLBACK_LABELS = {
+  effect: ['效果方向一', '效果方向二', '效果方向三'],
+  parameter: ['光线微调', '虚化微调', '色彩微调'],
+};
 
 /**
  * system prompt 是全篇最要紧的资产，改动前先想清楚后果：
@@ -82,21 +86,37 @@ const CANDIDATE_LABELS = ['稳妥', '对症', '明显'];
  *
  * 注意：DeepSeek 只允许 user 消息带图，system 里放图会 400，所以这里只能是纯文本。
  */
-const SYSTEM_PROMPT = [
-  '你是摄影后期提示词工程师。用户会给你一张照片和一句白话需求，你为这张照片写图像编辑指令。',
+const SYSTEM_PROMPT_COMMON = [
+  '你是女性人像摄影后期提示词顾问。用户会给你一张照片、当前完整提示词和本次需求。',
   '',
   '输出规则（必须全部遵守）：',
   '1. 只输出 JSON，不要 markdown 代码块、不要任何解释文字。格式严格为：',
-  '{"analysis":"一句话","candidates":["指令一","指令二","指令三"]}',
-  '2. candidates 固定 3 条，每条 30-80 个汉字。',
+  '{"analysis":"一句话","candidates":[{"label":"短标签","text":"指令一","effectId":"配方ID或空"},{"label":"短标签","text":"指令二","effectId":"配方ID或空"},{"label":"短标签","text":"指令三","effectId":"配方ID或空"}]}',
+  '2. candidates 固定 3 条，每条 text 为 30-80 个汉字，label 不超过 8 个汉字。',
   '3. 只写「要改什么」。绝对不要出现「保持不变」「不要改变」「保持原图」「不修改」这类表述——这部分程序会统一追加，你写了会重复。',
   '4. 每条都是可直接执行的编辑指令，不要出现「建议」「可以」「请」「试试」这类对话口吻，不要写序号。',
   '5. 所有描述必须基于图片里真实存在的内容（人物、物体、场景、光线、色调），禁止虚构画面里没有的东西。',
   '6. 严禁涉及：更换或重绘背景、换脸、改变人物身份或身材、更换服装、添加文字或物体、扩图、裁切、改变构图。',
-  '7. 三条要有梯度：第 1 条最保守，最小改动即可见效；第 2 条针对你在图里看到的具体问题；第 3 条效果最强，但仍在原图范围内。',
-  '8. 如果画面存在明显技术缺陷（灰雾、欠曝、过曝、偏色、噪点、失焦、硬光、反光、色温错乱），第 2 条必须优先解决它。',
-  '9. analysis 不超过 40 个汉字，直接指出问题，不要复述用户需求，不要评价用户的照片。',
+  '7. 当前完整提示词是首要依据。候选只能是可追加的一段局部优化指令，不得重写、复述或推翻已有选择；不得和已有风格或参数冲突。',
+  '8. analysis 不超过 40 个汉字，直接指出画面特征或值得优化处，不要评价用户的照片。',
 ].join('\n');
+
+const MODE_PROMPTS = {
+  effect: [
+    '当前任务：效果推荐。根据原图和当前完整提示词，从用户提供的【可选效果配方】中挑选 3 个适合这张女性照片的配方。',
+    '每个候选必须返回对应的 effectId，且必须与可选列表中的 id 完全一致；label 使用配方名称。不要虚构配方或只给空泛风格词。',
+    'text 写该配方适合这张图的具体局部优化指令，不要复述配方说明。推荐要有差异；若当前提示词已有明确方向，应优先推荐兼容或能补足画面问题的配方。',
+  ].join('\n'),
+  parameter: [
+    '当前任务：参数推荐。依据照片缺陷和当前提示词，对现有效果做小幅、可执行的参数微调。',
+    '优先检查光线方向与软硬、曝光与高光、景深和背景虚化、色温与肤色、皮肤纹理与锐度。只选择照片里确有必要的方向，不要每项都强行调整。',
+    '三条分别聚焦不同的参数问题；写清调节对象、方向和幅度感（如轻提、略收、保留层次），不要编造数值滑杆或替换当前效果风格。',
+  ].join('\n'),
+};
+
+function getSystemPrompt(mode) {
+  return `${SYSTEM_PROMPT_COMMON}\n${MODE_PROMPTS[mode] || MODE_PROMPTS.effect}`;
+}
 
 function fail(error) {
   return { ok: false, error };
@@ -200,8 +220,13 @@ async function fileIdToUrl(fileID) {
 /* ---------------- 消息与解析 ---------------- */
 
 /** 用户消息：把「允许改的方向」「不许碰的东西」「他自己的要求」三段分清楚 */
-function buildUserText({ demand, scope, keepHint }) {
+function buildUserText({ mode, currentPrompt, effectOptions, demand, scope, keepHint }) {
   const lines = [];
+  lines.push(`【推荐类型】${mode === 'parameter' ? '参数推荐' : '效果推荐'}`);
+  if (currentPrompt) lines.push(`【当前完整提示词，必须以此为基础，不要重写】${currentPrompt}`);
+  if (mode === 'effect' && Array.isArray(effectOptions) && effectOptions.length) {
+    lines.push(`【可选效果配方，只能从中选择并原样返回 id】${JSON.stringify(effectOptions)}`);
+  }
   if (scope) lines.push(`【本次允许改动的方向】${scope}`);
   if (keepHint) lines.push(`【不得建议改动的部分】（仅供你判断边界，不要在输出里复述）${keepHint}`);
   lines.push(
@@ -219,11 +244,14 @@ function buildUserText({ demand, scope, keepHint }) {
  * detail 固定 high：单图 token 上限只有 1024，用 low 缩到 512x512 省不了多少，
  * 却正好把「噪点 / 油光 / 轻微失焦」这类要诊断的细节抹平。
  */
-function buildUserContent({ imageUrl, dataUrl, demand, scope, keepHint }) {
+function buildUserContent({ imageUrl, dataUrl, mode, currentPrompt, effectOptions, demand, scope, keepHint }) {
   const imageBlock = dataUrl
     ? { type: 'image_url', image_url: { url: dataUrl, detail: 'high' } }
     : { type: 'image_url', image_url: { url: imageUrl, detail: 'high' } };
-  return [imageBlock, { type: 'text', text: buildUserText({ demand, scope, keepHint }) }];
+  return [
+    imageBlock,
+    { type: 'text', text: buildUserText({ mode, currentPrompt, effectOptions, demand, scope, keepHint }) },
+  ];
 }
 
 /** 从可能夹着解释文字 / 代码块的文本里抠出第一个完整 JSON 对象 */
@@ -266,7 +294,7 @@ function normalizeText(raw) {
     .trim();
 }
 
-function normalizeCandidates(list) {
+function normalizeCandidates(list, mode, effectOptions) {
   const out = [];
   (Array.isArray(list) ? list : []).forEach((item) => {
     if (out.length >= MAX_CANDIDATES) return;
@@ -275,9 +303,19 @@ function normalizeCandidates(list) {
     );
     if (!text) return;
     if (text.length < 6) return; // 太短的肯定是模型没听话，丢掉
+    const requestedId = String(item && typeof item === 'object' ? item.effectId || '' : '').trim();
+    const matchedEffect = mode === 'effect' && Array.isArray(effectOptions)
+      ? effectOptions.find((effect) => effect.id === requestedId)
+      : null;
+    if (mode === 'effect' && Array.isArray(effectOptions) && effectOptions.length && !matchedEffect) return;
+    const suppliedLabel = normalizeText(item && typeof item === 'object' ? item.label : '').slice(0, 8);
     out.push({
-      label: CANDIDATE_LABELS[out.length] || `方案${out.length + 1}`,
+      label: (matchedEffect && matchedEffect.name)
+        || suppliedLabel
+        || (FALLBACK_LABELS[mode] || FALLBACK_LABELS.effect)[out.length]
+        || `方案${out.length + 1}`,
       text: text.slice(0, CANDIDATE_MAX_LENGTH),
+      effectId: matchedEffect ? matchedEffect.id : '',
     });
   });
   return out;
@@ -288,7 +326,7 @@ function normalizeCandidates(list) {
  * 不走 response_format 是有意的——官方 vision 文档没承诺这个组合，
  * 万一不认会整个 400，反而不如自己兜住。
  */
-function parseAdvice(text) {
+function parseAdvice(text, mode, effectOptions) {
   const raw = String(text || '').trim();
   if (!raw) return { analysis: '', candidates: [] };
 
@@ -297,7 +335,7 @@ function parseAdvice(text) {
     const parsed = JSON.parse(jsonText);
     return {
       analysis: normalizeText(parsed.analysis).slice(0, MAX_ANALYSIS_LENGTH),
-      candidates: normalizeCandidates(parsed.candidates),
+      candidates: normalizeCandidates(parsed.candidates, mode, effectOptions),
     };
   } catch (err) {
     console.warn('[promptAdvisor] JSON 解析失败，按行兜底：', raw.slice(0, 200));
@@ -305,7 +343,7 @@ function parseAdvice(text) {
       .split('\n')
       .map((line) => normalizeText(line))
       .filter((line) => line.length >= 10 && !/^analysis|^\{|^\}|^```/.test(line));
-    return { analysis: '', candidates: normalizeCandidates(lines) };
+    return { analysis: '', candidates: normalizeCandidates(lines, mode, effectOptions) };
   }
 }
 
@@ -355,6 +393,16 @@ exports.main = async (event = {}) => {
   }
 
   const demand = String(event.demand || '').trim().slice(0, MAX_DEMAND_LENGTH);
+  const mode = event.mode === 'parameter' ? 'parameter' : 'effect';
+  const currentPrompt = String(event.currentPrompt || '').trim().slice(0, MAX_CURRENT_PROMPT_LENGTH);
+  const effectOptions = (Array.isArray(event.effectOptions) ? event.effectOptions : [])
+    .slice(0, MAX_EFFECT_OPTIONS)
+    .map((effect) => ({
+      id: String((effect && effect.id) || '').trim().slice(0, 40),
+      name: String((effect && effect.name) || '').trim().slice(0, 20),
+      desc: String((effect && effect.desc) || '').trim().slice(0, 100),
+    }))
+    .filter((effect) => effect.id && effect.name);
   const scope = String(event.scope || '').trim().slice(0, 200);
   const keepHint = String(event.keepHint || '').trim().slice(0, 200);
 
@@ -369,12 +417,15 @@ exports.main = async (event = {}) => {
   const headers = { Authorization: `Bearer ${apiKey}` };
   const messagesFor = (image) => [
     // 图只能出现在 user 消息里：system / assistant 带图会被 400
-    { role: 'system', content: SYSTEM_PROMPT },
+    { role: 'system', content: getSystemPrompt(mode) },
     {
       role: 'user',
       content: buildUserContent({
         imageUrl: image.url,
         dataUrl: image.dataUrl,
+        mode,
+        currentPrompt,
+        effectOptions,
         demand,
         scope,
         keepHint,
@@ -477,12 +528,13 @@ exports.main = async (event = {}) => {
   }
 
   // ---------- 4. 解析 ----------
-  const { analysis, candidates } = parseAdvice(content);
+  const { analysis, candidates } = parseAdvice(content, mode, effectOptions);
   const elapsed = Date.now() - startedAt;
 
   console.log('[promptAdvisor] 完成', {
     elapsed,
     engine: event.engineName || '',
+    mode,
     model: usedModel,
     inlineImage: usedInline,
     key: maskKey(apiKey),

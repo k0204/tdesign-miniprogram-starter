@@ -154,12 +154,16 @@ Page({
     stageView: 'src', // 预览区看原图还是结果
     promptOpen: false, // 指令拆解弹层，默认收起
 
-    // 提示词顾问（DeepSeek 图片理解，看原图给建议）
+    // AI 建议：分别推荐效果方向或当前参数的微调
     adviceOpen: false,
     advising: false,
+    adviceMode: 'effect',
+    adviceTitle: '效果推荐',
+    adviceApplyHint: '选择后应用推荐效果；原有补充文字会保留',
     advice: null, // { analysis, candidates: [{ label, text }] }
     adviceError: '',
     adviceFromCache: false,
+    adviceAppliedText: '',
     generating: false,
     resultSrc: '',
     resultFileID: '',
@@ -732,6 +736,7 @@ Page({
     const extra = String(this.data.promptDraft || '').trim();
     this.setData({
       extra,
+      adviceAppliedText: '',
       promptInputOpen: false,
       inputSheetStyle: '',
       error: '',
@@ -1092,27 +1097,37 @@ Page({
   /**
    * 打开建议弹层。
    *
-   * 前置要求是「已经选好图 + 已经选好效果」：没选效果时模型不知道往哪个方向改，
-   * 只会给出一堆《提升整体质感》这种泛泛之谈，比现成的模板还差。
+   * 只要求已选图片。当前提示词和已选因素会一并传入，未选效果时也能按照片给方向。
    */
-  openAdvice() {
+  openAdvice(e) {
     if (this.data.generating || this.data.uploading) return;
     const { sourceFileID } = this.data;
+    const mode = (e && e.currentTarget && e.currentTarget.dataset.mode) === 'parameter'
+      ? 'parameter'
+      : 'effect';
 
     if (!sourceFileID) {
       this.showHint('请先选择一张图片');
       return;
     }
 
-    // 两个弹层互斥，别叠在一起
-    this.setData({
+    // 弹层开关与加载态由 runAdvice 合并提交，避免同一帧连续改条件节点。
+    const openPatch = {
       adviceOpen: true,
+      adviceMode: mode,
+      adviceTitle: mode === 'parameter' ? '参数推荐' : '效果推荐',
+      adviceApplyHint: mode === 'parameter'
+        ? '点选后追加参数微调指令，不会重置已选参数'
+        : '点选后应用推荐效果配方，原有补充文字会保留',
+      advice: null,
+      adviceError: '',
+      adviceFromCache: false,
       promptOpen: false,
       promptInputOpen: false,
       lockEditorOpen: false,
       inputSheetStyle: '',
-    });
-    if (!this.data.advice) this.runAdvice(false);
+    };
+    this.runAdvice(false, mode, openPatch);
   },
 
   /** 允许中途关掉：请求还会跑完并写进缓存，下次打开直接命中 */
@@ -1123,27 +1138,29 @@ Page({
   /** 换一批：绕过缓存重跑一次 */
   refreshAdvice() {
     if (this.data.advising) return;
-    this.runAdvice(true);
+    this.runAdvice(true, this.data.adviceMode);
   },
 
-  /**
-   * 真正发起顾问请求。
-   * force=false 时先查本地缓存——同一张图 + 同一个效果 + 同一句需求，
-   * 视觉模型的答案不会变，重复调用纯属浪费。
-   */
-  async runAdvice(force) {
-    if (this.data.advising) return;
-    const { sourceFileID, selection, extra, engine } = this.data;
+  /** force=false 时按照片、推荐模式和当前完整提示词查缓存。 */
+  async runAdvice(force, modeArg, openPatch = {}, allowWhileAdvising = false) {
+    if (this.data.advising && !allowWhileAdvising) {
+      if (Object.keys(openPatch).length) this.setData(openPatch);
+      return;
+    }
+    const { sourceFileID, selection, extra, engine, promptPreview } = this.data;
     if (!sourceFileID) return;
 
+    const mode = modeArg === 'parameter' ? 'parameter' : 'effect';
     const demand = String(extra || '').trim();
     const lockedNames = describeLocks(this.lockState);
     const key = buildAdviceKey({
       fileID: sourceFileID,
+      mode,
       // 因素菜单没有「功能」概念了，用当前分类当作用域标识，避免缓存混到别的分类上
       capId: this.data.activeCatId,
       // 锁变了，AI 建议的边界也变了，不该复用旧候选
       optionId: `${selectionKey(selection)}|${lockKey(this.lockState)}`,
+      currentPrompt: promptPreview,
       demand,
     });
 
@@ -1151,6 +1168,7 @@ Page({
       const cached = readCachedAdvice(key);
       if (cached) {
         this.setData({
+          ...openPatch,
           advice: cached,
           adviceFromCache: true,
           adviceError: '',
@@ -1160,11 +1178,22 @@ Page({
       }
     }
 
-    this.setData({ advising: true, adviceError: '', advice: null, adviceFromCache: false });
+    this.setData({
+      ...openPatch,
+      advising: true,
+      adviceError: '',
+      advice: null,
+      adviceFromCache: false,
+    });
 
     try {
       const advice = await requestAdvice({
         fileID: sourceFileID,
+        mode,
+        currentPrompt: promptPreview,
+        effectOptions: mode === 'effect'
+          ? EFFECT_RECOMMENDATIONS.map(({ id, name, desc }) => ({ id, name, desc }))
+          : [],
         demand,
         // scope 决定「这份建议服务于哪种处理」，模型据此判断该往哪个方向改
         scope: `已选因素：${describeSelection(selection) || '未指定'}；锁定：${lockedNames || '无'}`,
@@ -1174,6 +1203,10 @@ Page({
       });
       cacheAdvice(key, advice);
       if (!this.alive) return;
+      if (this.data.adviceOpen && this.data.adviceMode !== mode) {
+        this.runAdvice(false, this.data.adviceMode, {}, true);
+        return;
+      }
       this.setData({ advice, advising: false });
     } catch (err) {
       console.error('[aiImage] AI 建议失败（原始错误）', {
@@ -1182,6 +1215,10 @@ Page({
         err,
       });
       if (!this.alive) return;
+      if (this.data.adviceOpen && this.data.adviceMode !== mode) {
+        this.runAdvice(false, this.data.adviceMode, {}, true);
+        return;
+      }
       this.setData({ advising: false, adviceError: this.describeAdviceError(err) });
     }
   },
@@ -1194,9 +1231,8 @@ Page({
   },
 
   /**
-   * 点一条候选 → 写进「补充要求」。
-   * 只覆盖 extra 这一格：锚点、保留、约束行仍由 buildPrompt 拼装，
-   * 这样建议再活跃也动不了「保持不变」这条硬约束。
+   * 点一条候选 → 追加到「补充要求」。再次选择时只替换上次追加的 AI 段落，
+   * 保留用户输入以及由 buildPrompt 拼装的因素和锁定约束。
    */
   pickAdvice(e) {
     const index = Number(e.currentTarget.dataset.index);
@@ -1204,9 +1240,40 @@ Page({
     const item = list[index];
     if (!item) return;
 
-    // setData 是同步更新 this.data 的，但 callback 在下一帧 ——
-    // 所以 refreshPreview 必须紧跟着 setData 调，不能塞进 callback
-    this.setData({ extra: item.text, adviceOpen: false });
+    const current = String(this.data.extra || '').trim();
+    const previous = String(this.data.adviceAppliedText || '').trim();
+    let base = current;
+    if (previous && current.endsWith(previous)) {
+      base = current.slice(0, -previous.length).replace(/[\s；;，,]+$/, '').trim();
+    }
+    const extra = [base, item.text].filter(Boolean).join(base ? '；' : '');
+
+    if (this.data.adviceMode === 'effect') {
+      if (!item.effectId) {
+        this.setData({ adviceError: '这条推荐缺少可应用的效果配方，请换一批' });
+        return;
+      }
+      const selection = applyEffectRecommendation(item.effectId, this.data.selection);
+      if (!selection) {
+        this.setData({ adviceError: '推荐效果已失效，请换一批' });
+        return;
+      }
+      const catId = this.data.activeCatId;
+      this.setData({
+        selection,
+        selectedEffectId: item.effectId,
+        effectRecommendations: this.decorateEffectRecommendations(item.effectId),
+        dimensions: buildDimViews(catId, selection, this.data.expandedDims),
+        cats: this.decorateCategories(this.data.cats, selection),
+        extra,
+        adviceAppliedText: item.text,
+        adviceOpen: false,
+        error: '',
+      });
+    } else {
+      // 参数建议追加为当前组合的提示词微调，不改变用户已选的参数项。
+      this.setData({ extra, adviceAppliedText: item.text, adviceOpen: false });
+    }
     this.refreshPreview();
   },
 

@@ -53,10 +53,10 @@ export const EFFECT_RECOMMENDATIONS = [
   { id: 'bleach', name: '银漂高反差', desc: '硬侧光 · 饱和度压低 · 黑位厚实亮部坚实', selection: { dof: 'medium', lightDir: 'side', lightQuality: 'hard', grade: 'bleach_bypass' } },
 ];
 
-export function applyEffectRecommendation(id) {
+export function applyEffectRecommendation(id, currentSelection) {
   const effect = EFFECT_RECOMMENDATIONS.find((item) => item.id === id);
   if (!effect) return null;
-  return { ...defaultSelection(), ...effect.selection };
+  return { ...defaultSelection(), ...(currentSelection || {}), ...effect.selection };
 }
 
 export {

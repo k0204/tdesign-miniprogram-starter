@@ -804,9 +804,13 @@
 
 .clip__digits {
   flex: 1;
+  min-width: 0;
   margin-left: 12rpx;
   font-size: 22rpx;
   color: var(--c-text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
   /* 超出当前引擎字数上限：只改颜色提示，不截断 */
   &--over {
@@ -814,29 +818,35 @@
   }
 }
 
-/* 「AI 帮我想」胶囊：必须是 view + flex。用 <text> 加 padding 撑不开宽度，
-   会被压成小方块再把文字裁掉（本页踩过一次，见项目记忆） */
+/* 两个独立 AI 入口保持单行，窄屏时优先压缩提示词字数摘要。 */
+.clip__advice-group {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8rpx;
+}
+
 .clip__advice {
   display: flex;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
   height: 44rpx;
-  padding: 0 16rpx;
+  padding: 0 12rpx;
   box-sizing: border-box;
   border-radius: 22rpx;
   background-color: var(--c-primary-weak);
 }
 
 .clip__advice-text {
-  margin-left: 6rpx;
+  margin-left: 0;
   font-size: 20rpx;
   color: var(--c-primary);
 }
 
 .clip__more {
   flex-shrink: 0;
-  margin-left: 16rpx;
+  margin-left: 10rpx;
   font-size: 22rpx;
   color: var(--c-primary);
 }

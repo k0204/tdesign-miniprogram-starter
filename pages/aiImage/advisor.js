@@ -8,7 +8,7 @@
  * 用户经常在「点开看看 / 关掉 / 再点开」之间反复，没有缓存就等于重复烧钱。
  */
 
-const CACHE_KEY = 'ai_advice_cache_v1';
+const CACHE_KEY = 'ai_advice_cache_v3';
 /** 本地最多留 24 条，按写入时间淘汰最旧的；单条只有几百字节 */
 const CACHE_MAX = 24;
 
@@ -16,8 +16,15 @@ const CACHE_MAX = 24;
  * 缓存 key 必须含 demand：同一张图、同一个效果，用户补了「重点是脸」和
  * 「重点是背景」，该给的建议是不同的。
  */
-export function buildAdviceKey({ fileID, capId, optionId, demand } = {}) {
-  return [fileID || '', capId || '', optionId || '', String(demand || '').trim()].join('|');
+export function buildAdviceKey({ fileID, mode, capId, optionId, currentPrompt, demand } = {}) {
+  return [
+    fileID || '',
+    mode || 'effect',
+    capId || '',
+    optionId || '',
+    String(currentPrompt || '').trim(),
+    String(demand || '').trim(),
+  ].join('|');
 }
 
 function readMap() {
@@ -80,11 +87,20 @@ export function clearAdviceCache(fileID) {
  * 调云函数拿建议。云函数侧预算 20s，远低于 callFunction 的 60s 硬限，
  * 所以这里同步等，不需要两段式。
  */
-export function requestAdvice({ fileID, demand, scope, keepHint, engineName } = {}) {
+export function requestAdvice({
+  fileID,
+  mode,
+  currentPrompt,
+  effectOptions,
+  demand,
+  scope,
+  keepHint,
+  engineName,
+} = {}) {
   return wx.cloud
     .callFunction({
       name: 'promptAdvisor',
-      data: { fileID, demand, scope, keepHint, engineName },
+      data: { fileID, mode, currentPrompt, effectOptions, demand, scope, keepHint, engineName },
     })
     .then((res) => {
       const result = (res && res.result) || {};
@@ -100,6 +116,7 @@ export function requestAdvice({ fileID, demand, scope, keepHint, engineName } = 
         .map((item, index) => ({
           label: item.label || `方案${index + 1}`,
           text: String(item.text),
+          effectId: String(item.effectId || ''),
         }));
       if (!candidates.length) {
         const error = new Error('AI 没给出可用建议，换张图或改一下需求试试');

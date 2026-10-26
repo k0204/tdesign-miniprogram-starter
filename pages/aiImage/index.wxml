@@ -278,14 +278,17 @@
     </view>
   </view>
 
-  <!-- ④ 指令：默认只占一行。整行不再统一 bindtap，
-       「AI 帮我想」和「查看」各自 catchtap，避免点一个触发两个 -->
+  <!-- ④ 指令：AI 效果与参数建议分开，避免一个入口承担两种任务 -->
   <view class="clip">
     <text class="clip__label">这次怎么改</text>
     <text class="clip__digits {{promptTooLong ? 'clip__digits--over' : ''}}">{{promptDigits}}</text>
-    <view class="clip__advice" catchtap="openAdvice">
-      <t-icon name="lightbulb" size="24rpx" color="#0052d9" />
-      <text class="clip__advice-text">AI 帮我想</text>
+    <view class="clip__advice-group">
+      <view class="clip__advice" data-mode="effect" catchtap="openAdvice">
+        <text class="clip__advice-text">效果推荐</text>
+      </view>
+      <view class="clip__advice" data-mode="parameter" catchtap="openAdvice">
+        <text class="clip__advice-text">参数推荐</text>
+      </view>
     </view>
     <text wx:if="{{promptPreview}}" class="clip__more" catchtap="openPrompt">查看 ›</text>
   </view>
@@ -349,11 +352,11 @@
   </view>
 </view>
 
-<!-- ⑦ AI 建议弹层：DeepSeek 看原图，给 3 条可点选的改动描述 -->
+<!-- ⑦ AI 建议弹层：按效果方向或参数微调给出 3 条可追加的指令 -->
 <view wx:if="{{adviceOpen}}" class="mask" bindtap="closeAdvice">
   <view class="sheet" catchtap="noop">
     <view class="sheet__head">
-      <text class="sheet__title">AI 建议</text>
+      <text class="sheet__title">{{adviceTitle}}</text>
       <view class="sheet__acts">
         <text wx:if="{{adviceFromCache}}" class="sheet__cache">上次结果</text>
         <text class="sheet__copy" catchtap="refreshAdvice">{{advising ? '想想…' : '换一批'}}</text>
@@ -363,7 +366,7 @@
     <view wx:if="{{advice && advice.analysis}}" class="advice__analysis">{{advice.analysis}}</view>
 
     <scroll-view class="sheet__body" scroll-y>
-      <view wx:if="{{advising}}" class="advice__hint">AI 正在看这张图…</view>
+      <view wx:if="{{advising}}" class="advice__hint">AI 正在分析图片和当前提示词…</view>
       <view wx:if="{{adviceError}}" class="advice__hint advice__hint--error">{{adviceError}}</view>
       <view
         wx:for="{{advice && advice.candidates}}"
@@ -377,7 +380,7 @@
       </view>
     </scroll-view>
 
-    <view class="sheet__foot">点一条写进提示词，可再手动改。AI 只看原图和你的描述，不会替你点生成</view>
+    <view class="sheet__foot">{{adviceApplyHint}}</view>
   </view>
 </view>
 
