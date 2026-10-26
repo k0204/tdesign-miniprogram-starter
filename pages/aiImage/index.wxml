@@ -1,6 +1,11 @@
-<t-navbar title="AI 修图" left-arrow />
+<!-- placeholder 必须要有：t-navbar 的 fixed 默认 true、placeholder 默认 false，
+     不占位的话页面内容从 y=0 开始，顶部会被导航栏整块盖住（引擎条就是这么"消失"的） -->
+<t-navbar title="AI 修图" left-arrow placeholder />
 
-<view class="page" style="{{pageStyle}}">
+<!-- 引擎条是全局设置，必须常驻。.page 是「固定高 + overflow:auto」的滚动容器，
+     引擎条放在里面会跟着内容一起滚走（滑到参数区再回来看，就像被删了），
+     所以拆成两层：.shell 竖排（定高），.engine 和 .page（滚动区）是它的兄弟 -->
+<view class="shell">
   <!-- ⓪ 引擎切换：混元单图快、Agnes 可加参考图但慢、Nexus 走 OpenAI 兼容网关，
        能力差异由 providers.js 定义。三个引擎后胶囊只摆名字，
        说明文案降为下一行（否则三个胶囊放不下一行） -->
@@ -19,278 +24,281 @@
     <text class="engine__hint">{{engine.desc}} · {{engine.tip}}</text>
   </view>
 
-  <!-- ① 预览区：原图 / 对比 / 结果 三态共用一块，图按比例完整显示 -->
-  <view class="stage">
-    <view class="stage__head">
-      <view wx:if="{{resultSrc}}" class="stage__tabs">
-        <view
-          class="stage__tab {{stageView === 'src' ? 'stage__tab--on' : ''}}"
-          data-view="src"
-          bindtap="switchView"
-        >
-          原图
-        </view>
-        <view
-          class="stage__tab {{stageView === 'both' ? 'stage__tab--on' : ''}}"
-          data-view="both"
-          bindtap="switchView"
-        >
-          对比
-        </view>
-        <view
-          class="stage__tab {{stageView === 'out' ? 'stage__tab--on' : ''}}"
-          data-view="out"
-          bindtap="switchView"
-        >
-          结果
-        </view>
-      </view>
-      <text wx:else class="stage__title">原图</text>
+  <view class="page">
 
-      <view class="stage__actions">
-        <text wx:if="{{sourcePath && engine.maxImages === 1}}" class="stage__link" bindtap="chooseImage">更换</text>
-        <text wx:if="{{sourcePath && engine.maxImages > 1 && canAddImage}}" class="stage__link" bindtap="chooseImage">添加</text>
-        <text wx:if="{{sourcePath}}" class="stage__meta">
-          <text wx:if="{{engine.maxImages > 1}}">{{imageCount}}/{{engine.maxImages}} · </text>{{outputLabel}}
-        </text>
-      </view>
-    </view>
-
-    <view class="stage__box {{sourcePath ? '' : 'stage__box--empty'}}">
-      <!-- 并排对比：两张同时看，各自等比缩小、完整展示 -->
-      <view wx:if="{{stageView === 'both' && resultSrc && sourcePath}}" class="pair">
-        <view class="pair__col" data-view="src" bindtap="tapStage">
-          <text class="pair__tag">原图</text>
-          <view class="pair__card">
-            <image class="pair__img" src="{{sourcePath}}" mode="aspectFit" />
+    <!-- ① 预览区：原图 / 对比 / 结果 三态共用一块，图按比例完整显示 -->
+    <view class="stage">
+      <view class="stage__head">
+        <view wx:if="{{resultSrc}}" class="stage__tabs">
+          <view
+            class="stage__tab {{stageView === 'src' ? 'stage__tab--on' : ''}}"
+            data-view="src"
+            bindtap="switchView"
+          >
+            原图
+          </view>
+          <view
+            class="stage__tab {{stageView === 'both' ? 'stage__tab--on' : ''}}"
+            data-view="both"
+            bindtap="switchView"
+          >
+            对比
+          </view>
+          <view
+            class="stage__tab {{stageView === 'out' ? 'stage__tab--on' : ''}}"
+            data-view="out"
+            bindtap="switchView"
+          >
+            结果
           </view>
         </view>
-        <view class="pair__gap"></view>
-        <view class="pair__col" data-view="out" bindtap="tapStage">
-          <text class="pair__tag pair__tag--out">结果</text>
-          <view class="pair__card">
-            <image class="pair__img" src="{{resultSrc}}" mode="aspectFit" />
-          </view>
+        <text wx:else class="stage__title">原图</text>
+
+        <view class="stage__actions">
+          <text wx:if="{{sourcePath && engine.maxImages === 1}}" class="stage__link" bindtap="chooseImage">更换</text>
+          <text wx:if="{{sourcePath && engine.maxImages > 1 && canAddImage}}" class="stage__link" bindtap="chooseImage">添加</text>
+          <text wx:if="{{sourcePath}}" class="stage__meta">
+            <text wx:if="{{engine.maxImages > 1}}">{{imageCount}}/{{engine.maxImages}} · </text>{{outputLabel}}
+          </text>
         </view>
       </view>
 
-      <image
-        wx:elif="{{stageView === 'out' && resultSrc}}"
-        class="stage__img"
-        src="{{resultSrc}}"
-        mode="aspectFit"
-        data-view="out"
-        bindtap="tapStage"
-      />
-      <image
-        wx:elif="{{sourcePath}}"
-        class="stage__img"
-        src="{{sourcePath}}"
-        mode="aspectFit"
-        data-view="src"
-        bindtap="tapStage"
-      />
-
-      <view wx:else class="stage__empty" bindtap="chooseImage">
-        <t-icon name="add" size="64rpx" color="#00000026" />
-        <text class="stage__empty-title">{{engine.maxImages > 1 ? '先选一张主图' : '从相册选择一张照片'}}</text>
-        <text class="stage__empty-tip">{{engine.emptyTip}}</text>
-      </view>
-
-      <view wx:if="{{uploading}}" class="stage__mask">上传中…</view>
-      <view wx:if="{{generating}}" class="stage__mask">{{engine.waitText}}…</view>
-    </view>
-
-    <!-- 多图素材槽：混元只有 1 张，这里不渲染；Agnes 最多 4 张，第 1 张是主图 -->
-    <view wx:if="{{engine.maxImages > 1 && imageCount > 0}}" class="slots">
-      <view
-        wx:for="{{images}}"
-        wx:key="fileID"
-        class="slot"
-        data-index="{{index}}"
-        bindtap="previewSlot"
-      >
-        <image class="slot__img" src="{{item.path}}" mode="aspectFill" />
-        <text class="slot__tag {{item.isMain ? 'slot__tag--main' : ''}}">{{item.label}}</text>
-        <view class="slot__del" data-index="{{index}}" catchtap="removeImageAt">×</view>
-      </view>
-      <view wx:if="{{canAddImage}}" class="slot slot--add" bindtap="chooseImage">
-        <t-icon name="add" size="40rpx" color="#00000040" />
-        <text class="slot__add-tip">加参考</text>
-      </view>
-    </view>
-
-    <!-- 出图后的操作，只在有结果时出现 -->
-    <view wx:if="{{resultSrc}}" class="stage__ops">
-      <view class="ops__btn" bindtap="saveToAlbum">保存相册</view>
-      <view class="ops__btn" bindtap="useAsSource">继续修改</view>
-      <view class="ops__btn ops__btn--ghost" bindtap="previewCurrent">大图</view>
-    </view>
-  </view>
-
-  <!-- ② 锁定不换：图生图最容易翻车的是 AI 顺着提示词把人和场景一起重画。
-       点整块开关，点右侧笔改文案；class / icon 都在 JS 侧算好 -->
-  <view class="locks">
-    <view class="locks__head" bindtap="toggleLocksPanel">
-      <view class="locks__head-left">
-        <t-icon name="{{lockHeaderIcon}}" size="28rpx" color="{{lockHeaderColor}}" />
-        <text class="locks__title">{{lockTitle}}</text>
-        <text class="locks__summary">{{lockSummary}}</text>
-      </view>
-      <view class="locks__setting">
-        <text class="locks__hint-text">{{locksExpanded ? '收起' : '设置'}}</text>
-        <t-icon name="chevron-{{locksExpanded ? 'up' : 'down'}}" size="24rpx" color="#00000066" />
-      </view>
-    </view>
-
-    <view wx:if="{{locksExpanded}}" class="locks__grid">
-      <view wx:for="{{locks}}" wx:key="id" class="{{item.cls}}">
-        <view class="lock__main" data-id="{{item.id}}" bindtap="toggleLock">
-          <t-icon name="{{item.icon}}" size="26rpx" color="{{item.iconColor}}" />
-          <view class="lock__text">
-            <view class="lock__name-row">
-              <text class="lock__name">{{item.name}}</text>
-              <text wx:if="{{item.hasMark}}" class="lock__mark">{{item.mark}}</text>
+      <view class="stage__box {{sourcePath ? '' : 'stage__box--empty'}}">
+        <!-- 并排对比：两张同时看，各自等比缩小、完整展示 -->
+        <view wx:if="{{stageView === 'both' && resultSrc && sourcePath}}" class="pair">
+          <view class="pair__col" data-view="src" bindtap="tapStage">
+            <text class="pair__tag">原图</text>
+            <view class="pair__card">
+              <image class="pair__img" src="{{sourcePath}}" mode="aspectFit" />
             </view>
-            <text class="lock__desc">{{item.desc}}</text>
+          </view>
+          <view class="pair__gap"></view>
+          <view class="pair__col" data-view="out" bindtap="tapStage">
+            <text class="pair__tag pair__tag--out">结果</text>
+            <view class="pair__card">
+              <image class="pair__img" src="{{resultSrc}}" mode="aspectFit" />
+            </view>
           </view>
         </view>
-        <view class="lock__edit" data-id="{{item.id}}" catchtap="openLockEditor">
-          <t-icon name="edit" size="22rpx" color="#00000040" />
+
+        <image
+          wx:elif="{{stageView === 'out' && resultSrc}}"
+          class="stage__img"
+          src="{{resultSrc}}"
+          mode="aspectFit"
+          data-view="out"
+          bindtap="tapStage"
+        />
+        <image
+          wx:elif="{{sourcePath}}"
+          class="stage__img"
+          src="{{sourcePath}}"
+          mode="aspectFit"
+          data-view="src"
+          bindtap="tapStage"
+        />
+
+        <view wx:else class="stage__empty" bindtap="chooseImage">
+          <t-icon name="add" size="64rpx" color="#00000026" />
+          <text class="stage__empty-title">{{engine.maxImages > 1 ? '先选一张主图' : '从相册选择一张照片'}}</text>
+          <text class="stage__empty-tip">{{engine.emptyTip}}</text>
         </view>
+
+        <view wx:if="{{uploading}}" class="stage__mask">上传中…</view>
+        <view wx:if="{{generating}}" class="stage__mask">{{engine.waitText}}…</view>
+      </view>
+
+      <!-- 多图素材槽：混元只有 1 张，这里不渲染；Agnes 最多 4 张，第 1 张是主图 -->
+      <view wx:if="{{engine.maxImages > 1 && imageCount > 0}}" class="slots">
+        <view
+          wx:for="{{images}}"
+          wx:key="fileID"
+          class="slot"
+          data-index="{{index}}"
+          bindtap="previewSlot"
+        >
+          <image class="slot__img" src="{{item.path}}" mode="aspectFill" />
+          <text class="slot__tag {{item.isMain ? 'slot__tag--main' : ''}}">{{item.label}}</text>
+          <view class="slot__del" data-index="{{index}}" catchtap="removeImageAt">×</view>
+        </view>
+        <view wx:if="{{canAddImage}}" class="slot slot--add" bindtap="chooseImage">
+          <t-icon name="add" size="40rpx" color="#00000040" />
+          <text class="slot__add-tip">加参考</text>
+        </view>
+      </view>
+
+      <!-- 出图后的操作，只在有结果时出现 -->
+      <view wx:if="{{resultSrc}}" class="stage__ops">
+        <view class="ops__btn" bindtap="saveToAlbum">保存相册</view>
+        <view class="ops__btn" bindtap="useAsSource">继续修改</view>
+        <view class="ops__btn ops__btn--ghost" bindtap="previewCurrent">大图</view>
       </view>
     </view>
 
-    <text wx:if="{{locksExpanded}}" class="locks__hint">点锁定项开关，点铅笔可写更具体的保护要求</text>
-    <text wx:if="{{lockTip}}" class="{{lockTipCls}}">{{lockTip}}</text>
-  </view>
+    <!-- ② 锁定不换：图生图最容易翻车的是 AI 顺着提示词把人和场景一起重画。
+         点整块开关，点右侧笔改文案；class / icon 都在 JS 侧算好 -->
+    <view class="locks">
+      <view class="locks__head" bindtap="toggleLocksPanel">
+        <view class="locks__head-left">
+          <t-icon name="{{lockHeaderIcon}}" size="28rpx" color="{{lockHeaderColor}}" />
+          <text class="locks__title">{{lockTitle}}</text>
+          <text class="locks__summary">{{lockSummary}}</text>
+        </view>
+        <view class="locks__setting">
+          <text class="locks__hint-text">{{locksExpanded ? '收起' : '设置'}}</text>
+          <t-icon name="chevron-{{locksExpanded ? 'up' : 'down'}}" size="24rpx" color="#00000066" />
+        </view>
+      </view>
 
-  <!-- ③ 两步选择：先选因素分类，再挑这一类里的具体取值 -->
-  <view class="tech">
-    <view class="tech__top">
-      <view class="step-head">
-        <text class="step-no">1</text>
-        <text class="step-title">这次想调什么</text>
+      <view wx:if="{{locksExpanded}}" class="locks__grid">
+        <view wx:for="{{locks}}" wx:key="id" class="{{item.cls}}">
+          <view class="lock__main" data-id="{{item.id}}" bindtap="toggleLock">
+            <t-icon name="{{item.icon}}" size="26rpx" color="{{item.iconColor}}" />
+            <view class="lock__text">
+              <view class="lock__name-row">
+                <text class="lock__name">{{item.name}}</text>
+                <text wx:if="{{item.hasMark}}" class="lock__mark">{{item.mark}}</text>
+              </view>
+              <text class="lock__desc">{{item.desc}}</text>
+            </view>
+          </view>
+          <view class="lock__edit" data-id="{{item.id}}" catchtap="openLockEditor">
+            <t-icon name="edit" size="22rpx" color="#00000040" />
+          </view>
+        </view>
       </view>
-      <view class="tech__tools">
-        <text class="tech__count">{{pickedDigits}}</text>
-        <text wx:if="{{hasPicked}}" class="tech__reset" catchtap="resetSelection">清空</text>
-      </view>
+
+      <text wx:if="{{locksExpanded}}" class="locks__hint">点锁定项开关，点铅笔可写更具体的保护要求</text>
+      <text wx:if="{{lockTip}}" class="{{lockTipCls}}">{{lockTip}}</text>
     </view>
-    <scroll-view class="seg-scroll" scroll-x enable-flex>
-      <view class="seg">
-        <view
-          wx:for="{{cats}}"
-          wx:key="id"
-          class="seg__item {{activeCatId === item.id ? 'seg__item--on' : ''}}"
-          data-id="{{item.id}}"
-          bindtap="chooseCategory"
-        >
-          <t-icon
-            name="{{item.icon}}"
-            size="36rpx"
-            color="{{activeCatId === item.id ? '#0052d9' : '#00000080'}}"
-          />
-          <view class="seg__label">
-            <text class="seg__name">{{item.name}}</text>
-            <text wx:if="{{item.badge}}" class="seg__badge">{{item.badge}}</text>
-          </view>
-        </view>
-      </view>
-    </scroll-view>
 
-    <view class="effects">
-      <view class="effects__head">
-        <view class="effects__intro">
-          <text class="effects__title">推荐效果</text>
-          <text class="effects__hint">选一个，再微调参数</text>
+    <!-- ③ 两步选择：先选因素分类，再挑这一类里的具体取值 -->
+    <view class="tech">
+      <view class="tech__top">
+        <view class="step-head">
+          <text class="step-no">1</text>
+          <text class="step-title">这次想调什么</text>
         </view>
-        <text class="effects__count">{{effectRecommendations.length}} 项</text>
+        <view class="tech__tools">
+          <text class="tech__count">{{pickedDigits}}</text>
+          <text wx:if="{{hasPicked}}" class="tech__reset" catchtap="resetSelection">清空</text>
+        </view>
       </view>
-      <scroll-view class="effects__list" scroll-y show-scrollbar="{{true}}">
-        <view
-          wx:for="{{effectRecommendations}}"
-          wx:key="id"
-          class="{{item.cls}}"
-          data-id="{{item.id}}"
-          bindtap="chooseEffectRecommendation"
-        >
-          <view class="effect__copy">
-            <text class="effect__name">{{item.name}}</text>
-            <text class="effect__desc">{{item.desc}}</text>
+      <scroll-view class="seg-scroll" scroll-x enable-flex>
+        <view class="seg">
+          <view
+            wx:for="{{cats}}"
+            wx:key="id"
+            class="seg__item {{activeCatId === item.id ? 'seg__item--on' : ''}}"
+            data-id="{{item.id}}"
+            bindtap="chooseCategory"
+          >
+            <t-icon
+              name="{{item.icon}}"
+              size="36rpx"
+              color="{{activeCatId === item.id ? '#0052d9' : '#00000080'}}"
+            />
+            <view class="seg__label">
+              <text class="seg__name">{{item.name}}</text>
+              <text wx:if="{{item.badge}}" class="seg__badge">{{item.badge}}</text>
+            </view>
           </view>
-          <t-icon wx:if="{{item.selected}}" name="check" size="30rpx" color="#0052d9" />
         </view>
       </scroll-view>
-    </view>
 
-    <view wx:if="{{activeCat}}" class="tech__body">
-      <view class="tech__head">
-        <view class="step-head step-head--effect">
-          <text class="step-no">2</text>
-          <text class="step-title">微调参数</text>
+      <view class="effects">
+        <view class="effects__head">
+          <view class="effects__intro">
+            <text class="effects__title">推荐效果</text>
+            <text class="effects__hint">选一个，再微调参数</text>
+          </view>
+          <text class="effects__count">{{effectRecommendations.length}} 项</text>
         </view>
-        <text class="tech__hint">{{activeCat.desc}}</text>
+        <scroll-view class="effects__list" scroll-y show-scrollbar="{{true}}">
+          <view
+            wx:for="{{effectRecommendations}}"
+            wx:key="id"
+            class="{{item.cls}}"
+            data-id="{{item.id}}"
+            bindtap="chooseEffectRecommendation"
+          >
+            <view class="effect__copy">
+              <text class="effect__name">{{item.name}}</text>
+              <text class="effect__desc">{{item.desc}}</text>
+            </view>
+            <t-icon wx:if="{{item.selected}}" name="check" size="30rpx" color="#0052d9" />
+          </view>
+        </scroll-view>
       </view>
 
-      <!-- 因素维度：每行一个因素，横滑挑取值。
-           全部用 scroll-view 而不判断长度——wx:for 里做数值比较在当前基础库恒走假分支。
-           class 也在 JS 侧拼好（opt.cls / grp.showName），模板里不做任何判断 -->
-      <view class="dims">
-        <view wx:for="{{dimensions}}" wx:key="key" class="dim">
-          <view class="dim__head">
-            <text class="dim__name">{{item.name}}</text>
-            <text class="dim__value">{{item.pickedLabel}}</text>
-            <text wx:if="{{item.hasMore}}" class="dim__more" data-key="{{item.key}}" catchtap="toggleDimensionOptions">{{item.moreText}}</text>
+      <view wx:if="{{activeCat}}" class="tech__body">
+        <view class="tech__head">
+          <view class="step-head step-head--effect">
+            <text class="step-no">2</text>
+            <text class="step-title">微调参数</text>
           </view>
+          <text class="tech__hint">{{activeCat.desc}}</text>
+        </view>
 
-          <scroll-view class="dim__scroll" scroll-x enable-flex>
-            <view class="dim__chips">
-              <view
-                wx:for="{{item.groups}}"
-                wx:for-item="grp"
-                wx:key="key"
-                class="dgroup"
-              >
-                <text wx:if="{{grp.showName}}" class="dgroup__name">{{grp.name}}</text>
+        <!-- 因素维度：每行一个因素，横滑挑取值。
+             全部用 scroll-view 而不判断长度——wx:for 里做数值比较在当前基础库恒走假分支。
+             class 也在 JS 侧拼好（opt.cls / grp.showName），模板里不做任何判断 -->
+        <view class="dims">
+          <view wx:for="{{dimensions}}" wx:key="key" class="dim">
+            <view class="dim__head">
+              <text class="dim__name">{{item.name}}</text>
+              <text class="dim__value">{{item.pickedLabel}}</text>
+              <text wx:if="{{item.hasMore}}" class="dim__more" data-key="{{item.key}}" catchtap="toggleDimensionOptions">{{item.moreText}}</text>
+            </view>
+
+            <scroll-view class="dim__scroll" scroll-x enable-flex>
+              <view class="dim__chips">
                 <view
-                  wx:for="{{grp.options}}"
-                  wx:for-item="opt"
-                  wx:key="id"
-                  class="{{opt.cls}}"
-                  data-key="{{item.key}}"
-                  data-id="{{opt.id}}"
-                  bindtap="chooseDimension"
+                  wx:for="{{item.groups}}"
+                  wx:for-item="grp"
+                  wx:key="key"
+                  class="dgroup"
                 >
-                  <text class="dchip__name">{{opt.label}}</text>
+                  <text wx:if="{{grp.showName}}" class="dgroup__name">{{grp.name}}</text>
+                  <view
+                    wx:for="{{grp.options}}"
+                    wx:for-item="opt"
+                    wx:key="id"
+                    class="{{opt.cls}}"
+                    data-key="{{item.key}}"
+                    data-id="{{opt.id}}"
+                    bindtap="chooseDimension"
+                  >
+                    <text class="dchip__name">{{opt.label}}</text>
+                  </view>
                 </view>
               </view>
-            </view>
-          </scroll-view>
+            </scroll-view>
 
-          <!-- 这里显示的是「当前选择实际会拼进提示词的那句话」，不是形容词 -->
-          <text class="dim__desc">{{item.pickedDesc}}</text>
+            <!-- 这里显示的是「当前选择实际会拼进提示词的那句话」，不是形容词 -->
+            <text class="dim__desc">{{item.pickedDesc}}</text>
+          </view>
+        </view>
+
+        <!-- 一个都没选时说清楚：这是合法状态，不是没选完 -->
+        <view wx:if="{{nonePicked}}" class="dims__none">不确定可以都不选，AI 会按原图自然优化</view>
+      </view>
+    </view>
+
+    <!-- ④ 指令：AI 效果与参数建议分开，避免一个入口承担两种任务 -->
+    <view class="clip">
+      <text class="clip__label">这次怎么改</text>
+      <text class="clip__digits {{promptTooLong ? 'clip__digits--over' : ''}}">{{promptDigits}}</text>
+      <view class="clip__advice-group">
+        <view class="clip__advice" data-mode="effect" catchtap="openAdvice">
+          <text class="clip__advice-text">效果推荐</text>
+        </view>
+        <view class="clip__advice" data-mode="parameter" catchtap="openAdvice">
+          <text class="clip__advice-text">参数推荐</text>
         </view>
       </view>
-
-      <!-- 一个都没选时说清楚：这是合法状态，不是没选完 -->
-      <view wx:if="{{nonePicked}}" class="dims__none">不确定可以都不选，AI 会按原图自然优化</view>
+      <text wx:if="{{promptPreview}}" class="clip__more" catchtap="openPrompt">查看 ›</text>
     </view>
-  </view>
-
-  <!-- ④ 指令：AI 效果与参数建议分开，避免一个入口承担两种任务 -->
-  <view class="clip">
-    <text class="clip__label">这次怎么改</text>
-    <text class="clip__digits {{promptTooLong ? 'clip__digits--over' : ''}}">{{promptDigits}}</text>
-    <view class="clip__advice-group">
-      <view class="clip__advice" data-mode="effect" catchtap="openAdvice">
-        <text class="clip__advice-text">效果推荐</text>
-      </view>
-      <view class="clip__advice" data-mode="parameter" catchtap="openAdvice">
-        <text class="clip__advice-text">参数推荐</text>
-      </view>
-    </view>
-    <text wx:if="{{promptPreview}}" class="clip__more" catchtap="openPrompt">查看 ›</text>
   </view>
 </view>
 

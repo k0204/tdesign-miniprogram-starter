@@ -1,5 +1,19 @@
 /* pages/aiImage/index.wxss —— 预览优先：图大、指令折叠 */
-.page {
+
+/* 根节点改竖排 flex：t-navbar 是 fixed（placeholder 给它占位），
+   .shell 用 flex:1 吃掉剩下的一屏，页内滚动交给 .page。
+   这样不用在 JS 里按 statusBarHeight+44 硬算高度——算错几像素就会被导航栏切掉 */
+page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #f3f3f3;
+}
+
+/* 定高的竖排壳：引擎条（常驻）+ .page（滚动区）。
+   主题变量放在这里，两层都能继承到（引擎条已经不在 .page 里了） */
+.shell {
   --c-primary: #0052d9;
   --c-primary-weak: #e8f0fd;
   --c-text-1: rgba(0, 0, 0, 0.9);
@@ -9,10 +23,24 @@
   --c-fill: #f3f3f3;
 
   display: flex;
+  flex: 1;
   flex-direction: column;
   min-height: 0;
   box-sizing: border-box;
-  padding: 16rpx 24rpx calc(120rpx + env(safe-area-inset-bottom));
+  background-color: #f3f3f3;
+}
+
+.page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  /* 全局 app.less 给 .page 写过 height:100vh，这里必须显式收回来，
+     高度改由 .shell 的 flex 分配（否则整页会顶出屏幕） */
+  height: auto;
+  min-height: 0;
+  box-sizing: border-box;
+  /* 顶部间距由引擎条的 padding-top 承担，这里不能再留，否则比改动前多出 16rpx */
+  padding: 0 24rpx calc(120rpx + env(safe-area-inset-bottom));
   background-color: #f3f3f3;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -21,13 +49,17 @@
 /* ---------------- ⓪ 引擎切换 ---------------- */
 
 /* 三个引擎后改为两行：胶囊占满一行（三等分），说明文案降为右对齐的一行。
-   原来的「胶囊 + 右侧 tip」并排在 3 个引擎下会挤掉第三个，改列向后与文案长度无关 */
+   原来的「胶囊 + 右侧 tip」并排在 3 个引擎下会挤掉第三个，改列向后与文案长度无关。
+
+   引擎是全局设置，不属于页面内容：它是 .page 的兄弟（见 wxml 的 .shell），
+   否则作为滚动容器首个子元素会跟着内容一起滚走（滑到参数区再回来看就像「没了」）。
+   左右 32rpx = 原 .page 的 24rpx + 原引擎条自己的 8rpx，视觉与改动前一致 */
 .engine {
   display: flex;
   flex-shrink: 0;
   flex-direction: column;
-  margin-bottom: 12rpx;
-  padding: 0 8rpx;
+  padding: 16rpx 32rpx 12rpx;
+  background-color: #f3f3f3;
 }
 
 .engine__seg {

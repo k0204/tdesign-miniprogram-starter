@@ -3,18 +3,23 @@
 线上环境 `cloud1-d4g48z822d1300a77`，appid `wx16f3362b82c554fd`。tabBar 只有 首页/我的（「消息」页与 chat/eventBus 已于 2026-10-23 删除）。
 
 ## 小程序硬性坑
+- **`t-navbar` 必须写 `placeholder`**：tdesign 的 props 里 `fixed` 默认 `true`、`placeholder` 默认 `false`，不写就是「浮在上面 + 不占位」，页面内容从 y=0 开始，顶部一屏全被导航栏盖住。症状极像「元素没渲染」——实际渲染了，只是被盖（`<t-navbar title="AI 修图" left-arrow placeholder />`）。除 `components/nav`（首页大图 header 故意覆盖）外，pages 下 7 个页面目前仍缺这个属性。
+- **一屏高度别在 JS 里算**（`statusBarHeight + 44` 之类）：`page { display:flex; flex-direction:column; height:100vh }` + 容器 `flex:1; min-height:0`，页内滚动交给 `overflow-y:auto` 的子层，算错几像素就被导航栏切掉。
 - `wx:for` 内禁止数值判断（`index === 0` 恒假，class 绑定同样失效），派生态一律 JS 侧算好塞进 item。
 - `setData` callback 是下一帧，派生字段别写进 callback，用 `this.setData(patch); this.derive();`。
 - `wx.cloud.callFunction` 客户端硬限 60s（超时 `-501002`），长任务两段式：派发秒回 taskId + worker 不 await + 前端轮询 DB。云函数返回单字段上限 ~1MB，图转存云存储返 fileID。
 - `<text>` 不能做胶囊按钮，用 `<view>` + flex + 固定 height + `box-sizing:border-box`。
 - 改完模块 import 必须核对导出名并 grep 使用处，漏一个 import 整页 ReferenceError。
-- 包体积主包 2048KB：`packOptions.ignore` 排除 `output`/`.workbuddy`/`package-lock.json`/`.md`；`tdesign-miniprogram` 约 2MB，用 `.workbuddy/scripts/tdesign-prune.mjs` 裁剪（`common/mixins/overlay/popup` 别手删，构建 npm 后要重跑）。量体积看 `create_preview_qrcode` 的 `info.size.packages`。
+- 包体积主包 2048KB：`packOptions.ignore` 排除 `output`/`.workbuddy`/`.npm-cache`/`docs`/`package-lock.json`/`.md`/`.d.ts`/`.py`/`.csv`/`.jsonl`。**`.npm-cache` 是隐形大头（单文件 2.1MB）**，不排就必超；`docs` 有 20MB 语料（pipeline 产物），也别进包。**`mock` 绝对不能排除**：`config.js` 里 `isMock: true` 且 `app.js` 顶层 `import Mock from './mock/index'`，排掉就启动即报 `module 'mock/index.js' is not defined`。`tdesign-miniprogram` 约 2MB，用 `.workbuddy/scripts/tdesign-prune.mjs --apply` 裁剪（`common/mixins/overlay/popup` 别手删，**每次构建 npm 后都要重跑**）。量体积看 `auto_preview` 返回的 `info.size.packages`。当前基线：主包 1133692B / 总 1370100B / aiImage 分包 86135B。
+- **包超限时预览会静默失败，用户手机上是上一次成功上传的旧包** —— 于是任何"明明改了却没生效/功能没了"的报障，先跑一次 `auto_preview` 确认能上传，再怀疑代码。这次「引擎选项没了」就是这么翻出来的：主包 4442KB，预览一直上传失败。
 
 ## AI 修图（pages/aiImage）
 - 引擎差异只在 `providers.js` 声明，页面禁写 `if (引擎===xxx)`，只看 `sizeMode`/`asyncTask`/`maxImages`/`pickSize`。混元 1 张/exact/同步；Agnes 1-4 张/tier/异步 85-96s；Nexus 1-4 张/exact/异步。
 - 素材唯一写入口 `applyImages(...)`。错误两层：用户只看 `errors.js` 的 `toFriendlyError`，**禁用「稍后重试」这类通用后缀匹配**。
 - 尺寸按 `engine.pickSize || pickExactSize`，混元（8 倍数、≤1024²）与 gpt-image-2（16 倍数、≤3:1）不可互换。
 - 混元水印关不掉只能换文案：SDK 只暴露 `footnote`，在 `cloudfunctions/imageToImage/index.js` 的 `WATERMARK_TEXT`，不许裁切覆盖。
+- **布局两层：`.shell`（定高 100vh-nav，竖排）× 引擎条 + `.page`（flex:1 + overflow-y:auto）**。引擎条是全局设置，必须放在滚动区**外面**；放 `.page` 里会跟着内容滚走（滑到参数区再回顶，用户就报「引擎选项没了」）。主题变量 `--c-*` 定义在 `.shell` 上，两层都能继承。`.page` 要显式 `height:auto` 收掉 app.less 里的 `height:100vh`。
+- 别用 `position: sticky` 让引擎条吸顶：`.page` 开了 `-webkit-overflow-scrolling: touch`，iOS 上 sticky 在带这个属性的滚动容器里会失效。
 
 ### 提示词 = 生成因素库（v9）
 - 2 分类 / 6 维 / 91 取值（含 6 auto）/ 4 锁；原则：只新增 1 个选项，其余改已有文案。
@@ -56,6 +61,7 @@
 - `cloud_query_storage action:"url"` 的 temporaryUrl 无效（403），取文件用 `cloud_manage_storage action:"download"`。`automation_evaluate` 的 project 必须绝对路径，上下文常停在首页需先 navigateTo。
 - `simulator_screenshot` 偶发切回首页，操作前用 `ensurePage()` 重新 reLaunch；弹层打开时不要 tap `.mask`（会 timeout 并关掉项目窗口）。
 - AI 修图页走查 `.workbuddy/scripts/verify-aiimage-live.mjs`，截图落 `.workbuddy/out/`。
+- **不要用 MCP 去开模拟器 / open_page / simulator_screenshot / simulator_refresh**（会把开发者工具窗口抢走、打断用户操作，用户已两次明确制止）。要看效果只用 `auto_preview` / `create_preview_qrcode` 推送预览，或让用户自己点预览在微信里看。我只做代码级验证（编译检查、标签配对、verify 脚本）。
 
 ## 留言板（pages/leaveMessage + 云函数 leaveMessage）
 - 入口彩蛋：连点图片左上角爱心 5 次（间隔 ≤2000ms），事件名必须 `like`。

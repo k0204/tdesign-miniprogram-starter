@@ -95,7 +95,15 @@ page.setData = (patch, callback) => {
 
 try {
   page.onLoad();
-  ok(page.data.pageStyle.indexOf('100vh') !== -1, 'onLoad 没有设置一屏高度');
+  /**
+   * 布局契约从「JS 算一屏高度」改成了「CSS flex + navbar 占位」：
+   * t-navbar 的 fixed 默认 true、placeholder 默认 false，漏了 placeholder 页面内容
+   * 就从 y=0 开始，整块被导航栏盖住（引擎条曾因此「消失」）。
+   */
+  const wxmlSrc = fs.readFileSync(path.join(root, 'pages/aiImage/index.wxml'), 'utf8');
+  ok(/<t-navbar[^>]*\bplaceholder\b/.test(wxmlSrc), 't-navbar 缺 placeholder，内容会被 fixed 导航栏盖住');
+  ok(wxmlSrc.includes('class="shell"'), '缺少 .shell 竖排容器');
+  ok(!wxmlSrc.includes('style="{{pageStyle}}"'), 'shell 不应再依赖 pageStyle 内联高度');
   ok(page.data.locks.length === 4, `锁定项应为 4 个，实际 ${page.data.locks.length}`);
   ok(page.data.lockSummary.includes('人物') && page.data.lockSummary.includes('场景'), '默认锁摘要不对');
   ok(page.data.promptPreview.includes('严格保持原图人物的身份'), '默认提示词里没有人物锁');

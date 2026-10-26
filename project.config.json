@@ -11,6 +11,14 @@
         "type": "folder"
       },
       {
+        "value": ".npm-cache",
+        "type": "folder"
+      },
+      {
+        "value": "docs",
+        "type": "folder"
+      },
+      {
         "value": "package-lock.json",
         "type": "file"
       },
@@ -20,6 +28,18 @@
       },
       {
         "value": ".d.ts",
+        "type": "suffix"
+      },
+      {
+        "value": ".py",
+        "type": "suffix"
+      },
+      {
+        "value": ".csv",
+        "type": "suffix"
+      },
+      {
+        "value": ".jsonl",
         "type": "suffix"
       }
     ],

@@ -150,7 +150,6 @@ Page({
     draftDigits: '',
     /** 弹层跟随键盘上移，原生 textarea 的 adjust-position 推不动 fixed 弹层 */
     inputSheetStyle: '',
-    pageStyle: '', // 一屏高度 = 100vh - 导航栏，由 onLoad 算
     stageView: 'src', // 预览区看原图还是结果
     promptOpen: false, // 指令拆解弹层，默认收起
 
@@ -175,12 +174,14 @@ Page({
 
   /* ---------------- 生命周期 ---------------- */
 
-  /** 一屏布局：内容区高度 = 视口 - 自定义导航栏（状态栏 + 44px） */
+  /**
+   * 一屏布局交给 CSS：page 是竖排 flex，navbar 靠 placeholder 占位，
+   * .shell 用 flex:1 吃掉剩下的一屏。不再在这里按 statusBarHeight+44 硬算，
+   * 算少几像素就会被 fixed 的导航栏切掉顶部（引擎条曾因此整条被盖住）
+   */
   onLoad() {
     // 轮询期间用来判断用户是否还在这页，离开就停
     this.alive = true;
-    const sys = wx.getSystemInfoSync();
-    const navHeight = (sys.statusBarHeight || 20) + 44;
 
     // 先用「当前生效配置」渲染（内置默认，或上次下载缓存下来的版本），不等网络
     const selection = defaultSelection();
@@ -191,7 +192,6 @@ Page({
     this.lockState = readLockState();
 
     this.setData({
-      pageStyle: `height: calc(100vh - ${navHeight}px)`,
       cats,
       effectRecommendations: this.decorateEffectRecommendations(''),
       activeCatId: catId,
