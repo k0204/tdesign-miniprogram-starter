@@ -42,6 +42,12 @@ const RULES = [
     text: 'AI 通道正忙，稍等几秒再试一次',
     retryable: true,
   },
+  // Agnes 拉不到输入图时会带着 "timeout" 一词返回，不能误报成生成超时。
+  {
+    match: /Media URL could not be downloaded|无法下载.*(?:图片|原图|素材)/i,
+    text: 'AI 暂时无法读取原图，请重新选图或稍后重试',
+    retryable: true,
+  },
   // 超时（含前端轮询超时、云函数内部超时）
   {
     match: /超时|timeout|timed out|ESOCKETTIMEDOUT/i,

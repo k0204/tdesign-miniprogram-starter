@@ -62,13 +62,9 @@ const MODEL_TIMEOUT_MS = 20000;
 /** 图片 URL 取不到时改用 base64 内联重试，这一轮给更短的预算，避免撞 callFunction 的 60s */
 const RETRY_TIMEOUT_MS = 15000;
 
-const MAX_DEMAND_LENGTH = 300;
-const MAX_CURRENT_PROMPT_LENGTH = 4000;
 const MAX_EFFECT_OPTIONS = 24;
 const MAX_ANALYSIS_LENGTH = 100;
 const MAX_CANDIDATES = 3;
-/** 候选要写进底部输入框，且总提示词还有 500 字硬限，单条压到 120 */
-const CANDIDATE_MAX_LENGTH = 120;
 /** 单图上限 32MiB（官方限制），本项目前端已卡 9.5MB，base64 膨胀后仍在 48MiB 请求体预算内 */
 const MAX_IMAGE_BYTES = 32 * 1024 * 1024;
 const ALLOWED_SUFFIX = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
@@ -314,7 +310,7 @@ function normalizeCandidates(list, mode, effectOptions) {
         || suppliedLabel
         || (FALLBACK_LABELS[mode] || FALLBACK_LABELS.effect)[out.length]
         || `方案${out.length + 1}`,
-      text: text.slice(0, CANDIDATE_MAX_LENGTH),
+      text,
       effectId: matchedEffect ? matchedEffect.id : '',
     });
   });
@@ -392,9 +388,9 @@ exports.main = async (event = {}) => {
     return fail('AI 建议服务未配置密钥，请联系管理员');
   }
 
-  const demand = String(event.demand || '').trim().slice(0, MAX_DEMAND_LENGTH);
+  const demand = String(event.demand || '').trim();
   const mode = event.mode === 'parameter' ? 'parameter' : 'effect';
-  const currentPrompt = String(event.currentPrompt || '').trim().slice(0, MAX_CURRENT_PROMPT_LENGTH);
+  const currentPrompt = String(event.currentPrompt || '').trim();
   const effectOptions = (Array.isArray(event.effectOptions) ? event.effectOptions : [])
     .slice(0, MAX_EFFECT_OPTIONS)
     .map((effect) => ({
@@ -403,8 +399,8 @@ exports.main = async (event = {}) => {
       desc: String((effect && effect.desc) || '').trim().slice(0, 100),
     }))
     .filter((effect) => effect.id && effect.name);
-  const scope = String(event.scope || '').trim().slice(0, 200);
-  const keepHint = String(event.keepHint || '').trim().slice(0, 200);
+  const scope = String(event.scope || '').trim();
+  const keepHint = String(event.keepHint || '').trim();
 
   // ---------- 2. 原图取链接 ----------
   let imageUrl = '';

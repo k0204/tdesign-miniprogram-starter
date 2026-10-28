@@ -5,7 +5,7 @@
  * 模型：HY-Image-v3.0-I2I-ToB-v1.0.1（在文生图参数基础上传入垫图）
  *
  * 入参（event）：
- *   prompt     {string}  必填，提示词，最长 500 字
+ *   prompt     {string}  必填，提示词
  *   size       {string}  出图尺寸 "宽x高"，宽高 [512,2048]、面积 ≤ 1024x1024，默认 1024x1024
  *   fileID     {string}  垫图：云存储 fileID（小程序端主路径，最长边即原图分辨率）
  *   images     {string[]} 垫图：base64 列表，最多 1 张（备用，受 callFunction 约 1MB 入参限制）
@@ -43,23 +43,6 @@ const I2I_MODEL = 'HY-Image-v3.0-I2I-ToB-v1.0.1';
  * 水印本身关不掉（合规要求，SDK 不开放 LogoAdd=0），只能改文案，所以这里是唯一的调节点。
  */
 const WATERMARK_TEXT = '空谷';
-/**
- * 提示词长度上限。
- *
- * 500 这个值一直是自己拍的，从没有实测依据。2026-10-25 用真实垫图做了阶梯实测
- * （`.workbuddy/scripts/probe-hunyuan-prompt-limit.mjs`）：
- *   600 字 → 成功 8.4s
- *   3000 字 → 成功 11.1s
- *   8192 字 → 成功 9.4s
- *   8500 字 → 被本行护栏拒绝，738ms（在调模型之前就返回，不产生费用）
- *
- * 两个结论：
- *   1. 模型侧和 CloudBase 封装层都没有低于官方文档的天花板，8192 就是真上限
- *   2. **耗时与 prompt 长度无关**（8-11s 区间波动），长提示词不会让生成变慢
- *
- * 所以取官方文档值 8192 作为硬限。前端 `providers.js` 的 maxPromptLength 留了余量提前拦。
- */
-const MAX_PROMPT_LENGTH = 8192;
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 垫图上限 10MB
 const ALLOWED_SUFFIX = ['jpg', 'jpeg', 'png'];
 
@@ -145,7 +128,6 @@ exports.main = async (event = {}) => {
   // ---------- 1. 提示词校验 ----------
   const prompt = String(event.prompt || '').trim();
   if (!prompt) return fail('请输入提示词');
-  if (prompt.length > MAX_PROMPT_LENGTH) return fail(`提示词最多 ${MAX_PROMPT_LENGTH} 字`);
 
   // ---------- 2. 垫图归一：image_urls（URL）或 images（base64），二选一非空 ----------
   let imageUrls = Array.isArray(event.imageUrls) ? event.imageUrls.filter(Boolean).slice(0, 1) : [];

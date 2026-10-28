@@ -14,9 +14,11 @@
 import { getLocks } from './promptConfig';
 
 const STORAGE_KEY = 'aiimage_lock_prefs_v1';
+const MANDATORY_LOCK_IDS = new Set(['features']);
 
-/** 单条锁定文案的长度上限，页面上限与这里保持一致 */
-export const LOCK_PHRASE_MAX = 200;
+export function isMandatoryLock(id) {
+  return MANDATORY_LOCK_IDS.has(id) || getLocks().some((item) => item.id === id && item.mandatory === true);
+}
 
 /**
  * 清洗用户编辑的锁定文案。
@@ -29,8 +31,7 @@ export function sanitizeLockText(text) {
     .replace(/。/g, '，')
     .replace(/，{2,}/g, '，')
     .replace(/^[，、；\s]+|[，、；\s]+$/g, '')
-    .trim()
-    .slice(0, LOCK_PHRASE_MAX);
+    .trim();
 }
 
 /** 默认状态：每个锁取配置里的 defaultOn，没有自定义文案 */
@@ -50,12 +51,13 @@ export function normalizeLockState(raw) {
   const savedPhrases = (raw && raw.phrases) || {};
 
   getLocks().forEach((item) => {
-    state.on[item.id] =
-      typeof savedOn[item.id] === 'boolean' ? savedOn[item.id] : Boolean(item.defaultOn);
+    const mandatory = isMandatoryLock(item.id);
+    state.on[item.id] = mandatory
+      || (typeof savedOn[item.id] === 'boolean' ? savedOn[item.id] : Boolean(item.defaultOn));
 
     const custom = sanitizeLockText(savedPhrases[item.id]);
     const fallback = sanitizeLockText(item.phrase);
-    if (custom && custom !== fallback) state.phrases[item.id] = custom;
+    if (!mandatory && custom && custom !== fallback) state.phrases[item.id] = custom;
   });
 
   return state;
@@ -85,6 +87,9 @@ export function isLockOn(state, id) {
 
 /** 不可变地切换一个锁，页面用完直接替换 this.lockState */
 export function toggleLockState(state, id) {
+  if (isMandatoryLock(id)) {
+    return { ...state, on: { ...state.on, [id]: true } };
+  }
   return {
     ...state,
     on: { ...state.on, [id]: !isLockOn(state, id) },
@@ -93,6 +98,7 @@ export function toggleLockState(state, id) {
 
 /** 不可变地改一条锁定文案；改回默认值时删除覆盖，恢复跟随配置 */
 export function setLockPhrase(state, id, text) {
+  if (isMandatoryLock(id)) return state;
   const def = getLocks().find((item) => item.id === id);
   const next = sanitizeLockText(text);
   const fallback = def ? sanitizeLockText(def.phrase) : '';
@@ -116,10 +122,12 @@ export function getLockDefaultPhrase(id) {
  */
 export function buildLockViews(state) {
   return getLocks().map((item) => {
-    const on = isLockOn(state, item.id);
-    const custom = (state.phrases && state.phrases[item.id]) || '';
+    const mandatory = isMandatoryLock(item.id);
+    const on = mandatory || isLockOn(state, item.id);
+    const custom = mandatory ? '' : (state.phrases && state.phrases[item.id]) || '';
     return {
       id: item.id,
+      mandatory,
       name: item.name,
       desc: item.desc || '',
       phrase: custom || item.phrase || '',
@@ -182,18 +190,14 @@ export function detectLockTip(selection = {}, state) {
   const scene = isLockOn(state, 'scene');
 
   if (person) {
-    if (selection.angle === 'back') tips.push('背面机位看不到五官，人物锁定会打折');
-    if (selection.lightDir === 'silhouette') tips.push('剪影只剩轮廓，人物锁定会失效');
-    if (['extreme_wide', 'wide', 'env'].indexOf(selection.shot) !== -1) {
+    if (selection.shot === 'env') {
       tips.push('人物占比太小，人物锁定会打折');
     }
-    if (selection.shot === 'detail') tips.push('局部特写看不到脸，人物锁定没有意义');
   }
   if (scene) {
-    if (['razor', 'shallow', 'bokeh', 'motion_blur'].indexOf(selection.dof) !== -1) {
-      tips.push('背景虚化或拖影会降低细节，场景锁仍要求保留环境结构');
+    if (selection.dof === 'shallow') {
+      tips.push('背景虚化会降低环境细节，场景锁仍要求保留环境结构');
     }
-    if (selection.shot === 'detail') tips.push('局部特写里没有环境，场景锁定没有意义');
   }
   if (!person && !scene) tips.push('人物和场景都没锁，AI 可能把整张图重画');
 

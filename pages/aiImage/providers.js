@@ -148,11 +148,6 @@ export const ENGINES = [
     maxImages: 1,
     /** 本页是修图流程，所有引擎都至少需要 1 张原图；改成 0 即可放出纯文生图 */
     minImages: 1,
-    /**
-     * 云函数硬限 8192（官方文档值，2026-10-25 实测 8192 字可正常出图、耗时 9.4s），
-     * 这里留 92 字余量提前拦，避免白跑一次 8-11s 的生成。
-     */
-    maxPromptLength: 8100,
     sizeMode: 'exact',
     /** 混元约 30s，一次 callFunction 等得回来 */
     asyncTask: false,
@@ -168,7 +163,6 @@ export const ENGINES = [
     cloudFn: 'agnesImage',
     maxImages: 4,
     minImages: 1,
-    maxPromptLength: 1900, // 云函数硬限 2000
     sizeMode: 'tier',
     /** 档位式尺寸：1K 时图生图实测 85-96s */
     tier: '1K',
@@ -192,7 +186,6 @@ export const ENGINES = [
     cloudFn: 'nexusImage',
     maxImages: 4,
     minImages: 1,
-    maxPromptLength: 1900, // 云函数硬限 2000
     /**
      * exact：尺寸传「宽x高」，但**按 gpt-image-2 官方规则算**
      * （16 的倍数、比例 ≤3:1、像素 655K-8.29M），由 pickNexusSize 负责。

@@ -479,6 +479,17 @@ page {
   background-color: #fff;
 }
 
+.lock__required {
+  flex-shrink: 0;
+  margin-left: 6rpx;
+  padding: 0 6rpx;
+  border-radius: 999rpx;
+  font-size: 16rpx;
+  line-height: 22rpx;
+  color: #006b5b;
+  background-color: #d8f1eb;
+}
+
 .lock__desc {
   margin-top: 2rpx;
   font-size: 18rpx;
@@ -593,26 +604,22 @@ page {
   color: var(--c-text-1);
 }
 
-.seg-scroll {
-  width: 100%;
-  margin-top: 14rpx;
-  white-space: nowrap;
-}
-
 .seg {
-  display: inline-flex;
+  display: flex;
+  gap: 10rpx;
+  margin-top: 14rpx;
   padding: 0 24rpx 4rpx;
+  box-sizing: border-box;
 }
 
 .seg__item {
   display: flex;
-  flex-shrink: 0;
+  flex: 1;
+  min-width: 0;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 168rpx;
   height: 92rpx;
-  margin-right: 10rpx;
   padding: 0;
   border-radius: 12rpx;
 
@@ -679,15 +686,6 @@ page {
   color: var(--c-text-1);
 }
 
-.effects__hint {
-  overflow: hidden;
-  min-width: 0;
-  font-size: 20rpx;
-  color: var(--c-text-3);
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
 .effects__count {
   flex-shrink: 0;
   margin-left: 12rpx;
@@ -697,6 +695,27 @@ page {
 
 .effects__list {
   height: 264rpx;
+}
+
+.tech__advanced-toggle {
+  display: flex;
+  min-height: 72rpx;
+  align-items: center;
+  gap: 14rpx;
+  margin: 0 24rpx;
+  border-bottom: 1rpx solid var(--c-line);
+}
+
+.tech__advanced-title {
+  flex: 1;
+  font-size: 24rpx;
+  font-weight: 500;
+  color: var(--c-text-1);
+}
+
+.tech__expand {
+  font-size: 20rpx;
+  color: var(--c-primary);
 }
 
 .effect {
@@ -843,11 +862,6 @@ page {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-
-  /* 超出当前引擎字数上限：只改颜色提示，不截断 */
-  &--over {
-    color: #d54941;
-  }
 }
 
 /* 两个独立 AI 入口保持单行，窄屏时优先压缩提示词字数摘要。 */
@@ -946,8 +960,7 @@ page {
   align-items: center;
 }
 
-/* 输入区改成一行的摘要条：点开才进弹层写长文。
-   原来是个 maxlength=120 的单行 input，写整段提示词根本写不下 */
+/* 输入区使用摘要条，点开后进入弹层编辑完整描述。 */
 .dock__field {
   display: flex;
   flex: 1;
@@ -981,7 +994,7 @@ page {
   color: var(--c-primary);
 }
 
-/* 弹层里的长文本编辑区 */
+/* 弹层里的自由提示词编辑区 */
 .input-area {
   width: 100%;
   min-height: 200rpx;
@@ -1245,10 +1258,7 @@ page {
   }
 }
 
-/* ---------------- ② 维度组 ----------------
-   从原来的 2×2 固定套餐改成每组一行横滑。
-   横滑而不是网格：影调方向 8 个、画面问题 7 个，网格会占掉整屏，
-   而且用户一次只想看一个维度，铺开反而是干扰。 */
+/* ---------------- ② 参数下拉项 ---------------- */
 
 .dims {
   margin-top: 6rpx;
@@ -1267,8 +1277,7 @@ page {
 .dim__head {
   display: flex;
   align-items: baseline;
-  gap: 10rpx;
-  margin-bottom: 12rpx;
+  margin-bottom: 8rpx;
 }
 
 .dim__name {
@@ -1278,104 +1287,33 @@ page {
   color: var(--c-text-1);
 }
 
-/* 当前选中值贴在右边，省掉 chips 里的选中态文字 */
 .dim__value {
-  flex: 1;
   min-width: 0;
-  margin-left: auto;
-  font-size: 24rpx;
+  font-size: 25rpx;
   color: var(--c-primary);
-  text-align: right;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.dim__more {
-  flex-shrink: 0;
-  margin-left: 8rpx;
-  font-size: 21rpx;
-  color: var(--c-primary);
-}
-
-
-
-.dim__scroll {
-  width: 100%;
-  white-space: nowrap;
-}
-
-.dim__chips {
-  display: inline-flex;
-  gap: 12rpx;
-  padding-right: 12rpx;
-}
-
-/* 取值分组：一维十几个取值平铺会让人横滑着猜顺序，按族切开更好找。
-   组名是一条贴在 chips 左边的小竖标签，不占独立行，横滑时跟着走。 */
-.dgroup {
-  display: inline-flex;
-  flex-shrink: 0;
+.dim__picker {
+  display: flex;
+  min-height: 72rpx;
   align-items: center;
+  justify-content: space-between;
   gap: 12rpx;
-
-  & + & {
-    margin-left: 6rpx;
-  }
-}
-
-.dgroup__name {
-  flex-shrink: 0;
-  padding-left: 8rpx;
-  font-size: 20rpx;
-  line-height: 1;
-  color: var(--c-text-3);
-  letter-spacing: 1rpx;
-  opacity: 0.75;
-}
-
-.dchip {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  height: 60rpx;
-  padding: 0 24rpx;
-  border-radius: 30rpx;
-  border: 2rpx solid transparent;
+  padding: 0 18rpx;
+  border: 1rpx solid var(--c-line);
+  border-radius: 8rpx;
   background-color: #fff;
-  color: var(--c-text-2);
-  font-size: 25rpx;
   box-sizing: border-box;
-
-  &--on {
-    color: var(--c-primary);
-    border-color: var(--c-primary);
-    background-color: var(--c-primary-weak);
-    font-weight: 500;
-  }
 }
 
-.dchip__name {
-  line-height: 1;
-}
-
-/* 选中项的说明：显示的是这句话实际会拼进提示词，不是形容词 */
 .dim__desc {
   display: block;
-  margin-top: 10rpx;
+  margin-top: 8rpx;
   font-size: 22rpx;
-  line-height: 1.45;
+  line-height: 1.5;
   color: var(--c-text-3);
-}
-
-/* 零选择的提示：不选是合法状态，不该让用户觉得「还没选完」 */
-.dims__none {
-  margin-top: 16rpx;
-  padding: 12rpx 16rpx;
-  border-radius: 10rpx;
-  background-color: var(--c-fill);
-  font-size: 22rpx;
-  line-height: 1.45;
-  color: var(--c-text-3);
+  word-break: break-word;
 }

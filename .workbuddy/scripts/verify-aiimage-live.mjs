@@ -63,15 +63,25 @@ const ok = (cond, msg) => {
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
- * 截图工具在某些状态下会把模拟器切回首页（实测），所以每次打开弹层前先确认页面。
- * 不在 AI 修图页就 reLaunch 一次；这会重置选择，但后续步骤用不到之前的选择。
+ * 截图工具可能切回首页或让页面实例失效，所以每次操作前检查路由和页面方法。
+ * 页面实例失效时 reLaunch 会重置选择；后续走查步骤不依赖之前的选择。
  */
 async function ensurePage() {
-  const info = await evaluate(`
-    var p = getCurrentPages().pop();
-    return JSON.stringify({ route: (p && (p.route || p.__route__)) || '' });
+  let info = null;
+  try {
+    info = await evaluate(`
+    var pages = typeof getCurrentPages === 'function' ? getCurrentPages() : [];
+    var p = pages.length ? pages[pages.length - 1] : null;
+    return JSON.stringify({
+      route: (p && (p.route || p.__route__)) || '',
+      ready: Boolean(p && typeof p.closePrompt === 'function' && typeof p.toggleLock === 'function')
+    });
   `);
-  if (info && info.route === 'pages/aiImage/index') return;
+  } catch (err) {
+    info = null;
+  }
+  if (info && info.route === 'pages/aiImage/index' && info.ready) return;
+  await mcp.call('open_project_window', { project: PROJECT, windowMode: 'liteMode' }, 240000);
   await mcp.call('automation_navigate', { project: PROJECT, action: 'reLaunch', url: '/pages/aiImage/index', wait: 2.5 }, 90000);
   await sleep(1500);
 }
@@ -94,7 +104,7 @@ try {
       lockSummary: d.lockSummary,
       lockTip: d.lockTip,
       locks: (d.locks || []).map(function (x) {
-        return { id: x.id, name: x.name, on: x.on, edited: x.edited, icon: x.icon, hasMark: x.hasMark };
+        return { id: x.id, name: x.name, on: x.on, mandatory: x.mandatory, edited: x.edited, icon: x.icon, hasMark: x.hasMark };
       }),
       promptDigits: d.promptDigits,
       promptPreview: d.promptPreview,
@@ -104,6 +114,8 @@ try {
       dimOptions: (d.dimensions || []).map(function (x) {
         return { key: x.key, labels: (x.options || []).map(function (o) { return o.label; }) };
       }),
+      visibleEffects: (d.visibleEffectRecommendations || []).length,
+      paramsExpanded: d.paramsExpanded,
       pickedDigits: d.pickedDigits,
       hasPicked: d.hasPicked
     });
@@ -111,16 +123,44 @@ try {
   console.log('初始页面:', JSON.stringify(initial));
   ok(initial && initial.ok, '页面没有加载');
   ok(initial && initial.route === 'pages/aiImage/index', `当前页面不是 AI 修图: ${initial && initial.route}`);
-  ok(initial && initial.version === '提示词 v14 · 内置', `提示词版本不对: ${initial && initial.version}`);
-  ok(initial && initial.locks.length === 4, `锁定项数量不对: ${initial && initial.locks.length}`);
-  ok(initial && initial.locks.filter((x) => x.on).length === 2, '默认应锁人物 + 场景');
+  ok(initial && initial.version === '提示词 v23 · 内置', `提示词版本不对: ${initial && initial.version}`);
+  ok(initial && initial.locks.length === 5, `锁定项数量不对: ${initial && initial.locks.length}`);
+  ok(initial && initial.locks.filter((x) => x.on).length === 3, '默认应锁人物、五官和场景');
+  ok(initial && initial.locks.some((x) => x.id === 'features' && x.on && x.mandatory), '五官锁不是必选状态');
   ok(initial && initial.lockSummary.includes('人物') && initial.lockSummary.includes('场景'), '默认锁定摘要不对');
-  ok(initial && initial.dims.length === 3 && initial.cats.length === 2, '取景/影调分类或维度数量不对');
+  ok(initial && initial.dims.length === 2 && initial.cats.length === 3, '分类或取景维度数量不对');
+  ok(initial && initial.visibleEffects === 3 && initial.paramsExpanded === false, '修图菜单默认展开项过多');
   const dofView = initial && initial.dimOptions && initial.dimOptions.find((x) => x.key === 'dof');
   ok(dofView && dofView.labels.indexOf('背景虚化') !== -1, '景深里没有「背景虚化」');
-  ok(initial && initial.promptPreview.includes('严格保持原图人物的身份'), '提示词里没有人物锁');
-  ok(initial && initial.promptPreview.includes('严格保持原图的背景'), '提示词里没有场景锁');
+  ok(initial && initial.promptPreview.includes('以原图人物为准，延续人物身份'), '提示词里没有人物锁');
+  ok(initial && initial.promptPreview.includes('以原图环境为基础，延续背景'), '提示词里没有场景锁');
   console.log('截图 1:', JSON.stringify(await shot('aiImage-locks.png', 1)));
+
+  const parameterMenu = await evaluate(`
+    var p = getCurrentPages().pop();
+    p.toggleParams();
+    p.chooseCategory({ currentTarget: { dataset: { id: 'portrait' } } });
+    var skin = (p.data.dimensions || []).find(function (x) { return x.key === 'skin'; });
+    var blemishIndex = skin.options.findIndex(function (x) { return x.id === 'blemish'; });
+    p.chooseDimensionOption({ currentTarget: { dataset: { key: 'skin' } }, detail: { value: blemishIndex } });
+    var d = p.data;
+    return JSON.stringify({
+      paramsExpanded: d.paramsExpanded,
+      categoryCount: d.cats.length,
+      selectedSkin: d.selection.skin,
+      preview: d.promptPreview,
+      dimensions: (d.dimensions || []).map(function (x) {
+        return { key: x.key, name: x.name, value: x.pickedLabel, description: x.pickedDesc };
+      })
+    });
+  `);
+  console.log('手动微调:', JSON.stringify(parameterMenu));
+  ok(parameterMenu && parameterMenu.paramsExpanded, '手动微调没有展开');
+  ok(parameterMenu && parameterMenu.dimensions.every((item) => item.name && item.description), '参数缺少名称或具体说明');
+  ok(parameterMenu && parameterMenu.selectedSkin === 'blemish', '下拉选择没有更新皮肤操作');
+  ok(parameterMenu && parameterMenu.preview.includes('痘痘、痘印、斑点与泛红细节'), '下拉选择没有更新提示词');
+  console.log('参数区截图:', JSON.stringify(await shot('aiImage-parameters.png', 0.6)));
+  await ensurePage();
 
   const toneOptions = await evaluate(`
     var p = getCurrentPages().pop();
@@ -133,17 +173,17 @@ try {
     });
   `);
   console.log('后期选项:', JSON.stringify(toneOptions));
-  ok(toneOptions && toneOptions.labels.indexOf('高级灰') !== -1, '后期里没有「高级灰」');
+  ok(toneOptions && toneOptions.labels.indexOf('日系清爽') !== -1, '后期里没有「日系清爽」');
   ok(toneOptions && toneOptions.labels.indexOf('冷调清透') !== -1, '后期里没有「冷调清透」');
-  ok(toneOptions && toneOptions.labels.indexOf('柔光镜') !== -1, '后期里没有「柔光镜」');
   ok(toneOptions && toneOptions.labels.indexOf('低饱和胶片') !== -1, '后期里没有「低饱和胶片」');
+  ok(toneOptions && toneOptions.labels.indexOf('黑白银盐') !== -1, '后期里没有「黑白银盐」');
 
   const afterPick = await evaluate(`
     var p = getCurrentPages().pop();
     p.toggleLock({ currentTarget: { dataset: { id: 'scene' } } });
     p.chooseDimension({ currentTarget: { dataset: { key: 'shot', id: 'full' } } });
     p.chooseDimension({ currentTarget: { dataset: { key: 'dof', id: 'shallow' } } });
-    p.chooseDimension({ currentTarget: { dataset: { key: 'lightDir', id: 'right' } } });
+    p.chooseDimension({ currentTarget: { dataset: { key: 'light', id: 'side' } } });
     p.chooseDimension({ currentTarget: { dataset: { key: 'grade', id: 'cool_clean' } } });
     var d = p.data;
     return JSON.stringify({
@@ -160,12 +200,12 @@ try {
   `);
   console.log('选因素后:', JSON.stringify(afterPick));
   ok(afterPick && afterPick.route === 'pages/aiImage/index', '选因素后页面被切走');
-  ok(afterPick && afterPick.lockSummary === '已锁 人物', `关场景锁失败: ${afterPick && afterPick.lockSummary}`);
+  ok(afterPick && afterPick.lockSummary === '已锁 人物、五官', `关场景锁失败: ${afterPick && afterPick.lockSummary}`);
   ok(afterPick && afterPick.pickedDigits === '4 项', `已选计数不对: ${afterPick && afterPick.pickedDigits}`);
   ok(afterPick && afterPick.pickedTags.length === 4, '拆解标签数量不对');
-  ok(afterPick && afterPick.promptPreview.includes('背景柔和虚化'), '背景虚化没有拼进提示词');
+  ok(afterPick && afterPick.promptPreview.includes('背景按远近自然渐进虚化'), '背景虚化没有拼进提示词');
   ok(afterPick && afterPick.promptPreview.includes('冷调清透'), '冷调清透没有拼进提示词');
-  ok(afterPick && !afterPick.promptPreview.includes('严格保持原图的背景'), '关场景锁后提示词仍有场景锁');
+  ok(afterPick && !afterPick.promptPreview.includes('以原图环境为基础，延续背景'), '关场景锁后提示词仍有场景锁');
   console.log('截图 2:', JSON.stringify(await shot('aiImage-selected.png', 0.6)));
 
   await ensurePage();
@@ -179,13 +219,11 @@ try {
       name: d.lockEditName,
       draft: d.lockDraft,
       digits: d.lockDraftDigits,
-      edited: d.lockDraftEdited,
-      max: d.lockPhraseMax
+      edited: d.lockDraftEdited
     });
   `);
   console.log('锁定编辑:', JSON.stringify(editor));
   ok(editor && editor.open === true && editor.name === '人物', '锁定编辑弹层没有打开');
-  ok(editor && editor.max === 200, `锁定文案上限不是 200: ${editor && editor.max}`);
   console.log('截图 3:', JSON.stringify(await shot('aiImage-lock-editor.png', 0.6)));
 
   await ensurePage();
@@ -193,7 +231,7 @@ try {
     var p = getCurrentPages().pop();
     p.chooseDimension({ currentTarget: { dataset: { key: 'shot', id: 'full' } } });
     p.chooseDimension({ currentTarget: { dataset: { key: 'dof', id: 'shallow' } } });
-    p.chooseDimension({ currentTarget: { dataset: { key: 'lightDir', id: 'right' } } });
+    p.chooseDimension({ currentTarget: { dataset: { key: 'light', id: 'side' } } });
     p.chooseDimension({ currentTarget: { dataset: { key: 'grade', id: 'cool_clean' } } });
     p.openPrompt();
     var d = p.data;
@@ -214,13 +252,6 @@ try {
   );
   console.log('截图 4:', JSON.stringify(await shot('aiImage-prompt.png', 0.6)));
 
-  const consoleLog = await mcp.call(
-    'get_simulator_console',
-    { project: PROJECT, command: 'grep -n -i -E "error|exception|fail|not a function"' },
-    60000,
-  );
-  console.log('控制台错误:', JSON.stringify(unwrap(consoleLog)).slice(0, 1000));
-
   // 收尾：恢复默认状态，别把模拟器的本地偏好留成测试值
   await ensurePage();
   const cleaned = await evaluate(`
@@ -234,8 +265,15 @@ try {
     return JSON.stringify({ route: p.route || p.__route__, lockSummary: d.lockSummary, pickedDigits: d.pickedDigits });
   `);
   console.log('收尾:', JSON.stringify(cleaned));
-  ok(cleaned && cleaned.lockSummary === '已锁 人物、场景', `收尾没有恢复默认锁: ${cleaned && cleaned.lockSummary}`);
+  ok(cleaned && cleaned.lockSummary === '已锁 人物、五官、场景', `收尾没有恢复默认锁: ${cleaned && cleaned.lockSummary}`);
   ok(cleaned && cleaned.pickedDigits === '0 项', `收尾没有清空因素: ${cleaned && cleaned.pickedDigits}`);
+
+  const consoleLog = await mcp.call(
+    'get_simulator_console',
+    { project: PROJECT, command: 'grep -n -i -E "error|exception|fail|not a function"' },
+    60000,
+  );
+  console.log('控制台错误:', JSON.stringify(unwrap(consoleLog)).slice(0, 1000));
 } catch (err) {
   fails.push(`模拟器走查抛错: ${err && (err.stack || err.message || err)}`);
 } finally {

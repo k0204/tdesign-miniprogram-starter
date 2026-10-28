@@ -21,7 +21,7 @@
  *   action     {string}   'submit'（默认）| 'status'
  *
  *   —— submit ——
- *   prompt     {string}   必填，提示词（≤2000 字）
+ *   prompt     {string}   必填，提示词
  *   fileIDs    {string[]} 垫图云存储 fileID（小程序端主路径，最多 4 张）
  *   fileID     {string}   单张垫图（兼容）
  *   imageUrls  {string[]} 垫图公网 URL
@@ -45,7 +45,6 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const WORKER = 'agnesImageWorker';
 const COLLECTION = 'ai_image_tasks';
-const MAX_PROMPT_LENGTH = 2000;
 const MAX_INPUT_IMAGES = 4;
 
 /** 建集合只做一次（冷启动内缓存），已存在不算错 */
@@ -139,9 +138,6 @@ async function readConfig() {
 async function submit(event) {
   const prompt = String(event.prompt || '').trim();
   if (!prompt) return fail('请输入提示词');
-  if (prompt.length > MAX_PROMPT_LENGTH) {
-    return fail(`提示词最多 ${MAX_PROMPT_LENGTH} 字`);
-  }
 
   const payload = {
     prompt,

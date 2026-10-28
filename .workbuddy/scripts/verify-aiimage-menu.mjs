@@ -75,23 +75,44 @@ ok(cfg.schema === 'aiImage.factors', `schema 非法: ${cfg.schema}`);
 ok(Number.isInteger(cfg.version) && cfg.version > 0, `version 非法: ${cfg.version}`);
 const check = validateConfig(cfg);
 ok(check.ok, `内置默认配置校验失败: ${check.reason}`);
+const builtinPhrases = [
+  cfg.copy.lead,
+  cfg.copy.tail,
+  ...LOCKS.map((item) => item.phrase),
+  ...Object.values(DIMS).flatMap((dim) => dim.options.map((option) => option.phrase)),
+];
+const negativePhrase = builtinPhrases.find((phrase) => /(不|无|避免|不得|禁止|勿)/.test(phrase));
+ok(!negativePhrase, `内置生成提示词应只描述正向优化: ${negativePhrase || ''}`);
 
 /* ---------- 0.5 锁定 ---------- */
 {
   ok(Array.isArray(LOCKS) && LOCKS.length >= 2, '锁定项少于两项');
   const ids = LOCKS.map((item) => item.id);
   ok(new Set(ids).size === ids.length, '锁定项 id 重复');
+  const featuresLock = LOCKS.find((item) => item.id === 'features');
+  ok(featuresLock && featuresLock.mandatory && featuresLock.defaultOn, '五官锁必须存在并始终启用');
   LOCKS.forEach((item) => {
     ok(typeof item.name === 'string' && item.name, `锁 ${item.id} 缺 name`);
     ok(typeof item.phrase === 'string' && item.phrase, `锁 ${item.id} 缺 phrase`);
     ok(!item.phrase.includes('。'), `锁 ${item.id} 的 phrase 里出现句号`);
-    ok(item.phrase.length <= 200, `锁 ${item.id} 的 phrase 超过 200 字`);
     ok(typeof item.defaultOn === 'boolean', `锁 ${item.id} 的 defaultOn 不是布尔`);
     ok(sanitizeLockText(item.phrase).length > 0, `锁 ${item.id} 清洗后为空`);
   });
 
   const state = defaultLockState();
+  const forcedOff = normalizeLockState({
+    on: { features: false },
+    phrases: { features: '替换成另一张脸' },
+  });
+  ok(forcedOff.on.features, '本地偏好不能关闭五官强制锁');
+  ok(!forcedOff.phrases.features, '本地偏好不能替换五官强制文案');
+  ok(toggleLockState(state, 'features').on.features, '交互不能关闭五官强制锁');
+  ok(
+    buildLockText(setLockPhrase(state, 'features', '替换成另一张脸')).includes(featuresLock.phrase),
+    '编辑入口不能替换五官强制文案',
+  );
   const views = buildLockViews(state);
+  ok(views.find((item) => item.id === 'features').mandatory, '五官锁视图没有标记为必选');
   ok(views.length === LOCKS.length, '锁定视图数与配置不一致');
   views.forEach((view) => {
     ok(typeof view.cls === 'string' && view.cls.indexOf('lock') === 0, `锁 ${view.id} 的 cls 异常`);
@@ -125,11 +146,10 @@ ok(check.ok, `内置默认配置校验失败: ${check.reason}`);
   const personId = LOCKS.find((item) => item.id === 'person');
   const sceneId = LOCKS.find((item) => item.id === 'scene');
   if (personId && personId.defaultOn) {
-    ok(detectLockTip({ angle: 'back' }, state).includes('背面'), '背面机位没有给出人物锁冲突提示');
+    ok(detectLockTip({ shot: 'env' }, state).includes('人物占比'), '环境人像没有给出人物占比提示');
   }
   if (sceneId && sceneId.defaultOn) {
     ok(detectLockTip({ dof: 'shallow' }, state).includes('保留环境结构'), '背景虚化没有说明场景锁仍保留环境结构');
-    ok(detectLockTip({ dof: 'motion_blur' }, state).includes('拖影'), '动态拖影没有给出场景细节提醒');
   }
   const noneState = { on: {}, phrases: {} };
   ok(detectLockTip({}, noneState).includes('都没锁'), '全不锁时没有风险提示');
@@ -139,6 +159,8 @@ ok(check.ok, `内置默认配置校验失败: ${check.reason}`);
 for (const [key, dim] of Object.entries(DIMS)) {
   ok(Array.isArray(dim.options) && dim.options.length >= 2, `${key} 取值少于两项`);
   ok(dim.options[0].id === 'auto', `${key} 第一项不是 auto`);
+  ok(dim.options[0].label === '不指定', `${key} auto 项标签应为「不指定」`);
+  ok(dim.options[0].phrase === '', `${key} auto 项不能拼入提示词`);
   const ids = dim.options.map((o) => o.id);
   ok(new Set(ids).size === ids.length, `${key} 取值 id 重复`);
   dim.options.forEach((o) => {
@@ -159,6 +181,10 @@ const covered = new Set(CATS.flatMap((c) => c.dims));
 Object.keys(DIMS).forEach((key) => ok(covered.has(key), `维度 ${key} 没挂在任何分类下，界面上选不到`));
 ORDER.forEach((key) => ok(DIMS[key], `order 引用不存在的维度 ${key}`));
 Object.keys(DIMS).forEach((key) => ok(ORDER.indexOf(key) !== -1, `维度 ${key} 不在 order 里，永远拼不进提示词`));
+const optionCount = ORDER.reduce((n, key) => n + DIMS[key].options.length, 0);
+ok(ORDER.length === 6, `手动微调应精简为 6 个维度，实际 ${ORDER.length}`);
+ok(optionCount <= 40, `手动微调取值应控制在 40 项以内，实际 ${optionCount}`);
+ok(!DIMS.angle && !DIMS.skinToneStyle && !DIMS.lightDir && !DIMS.lightQuality, '已移除的重复参数仍在因素库中');
 
 /* ---------- 2. 拼装 ---------- */
 const copy = cfg.copy;
@@ -200,9 +226,9 @@ const pos = (dimKey) => {
   const opt = DIMS[dimKey].options.find((o) => o.id === full[dimKey]);
   return opt && opt.phrase ? fullElements.indexOf(opt.phrase) : -1;
 };
-ok(pos('shot') < pos('lightDir'), '景别没有排在光位之前（前 20 字要定构图）');
-ok(pos('dof') < pos('lightDir'), '景深没有排在光位之前（取景组要连在一起）');
-ok(pos('lightDir') < pos('grade'), '光位没有排在后期之前');
+ok(pos('shot') < pos('light'), '景别没有排在光线之前');
+ok(pos('dof') < pos('light'), '景深没有排在光线之前');
+ok(pos('light') < pos('grade'), '光线没有排在影调之前');
 ok(pos('shot') >= 0, '全选时景别没有拼进提示词');
 
 // 全选时不能有完全重复的短语（同一句话说两遍）
@@ -211,9 +237,8 @@ ok(fullSplit.every((s) => s), '全选时出现空短语');
 const dup = fullSplit.filter((s, i) => fullSplit.indexOf(s) !== i);
 ok(dup.length === 0, `全选时出现重复短语: ${JSON.stringify([...new Set(dup)])}`);
 
-// 整段提示词长度（Agnes / Nexus 上限 1900，混元 8100）
+// 统计内置因素组合长度；用户输入不会被此处截断或限制。
 const fullPrompt = buildPrompt({ elements: fullElements, locks: defaultLockText, extra: '', reference: '' });
-ok(fullPrompt.length < 1900, `全选时整段 ${fullPrompt.length} 字，超过 Agnes/Nexus 的 1900 上限`);
 ok(fullPrompt.startsWith(copy.lead), '提示词没有以 copy.lead 开头');
 ok(fullPrompt.trim().endsWith(copy.tail.replace(/[。\s]+$/, '')), '提示词没有以 copy.tail 结尾');
 if (defaultLockText) ok(fullPrompt.includes(defaultLockText), '提示词里没有默认锁定段');
@@ -235,13 +260,12 @@ for (let i = 0; i < 3000; i += 1) {
     worst = text.length;
     worstCase = sel;
   }
-  ok(text.length < 1900, `随机组合超长 ${text.length}: ${JSON.stringify(sel)}`);
 }
 
 /* ---------- 4. 稳定 key ---------- */
 {
-  const a = { shot: 'full', lightDir: 'right' };
-  const b = { lightDir: 'right', shot: 'full' };
+  const a = { shot: 'full', light: 'side' };
+  const b = { light: 'side', shot: 'full' };
   ok(selectionKey(a) === selectionKey(b), 'selectionKey 受选择顺序影响');
   ok(selectionKey(a).split('|').length === ORDER.length, 'selectionKey 没有覆盖全部维度');
 }
@@ -251,23 +275,11 @@ for (let i = 0; i < 3000; i += 1) {
   const views = buildDimViews(CATS[0].id, { ...SEL0, [CATS[0].dims[0]]: DIMS[CATS[0].dims[0]].options[1].id });
   ok(views.length === CATS[0].dims.length, '视图维度数与分类配置不一致');
   views.forEach((v) => {
-    ok(v.options.every((o) => typeof o.cls === 'string' && o.cls.startsWith('dchip')), `${v.key} 的 cls 异常`);
+    ok(v.options.every((o) => typeof o.label === 'string' && o.label), `${v.key} 下拉选项缺少名称`);
     ok(v.options.filter((o) => o.selected).length === 1, `${v.key} 选中项不是恰好 1 个`);
     ok(typeof v.pickedDesc === 'string' && v.pickedDesc, `${v.key} 缺 pickedDesc`);
-
-    // 精简态只露出常用项，但当前选中项绝不能因为收起而消失。
-    ok(Array.isArray(v.groups) && v.groups.length > 0, `${v.key} 缺分组`);
-    const flat = (v.groups || []).flatMap((g) => g.options);
-    ok(flat.length <= v.options.length, `${v.key} 精简态取值数异常`);
-    ok(flat.some((o) => o.selected), `${v.key} 精简态隐藏了当前选中项`);
-    ok(flat.every((o) => typeof o.cls === 'string' && o.cls.startsWith('dchip')), `${v.key} 分组内的 cls 异常`);
-    ok((v.groups || []).every((g) => typeof g.showName === 'boolean'), `${v.key} 分组的 showName 不是布尔`);
-
-    // 展开后必须一个不少地恢复完整列表，否则冷门项会永远选不到。
-    const expandedView = buildDimViews(CATS[0].id, SEL0, { [v.key]: true }).find((item) => item.key === v.key);
-    const expandedFlat = (expandedView.groups || []).flatMap((g) => g.options);
-    ok(expandedFlat.length === v.options.length, `${v.key} 展开后没有恢复全部取值`);
-    ok(expandedView.moreText === '收起', `${v.key} 展开后的操作文案不对`);
+    ok(v.pickedIndex >= 0 && v.options[v.pickedIndex].selected, `${v.key} 下拉当前值索引不正确`);
+    ok(v.pickedLabel === v.options[v.pickedIndex].label, `${v.key} 下拉当前值名称不一致`);
   });
   ok(countPicked(CATS[0].id, SEL0) === 0, 'defaultSelection 不算「已选」却有计数');
   const one = { ...SEL0, [CATS[0].dims[0]]: DIMS[CATS[0].dims[0]].options[1].id };
@@ -287,10 +299,10 @@ for (let i = 0; i < 3000; i += 1) {
     ['版本非正整数', (() => { const c = clone(); c.version = 0; return c; })()],
     ['copy 缺字段', (() => { const c = clone(); delete c.copy.lead; return c; })()],
     ['锁少于两项', (() => { const c = clone(); c.locks.items = c.locks.items.slice(0, 1); return c; })()],
+    ['五官锁必须开启', (() => { const c = clone(); c.locks.items.find((item) => item.id === 'features').mandatory = false; return c; })()],
     ['锁重复 id', (() => { const c = clone(); c.locks.items[1].id = c.locks.items[0].id; return c; })()],
     ['锁 defaultOn 非布尔', (() => { const c = clone(); c.locks.items[0].defaultOn = 'yes'; return c; })()],
     ['锁文案带句号', (() => { const c = clone(); c.locks.items[0].phrase += '。'; return c; })()],
-    ['锁文案超长', (() => { const c = clone(); c.locks.items[0].phrase = '保'.repeat(201); return c; })()],
     ['维度缺 options', (() => { const c = clone(); delete c.dims.shot.options; return c; })()],
     ['第一项不是 auto', (() => { const c = clone(); c.dims.shot.options.shift(); return c; })()],
     ['order 漏维度', (() => { const c = clone(); c.order = c.order.filter((k) => k !== lastKey); return c; })()],
@@ -321,7 +333,6 @@ for (let i = 0; i < 3000; i += 1) {
 }
 
 /* ---------- 输出 ---------- */
-const optionCount = ORDER.reduce((n, k) => n + DIMS[k].options.length, 0);
 console.log(`配置 v${cfg.version} · ${CATS.length} 分类 / ${ORDER.length} 维度 / ${optionCount} 取值 / ${LOCKS.length} 锁`);
 CATS.forEach((c) => console.log(`  ${c.name}: ${c.dims.map((k) => `${DIMS[k].name}(${DIMS[k].options.length})`).join(' ')}`));
 console.log(`锁: ${LOCKS.map((item) => `${item.name}(${item.defaultOn ? '开' : '关'})`).join(' · ')}`);

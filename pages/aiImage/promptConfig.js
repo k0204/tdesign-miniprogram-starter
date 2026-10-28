@@ -127,10 +127,17 @@ export function validateConfig(raw) {
       return bad('locks.items 有项缺 id/name/phrase');
     }
     if (typeof item.defaultOn !== 'boolean') return bad(`locks.${item.id}.defaultOn 不是布尔`);
+    if (item.mandatory !== undefined && typeof item.mandatory !== 'boolean') {
+      return bad(`locks.${item.id}.mandatory 不是布尔`);
+    }
+    if (item.mandatory && !item.defaultOn) return bad(`必选锁 ${item.id} 必须默认开启`);
     if (item.phrase.includes('。')) return bad(`locks.${item.id}.phrase 里出现句号（会打断拼装）`);
-    if (item.phrase.length > 200) return bad(`locks.${item.id}.phrase 超过 200 字`);
     if (lockIds.has(item.id)) return bad(`locks.${item.id} 重复`);
     lockIds.add(item.id);
+  }
+  const featuresLock = lockItems.find((item) => item && item.id === 'features');
+  if (!featuresLock || !featuresLock.mandatory || !featuresLock.defaultOn) {
+    return bad('五官锁必须存在并设为必选');
   }
 
   const dims = raw.dims || {};

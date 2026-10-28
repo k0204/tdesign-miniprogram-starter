@@ -20,12 +20,12 @@ import {
   applyEffectRecommendation,
 } from './editPresets';
 import {
-  LOCK_PHRASE_MAX,
   buildLockText,
   buildLockViews,
   describeLocks,
   detectLockTip,
   getLockDefaultPhrase,
+  isMandatoryLock,
   lockKey,
   normalizeLockState,
   readLockState,
@@ -91,11 +91,12 @@ Page({
     /** 当前分类下的因素维度，带 selected 标记，供 wxml 直接渲染 */
     dimensions: [],
     effectRecommendations: [],
+    visibleEffectRecommendations: [],
+    effectsExpanded: false,
+    paramsExpanded: false,
     selectedEffectId: '',
-    /** 各因素默认只显示常用项，用户可单独展开需要精调的因素。 */
-    expandedDims: {},
     /**
-     * 全部因素的选择：{ shot:'full', angle:'auto', lightDir:'right', ... }
+     * 全部因素的选择：{ shot:'full', light:'side', ... }
      * 跨分类保留，切 tab 不清空——用户改了取景再改影调，取景不该丢。
      */
     selection: {},
@@ -103,8 +104,6 @@ Page({
     pickedDigits: '0 项',
     hasPicked: false,
     promptPreview: '',
-    /** 拼装后是否超过当前引擎的字数上限，交给模板标红，不在这里截断 */
-    promptTooLong: false,
     /** 折叠条右侧的字数文案，在 JS 侧算好——模板里不拼字符串 */
     promptDigits: '待生成',
     /** 拆解弹层顶部的已选因素标签，让用户先看到「选了哪些」再看长句 */
@@ -134,7 +133,6 @@ Page({
     lockDraftDigits: '',
     lockDraftDefault: '',
     lockDraftEdited: false,
-    lockPhraseMax: LOCK_PHRASE_MAX,
     /** 锁定默认只显示保护摘要，需要修改时再展开。 */
     locksExpanded: false,
     /** 指令拆解弹层底部那句提示，随有没有锁变化 */
@@ -193,11 +191,11 @@ Page({
 
     this.setData({
       cats,
-      effectRecommendations: this.decorateEffectRecommendations(''),
+      ...this.effectMenuData('', false),
       activeCatId: catId,
       activeCat: findCategory(catId),
       selection,
-      dimensions: buildDimViews(catId, selection, {}),
+      dimensions: buildDimViews(catId, selection),
       promptNote: describePromptSource(),
       locks: buildLockViews(this.lockState),
       lockTitle: (getLockConfig() || {}).title || '锁定不换',
@@ -232,6 +230,17 @@ Page({
     }));
   },
 
+  effectMenuData(selectedId, expanded = this.data.effectsExpanded) {
+    const effectRecommendations = this.decorateEffectRecommendations(selectedId);
+    const quickIds = ['natural', 'skinRefine', 'faceRefine'];
+    return {
+      effectRecommendations,
+      visibleEffectRecommendations: expanded
+        ? effectRecommendations
+        : effectRecommendations.filter((item) => quickIds.includes(item.id) || item.selected),
+    };
+  },
+
   /** 「已锁 人物、场景」；一个都没锁时给一句风险提示 */
   buildLockSummary() {
     const names = describeLocks(this.lockState);
@@ -258,7 +267,7 @@ Page({
           cats: this.decorateCategories(cats, this.data.selection),
           activeCatId: catId,
           activeCat: findCategory(catId),
-          dimensions: buildDimViews(catId, this.data.selection, this.data.expandedDims),
+          dimensions: buildDimViews(catId, this.data.selection),
           promptNote: describePromptSource(),
           locks: buildLockViews(this.lockState),
           lockTitle: (getLockConfig() || {}).title || '锁定不换',
@@ -521,7 +530,7 @@ Page({
     this.setData({
       activeCatId: id,
       activeCat: cat,
-      dimensions: buildDimViews(id, this.data.selection, this.data.expandedDims),
+      dimensions: buildDimViews(id, this.data.selection),
       error: '',
     });
   },
@@ -536,16 +545,30 @@ Page({
     if (this.data.generating) return;
     const { key, id } = e.currentTarget.dataset;
     if (!key || !id) return;
+    this.applyDimensionValue(key, this.data.selection[key] === id ? 'auto' : id);
+  },
+
+  chooseDimensionOption(e) {
+    if (this.data.generating) return;
+    const { key } = e.currentTarget.dataset;
+    const index = Number(e.detail && e.detail.value);
+    const dimension = (this.data.dimensions || []).find((item) => item.key === key);
+    const option = dimension && dimension.options[index];
+    if (!key || !option) return;
+    this.applyDimensionValue(key, option.id);
+  },
+
+  applyDimensionValue(key, id) {
 
     const selection = { ...this.data.selection };
-    selection[key] = selection[key] === id ? 'auto' : id;
+    selection[key] = id;
 
     const catId = this.data.activeCatId;
     this.setData({
       selection,
       selectedEffectId: '',
-      effectRecommendations: this.decorateEffectRecommendations(''),
-      dimensions: buildDimViews(catId, selection, this.data.expandedDims),
+      ...this.effectMenuData(''),
+      dimensions: buildDimViews(catId, selection),
       cats: this.decorateCategories(this.data.cats, selection),
       error: '',
     });
@@ -562,8 +585,8 @@ Page({
     this.setData({
       selection,
       selectedEffectId: id,
-      effectRecommendations: this.decorateEffectRecommendations(id),
-      dimensions: buildDimViews(catId, selection, this.data.expandedDims),
+      ...this.effectMenuData(id),
+      dimensions: buildDimViews(catId, selection),
       cats: this.decorateCategories(this.data.cats, selection),
       error: '',
     });
@@ -578,8 +601,8 @@ Page({
     this.setData({
       selection,
       selectedEffectId: '',
-      effectRecommendations: this.decorateEffectRecommendations(''),
-      dimensions: buildDimViews(catId, selection, this.data.expandedDims),
+      ...this.effectMenuData(''),
+      dimensions: buildDimViews(catId, selection),
       cats: this.decorateCategories(this.data.cats, selection),
       error: '',
     });
@@ -587,19 +610,16 @@ Page({
     this.onShowToast('#t-toast', '已清空因素');
   },
 
-  /** 在常用项和完整列表之间切换，每个因素独立记录展开状态。 */
-  toggleDimensionOptions(e) {
-    if (this.data.generating) return;
-    const { key } = e.currentTarget.dataset;
-    if (!key) return;
-    const expandedDims = {
-      ...this.data.expandedDims,
-      [key]: !this.data.expandedDims[key],
-    };
+  toggleEffects() {
+    const effectsExpanded = !this.data.effectsExpanded;
     this.setData({
-      expandedDims,
-      dimensions: buildDimViews(this.data.activeCatId, this.data.selection, expandedDims),
+      effectsExpanded,
+      ...this.effectMenuData(this.data.selectedEffectId, effectsExpanded),
     });
+  },
+
+  toggleParams() {
+    this.setData({ paramsExpanded: !this.data.paramsExpanded });
   },
 
   /* ---------------- 锁定不换 ---------------- */
@@ -620,7 +640,7 @@ Page({
   toggleLock(e) {
     if (this.data.generating) return;
     const { id } = e.currentTarget.dataset;
-    if (!id) return;
+    if (!id || isMandatoryLock(id)) return;
     this.lockState = toggleLockState(this.lockState, id);
     this.renderLocks(true);
     this.refreshPreview();
@@ -634,7 +654,7 @@ Page({
     if (this.data.generating) return;
     const { id } = e.currentTarget.dataset;
     const item = (this.data.locks || []).find((lock) => lock.id === id);
-    if (!item) return;
+    if (!item || item.mandatory) return;
 
     const fallback = item.defaultPhrase || getLockDefaultPhrase(item.id);
     const draft = item.phrase || fallback;
@@ -678,6 +698,7 @@ Page({
   },
 
   applyLockDraft() {
+    if (isMandatoryLock(this.data.lockEditId)) return;
     const text = sanitizeLockText(this.data.lockDraft);
     if (!text) {
       this.showHint('锁定文案不能为空，可以点「恢复默认」');
@@ -745,15 +766,13 @@ Page({
   },
 
   refreshPreview() {
-    const { selection, extra, engineId, imageCount, engine } = this.data;
+    const { selection, extra, engineId, imageCount } = this.data;
     const userText = String(extra || '').trim();
     const elements = buildElements(selection);
     const reference = referenceHint(engineId, imageCount);
     // 锁定文案由 locks.js 统一收口：开关、用户改过的文案、配置默认值都在那里合并
     const lockText = buildLockText(this.lockState);
     const prompt = buildEditPrompt({ selection, extra: userText, reference, lockText });
-    // 超长只标红，不静默截断——截断会让用户以为自己写的都生效了
-    const tooLong = !!prompt && prompt.length > engine.maxPromptLength;
     // 固定文案可能被云端配置换掉，所以每次实时取，不缓存
     const copy = getCopy() || {};
     // 一个都没选是完全合法的状态：不选＝不给指令，只按原图和模型判断出片
@@ -766,8 +785,7 @@ Page({
 
     this.setData({
       promptPreview: prompt,
-      promptTooLong: tooLong,
-      promptDigits: prompt ? `${prompt.length} 字${tooLong ? ' · 超长' : ''}` : '待生成',
+      promptDigits: prompt ? `${prompt.length} 字` : '待生成',
       pickedDigits: `${pickedCount} 项`,
       hasPicked: pickedCount > 0,
       nonePicked: pickedCount === 0,
@@ -871,14 +889,6 @@ Page({
       this.showHint('提示词为空，请重新选择');
       return;
     }
-    // 两个引擎的字数上限不同（混元 500 / Agnes 2000），按当前引擎卡
-    if (prompt.length > engine.maxPromptLength) {
-      this.showHint(
-        `补充描述太长（${prompt.length} 字，上限 ${engine.maxPromptLength} 字），请精简一点`
-      );
-      return;
-    }
-
     this.setData({ generating: true, error: '', errorRetryable: false });
     wx.showLoading({ title: engine.loadingTitle, mask: true });
 
@@ -1262,8 +1272,8 @@ Page({
       this.setData({
         selection,
         selectedEffectId: item.effectId,
-        effectRecommendations: this.decorateEffectRecommendations(item.effectId),
-        dimensions: buildDimViews(catId, selection, this.data.expandedDims),
+        ...this.effectMenuData(item.effectId),
+        dimensions: buildDimViews(catId, selection),
         cats: this.decorateCategories(this.data.cats, selection),
         extra,
         adviceAppliedText: item.text,

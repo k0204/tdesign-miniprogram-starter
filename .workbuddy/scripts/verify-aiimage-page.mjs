@@ -102,26 +102,49 @@ try {
    */
   const wxmlSrc = fs.readFileSync(path.join(root, 'pages/aiImage/index.wxml'), 'utf8');
   ok(/<t-navbar[^>]*\bplaceholder\b/.test(wxmlSrc), 't-navbar 缺 placeholder，内容会被 fixed 导航栏盖住');
+  ok(wxmlSrc.includes('range-key="label"') && wxmlSrc.includes('chooseDimensionOption'), '参数选项没有使用下拉选择器');
+  ok(!wxmlSrc.includes('class="dim__scroll"') && !wxmlSrc.includes('class="seg-scroll"'), '参数菜单仍包含横向滑动区域');
+  ok(wxmlSrc.includes('class="dim__desc"'), '参数没有展示具体说明');
   ok(wxmlSrc.includes('class="shell"'), '缺少 .shell 竖排容器');
   ok(!wxmlSrc.includes('style="{{pageStyle}}"'), 'shell 不应再依赖 pageStyle 内联高度');
-  ok(page.data.locks.length === 4, `锁定项应为 4 个，实际 ${page.data.locks.length}`);
+  ok(page.data.locks.length === 5, `锁定项应为 5 个，实际 ${page.data.locks.length}`);
   ok(page.data.lockSummary.includes('人物') && page.data.lockSummary.includes('场景'), '默认锁摘要不对');
-  ok(page.data.promptPreview.includes('严格保持原图人物的身份'), '默认提示词里没有人物锁');
-  ok(page.data.promptPreview.includes('严格保持原图的背景'), '默认提示词里没有场景锁');
+  ok(page.data.promptPreview.includes('以原图人物为准，延续人物身份'), '默认提示词里没有人物锁');
+  ok(page.data.promptPreview.includes('以原图五官为准，延续眼型'), '默认提示词里没有必选五官锁');
+  ok(page.data.promptPreview.includes('以原图环境为基础，延续背景'), '默认提示词里没有场景锁');
+  const featuresLock = page.data.locks.find((item) => item.id === 'features');
+  ok(featuresLock && featuresLock.mandatory && featuresLock.on, '必选五官锁没有展示为开启状态');
+  page.toggleLock({ currentTarget: { dataset: { id: 'features' } } });
+  ok(page.data.locks.find((item) => item.id === 'features').on, '页面交互关闭了必选五官锁');
+  page.openLockEditor({ currentTarget: { dataset: { id: 'features' } } });
+  ok(page.data.lockEditorOpen === false, '必选五官锁不应开放文案编辑');
   ok(page.data.promptParts.some((part) => part.key === '锁定'), '指令拆解里没有锁定段');
   ok(page.data.promptParts.every((part) => part.text), '指令拆解里有空段');
   ok(page.data.promptDigits.includes('字'), '指令字数没有算出来');
-  ok(page.data.effectRecommendations.length === 20, '推荐效果没有全部进入列表');
+  ok(page.data.effectRecommendations.length === 11, '推荐效果没有全部进入精简列表');
+  ok(page.data.visibleEffectRecommendations.length === 3, '默认只应展示三个常用效果');
+  ok(!page.data.paramsExpanded && !page.data.effectsExpanded, '手动参数和完整效果列表默认应收起');
+  page.toggleEffects();
+  ok(page.data.visibleEffectRecommendations.length === page.data.effectRecommendations.length, '展开后没有显示全部推荐效果');
+  page.toggleEffects();
+  page.toggleParams();
+  ok(page.data.paramsExpanded, '手动微调入口没有展开');
+  ok(
+    page.data.effectRecommendations.some((item) => item.id === 'skinRefine')
+      && page.data.effectRecommendations.some((item) => item.id === 'faceRefine'),
+    '皮肤和脸部推荐没有进入列表',
+  );
   ok(page.data.effectRecommendations.every((item) => !item.cls.includes('effect--hidden')), '推荐效果列表不应隐藏项目');
 
   // 关掉场景锁：摘要、提示词、本地偏好三者都要同步
   page.toggleLock({ currentTarget: { dataset: { id: 'scene' } } });
   ok(!page.data.lockSummary.includes('场景'), '关掉场景后摘要仍显示场景');
-  ok(!page.data.promptPreview.includes('严格保持原图的背景'), '关掉场景后提示词仍有场景锁');
+  ok(!page.data.promptPreview.includes('以原图环境为基础，延续背景'), '关掉场景后提示词仍有场景锁');
   ok(store.aiimage_lock_prefs_v1 && store.aiimage_lock_prefs_v1.on.scene === false, '锁定开关没有持久化');
 
   // 选一个因素：计数、提示词、分类角标联动
-  page.chooseDimension({ currentTarget: { dataset: { key: 'shot', id: 'full' } } });
+  const fullShotIndex = page.data.dimensions.find((item) => item.key === 'shot').options.findIndex((item) => item.id === 'full');
+  page.chooseDimensionOption({ currentTarget: { dataset: { key: 'shot' } }, detail: { value: fullShotIndex } });
   ok(page.data.pickedDigits === '1 项', `已选计数不对: ${page.data.pickedDigits}`);
   ok(page.data.promptPreview.includes('全景，人物全身完整入画'), '选中的因素没有拼进提示词');
   ok(page.data.pickedTags.length === 1, '拆解弹层没有生成已选标签');
@@ -130,43 +153,42 @@ try {
 
   // 推荐效果应一次填入多项，并可继续单独微调
   page.chooseEffectRecommendation({ currentTarget: { dataset: { id: 'cinematic' } } });
-  ok(page.data.effectRecommendations.length === 20, `推荐效果数量不对: ${page.data.effectRecommendations.length}`);
+  ok(page.data.effectRecommendations.length === 11, `推荐效果数量不对: ${page.data.effectRecommendations.length}`);
   ok(page.data.selectedEffectId === 'cinematic', '推荐效果没有标记选中');
   ok(page.data.effectRecommendations.find((item) => item.id === 'cinematic').cls.includes('--on'), '推荐卡片选中样式没有同步');
   ok(page.data.effectRecommendations.find((item) => item.id === 'cinematic').selected, '推荐效果的选中标记没有同步');
-  ok(page.data.selection.lightQuality === 'low_key' && page.data.selection.grade === 'cinematic', '推荐效果没有填入对应因素');
+  ok(page.data.visibleEffectRecommendations.some((item) => item.id === 'cinematic'), '收起状态没有保留当前选中的效果');
+  ok(page.data.selection.light === 'side' && page.data.selection.grade === 'cinematic', '推荐效果没有填入对应因素');
   ok(page.data.promptPreview.includes('高光偏暖橙、暗部偏青蓝'), '推荐效果的具体调色没有进入提示词');
   page.chooseDimension({ currentTarget: { dataset: { key: 'grade', id: 'cool_clean' } } });
   ok(page.data.selectedEffectId === '', '手动微调后推荐卡片仍显示为原预设');
   ok(page.data.effectRecommendations.every((item) => !item.cls.includes('--on')), '手动微调后仍有推荐卡片选中');
-  ok(page.data.selection.lightQuality === 'low_key', '手动微调丢失了推荐配方的其他参数');
+  ok(page.data.selection.light === 'side', '手动微调丢失了推荐配方的其他参数');
 
   page.chooseEffectRecommendation({ currentTarget: { dataset: { id: 'backlitFill' } } });
-  ok(page.data.selection.lightDir === 'back' && page.data.selection.grade === 'clean', '逆光补脸配方没有与发光效果区分');
-  ok(page.data.promptPreview.includes('优先局部补亮') && page.data.promptPreview.includes('避免全图提曝光'), '逆光补脸没有强调局部提亮与高光保护');
-
-  page.chooseEffectRecommendation({ currentTarget: { dataset: { id: 'backlitGlow' } } });
-  ok(page.data.selection.lightDir === 'back' && page.data.selection.grade === 'soft_focus', '逆光发光配方没有填入补光与柔光参数');
-  ok(page.data.promptPreview.includes('脸部中间调优先局部补亮'), '逆光配方没有强调脸部局部补光');
-  ok(page.data.promptPreview.includes('眼睛与脸部轮廓清楚'), '柔光光晕没有保护面部清晰度');
-  ok(page.data.promptPreview.includes('不给整图加灰雾'), '柔光光晕没有限制整图雾化');
+  ok(page.data.selection.light === 'back' && page.data.selection.grade === 'clean', '逆光效果没有映射到精简参数');
+  ok(page.data.promptPreview.includes('适度补亮面部中间调') && page.data.promptPreview.includes('发丝轮廓光自然清晰'), '逆光效果指令不完整');
 
   page.chooseEffectRecommendation({ currentTarget: { dataset: { id: 'creamyBokeh' } } });
-  ok(page.data.selection.dof === 'shallow' && page.data.selection.grade === 'commercial', '奶油虚化配方没有填入景深与肤质参数');
-  page.chooseEffectRecommendation({ currentTarget: { dataset: { id: 'nightFlash' } } });
-  ok(page.data.selection.lightQuality === 'flash' && page.data.selection.grade === 'polaroid', '夜景直闪配方没有填入直闪与拍立得效果');
-  page.chooseEffectRecommendation({ currentTarget: { dataset: { id: 'neonTrail' } } });
-  ok(page.data.selection.dof === 'motion_blur' && page.data.selection.lightQuality === 'neon', '霓虹拖影配方没有填入动态光轨参数');
-  ok(page.data.promptPreview.includes('不出现重影'), '动态拖影没有限制重影');
+  ok(page.data.selection.dof === 'shallow' && page.data.selection.light === 'soft', '奶油虚化配方没有填入景深与光线参数');
+  page.chooseEffectRecommendation({ currentTarget: { dataset: { id: 'skinRefine' } } });
+  ok(page.data.selection.skin === 'blemish', '自然修肤效果没有映射到皮肤优化');
+  ok(page.data.promptPreview.includes('痘痘、痘印、斑点与泛红细节'), '自然修肤指令没有进入提示词');
 
-  page.chooseEffectRecommendation({ currentTarget: { dataset: { id: 'clearGlow' } } });
-  ok(page.data.selection.grade === 'clean_glow' && page.data.selection.dof === 'deep', '清透发光配方没有填入亮部与景深参数');
-  ok(page.data.promptPreview.includes('中高光曲线轻提'), '清透发光没有强调中高光提亮');
-  ok(page.data.promptPreview.includes('不抬高全图曝光'), '清透发光没有限制全图曝光');
-
-  page.chooseEffectRecommendation({ currentTarget: { dataset: { id: 'skinBalance' } } });
-  ok(page.data.selection.grade === 'skin_balance' && page.data.selection.dof === 'deep', '自然匀肤配方没有填入匀肤参数');
-  ok(page.data.promptPreview.includes('局部红黄偏差') && page.data.promptPreview.includes('保留毛孔'), '自然匀肤没有覆盖肤色校正与纹理保护');
+  // 人像优化分类：皮肤和脸部细分项都应能进入最终提示词
+  page.chooseCategory({ currentTarget: { dataset: { id: 'portrait' } } });
+  ok(page.data.activeCatId === 'portrait' && page.data.dimensions.length === 2, '人像优化应精简为皮肤和脸部两个控制维度');
+  page.chooseDimension({ currentTarget: { dataset: { key: 'skin', id: 'tone_balance' } } });
+  page.chooseDimension({ currentTarget: { dataset: { key: 'skin', id: 'blemish' } } });
+  ok(page.data.promptPreview.includes('痘痘、痘印、斑点与泛红细节'), '皮肤优化细分项没有进入提示词');
+  ok(page.data.promptPreview.includes('保留真实肤质'), '简化后的皮肤指令没有保留自然纹理细节');
+  page.chooseDimension({ currentTarget: { dataset: { key: 'skin', id: 'tone_match' } } });
+  ok(page.data.promptPreview.includes('面部、颈部及画面中可见手臂等露肤区域'), '露肤区域肤色衔接没有进入提示词');
+  page.chooseDimension({ currentTarget: { dataset: { key: 'face', id: 'eye_bright' } } });
+  ok(page.data.promptPreview.includes('自然提亮眼睛与眼神光'), '脸部优化细分项没有进入提示词');
+  page.chooseEffectRecommendation({ currentTarget: { dataset: { id: 'faceRefine' } } });
+  ok(page.data.selection.face === 'even_light' && page.data.selection.skin === 'tone_balance', '脸部精修配方没有填入细分参数');
+  ok(page.data.promptPreview.includes('柔和校正脸部左右'), '脸部精修没有覆盖面部光影优化');
 
   // AI 效果推荐要应用对应配方，同时保留用户补充和配方未涉及的参数
   page.chooseDimension({ currentTarget: { dataset: { key: 'shot', id: 'closeup' } } });
@@ -208,14 +230,16 @@ try {
   // 编辑人物锁：句号要换成逗号，保存后摘要显示「改」
   page.openLockEditor({ currentTarget: { dataset: { id: 'person' } } });
   ok(page.data.lockEditorOpen && page.data.lockEditId === 'person', '锁定文案弹层没有打开');
-  page.onLockDraftInput({ detail: { value: '保留脸上的痣。不要磨皮过度' } });
+  const longLockDraft = `${'保留脸上的痣，不要磨皮过度 '.repeat(30)}。保留人物真实特征`;
+  page.onLockDraftInput({ detail: { value: longLockDraft } });
   ok(page.data.lockDraftEdited === true, '编辑后 edited 标记没亮');
   page.applyLockDraft();
   ok(page.data.lockEditorOpen === false, '完成后弹层没有关闭');
   ok(page.data.promptPreview.includes('保留脸上的痣，不要磨皮过度'), '自定义锁定文案没有拼进提示词');
-  ok(!page.data.promptPreview.includes('。不要磨皮过度'), '自定义文案里的句号没有被替换');
+  ok(page.data.promptPreview.includes('保留人物真实特征'), '长锁定文案被长度限制或截断');
+  ok(!page.data.promptPreview.includes('。保留人物真实特征'), '自定义文案里的句号没有被替换');
   ok(page.data.locks.find((lock) => lock.id === 'person').mark === '改', '自定义文案没有标「改」');
-  ok(store.aiimage_lock_prefs_v1.phrases.person === '保留脸上的痣，不要磨皮过度', '自定义文案没有持久化');
+  ok(store.aiimage_lock_prefs_v1.phrases.person.length > 200, '长锁定文案没有完整持久化');
 
   // 恢复默认
   page.openLockEditor({ currentTarget: { dataset: { id: 'person' } } });
@@ -230,15 +254,25 @@ try {
   ok(page.data.cats[0].badge === '', '清空因素后分类角标没有清掉');
   ok(page.data.pickedTags.length === 0, '清空因素后拆解标签没有清掉');
 
-  // 冲突提示：选背面机位，人物锁开着，应出现橙色提示
-  page.chooseDimension({ currentTarget: { dataset: { key: 'angle', id: 'back' } } });
-  ok(page.data.lockTip.includes('背面'), '背面机位没有触发人物锁冲突提示');
+  // 冲突提示：远景人物占比小，人物锁开着，应出现橙色提示
+  page.chooseDimension({ currentTarget: { dataset: { key: 'shot', id: 'env' } } });
+  ok(page.data.lockTip.includes('人物占比'), '环境人像没有触发人物锁冲突提示');
   ok(page.data.lockTipCls.includes('--warn'), '冲突提示没有用警示样式');
 
   // 弹层互斥：打开写提示词会关闭锁定编辑
   page.openLockEditor({ currentTarget: { dataset: { id: 'scene' } } });
   page.openPromptInput();
   ok(page.data.lockEditorOpen === false, '打开写提示词时锁定弹层没有关闭');
+  const longDraft = '详细修图要求 '.repeat(120);
+  page.onDraftInput({ detail: { value: longDraft } });
+  page.applyDraft();
+  ok(page.data.extra === longDraft.trim() && page.data.extra.length > 600, '自由提示词被长度限制或截断');
+  ok(!page.data.promptDigits.includes('超长'), '自由提示词仍被前端标记为超长');
+  const textareaTags = [...wxmlSrc.matchAll(/<textarea\b[^>]*>/g)].map((match) => match[0]);
+  ok(
+    textareaTags.length === 2 && textareaTags.every((tag) => /\bmaxlength="-1"/.test(tag)),
+    '自由提示词和锁定文案输入框都必须明确设置为不限长',
+  );
   page.closePromptInput();
 
   // 页面源码里的导出名必须真的存在（防止 import 了不存在的名字）
@@ -264,6 +298,14 @@ try {
   importedNames.forEach(({ from, name }) => {
     ok(modules[from] && modules[from][name] !== undefined, `页面 import 了 ${from} 不存在的导出 ${name}`);
   });
+  const mediaReadError = modules.errors.toFriendlyError(
+    'Media URL could not be downloaded (timeout or source server error). (request id: test-123)',
+  );
+  ok(
+    mediaReadError.text === 'AI 暂时无法读取原图，请重新选图或稍后重试',
+    'Agnes 原图链接读取失败被误报成了生成超时',
+  );
+  ok(mediaReadError.retryable, '原图链接读取失败应允许重试');
   calls.push(`import 校验 ${importedNames.length} 项`);
 } catch (err) {
   fails.push(`页面流程抛错: ${err && err.stack ? err.stack : err}`);

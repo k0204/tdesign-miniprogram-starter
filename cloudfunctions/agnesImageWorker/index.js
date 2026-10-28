@@ -72,7 +72,6 @@ const REQUEST_TIMEOUT_MS = 150 * 1000;
  */
 const RETRY_BACKOFF = [4000, 8000, 15000, 25000, 40000];
 
-const MAX_PROMPT_LENGTH = 2000;
 const MAX_INPUT_IMAGES = 4;
 const ALLOWED_SUFFIX = ['jpg', 'jpeg', 'png', 'webp'];
 
@@ -348,9 +347,6 @@ exports.main = async (event = {}) => {
 
     const prompt = String(event.prompt || '').trim();
     if (!prompt) throw new Error('请输入提示词');
-    if (prompt.length > MAX_PROMPT_LENGTH) {
-      throw new Error(`提示词最多 ${MAX_PROMPT_LENGTH} 字`);
-    }
 
     const { size, tiered } = normalizeSize(event.size);
     const body = {
